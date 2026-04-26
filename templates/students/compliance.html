@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Compliance | School ERP{% endblock %}
+{% block page_eyebrow %}Students{% endblock %}
+{% block page_heading %}Document & Compliance Reminders{% endblock %}
+{% block page_copy %}Track pending compliance items and reminder status for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+<div class="row gy-4">
+  <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="compliance" %}</div>
+  <div class="col-xl-5">
+    <div class="platform-panel"><div class="platform-panel__body">
+      <h6 class="mb-14">Add Reminder</h6>
+      {% if can_manage_students %}
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-12"><label class="form-label">Reminder type</label><input name="reminder_type" class="form-control" placeholder="Aadhar expiry / Medical renewal" required></div>
+        <div class="col-md-6"><label class="form-label">Due date</label><input type="date" name="due_date" class="form-control" value="{{ today|date:'Y-m-d' }}"></div>
+        <div class="col-md-6"><label class="form-label">Status</label><select name="status" class="form-control">{% for v,l in compliance_status_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label">Note</label><textarea name="note" class="form-control" rows="3"></textarea></div>
+        <div class="col-12"><button class="btn btn-primary-600 radius-8 px-20 py-11">Save Reminder</button></div>
+      </form>
+      {% else %}<div class="text-neutral-600 text-sm">View-only access.</div>{% endif %}
+    </div></div>
+  </div>
+  <div class="col-xl-7">
+    <div class="platform-panel"><div class="platform-panel__body">
+      <h6 class="mb-14">Compliance Queue</h6>
+      {% if reminders %}
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th>Type</th><th>Status</th><th>Due</th><th>Note</th></tr></thead>
+            <tbody>
+              {% for item in reminders %}
+                <tr>
+                  <td>{{ item.reminder_type }}</td>
+                  <td><span class="student-pill">{{ item.get_status_display }}</span></td>
+                  <td>{{ item.due_date|default:"-" }}</td>
+                  <td>{{ item.note|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}<div class="text-neutral-600 text-sm">No compliance reminders.</div>{% endif %}
+    </div></div>
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+<section class="sa-nav mb-16">
+  <div class="sa-nav__head">
+    <div class="sa-nav__title">
+      <strong>Super Admin Navigator</strong>
+      <small>Platform modules and quick actions</small>
+    </div>
+    <div class="sa-nav__meta">
+      <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+      <em>Control Scope</em>
+    </div>
+  </div>
+  <div class="sa-nav__grid">
+    <a class="sa-nav__item {% if request.path == '/super-admin/' %}is-active{% endif %}" href="/super-admin/">
+      <i class="ri-dashboard-line"></i>
+      <span><strong>Hub</strong><small>Control Tower</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/' %}is-active{% endif %}" href="/platform/">
+      <i class="ri-line-chart-line"></i>
+      <span><strong>Command Center</strong><small>Platform KPIs</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/roles/' %}is-active{% endif %}" href="/super-admin/roles/">
+      <i class="ri-shield-user-line"></i>
+      <span><strong>Role Sheet</strong><small>Access Matrix</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/gaps/' %}is-active{% endif %}" href="/super-admin/gaps/">
+      <i class="ri-alert-line"></i>
+      <span><strong>Gap Sheet</strong><small>Pending Scope</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/rollout/' %}is-active{% endif %}" href="/platform/rollout/">
+      <i class="ri-road-map-line"></i>
+      <span><strong>Rollout</strong><small>Execution Board</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/setup/' %}is-active{% endif %}" href="/super-admin/setup/">
+      <i class="ri-settings-3-line"></i>
+      <span><strong>Setup Wizard</strong><small>Onboarding</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/pages/' %}is-active{% endif %}" href="/super-admin/pages/">
+      <i class="ri-apps-2-line"></i>
+      <span><strong>Pages Index</strong><small>All Pages</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/transport/' %}is-active{% endif %}" href="/super-admin/transport/">
+      <i class="ri-bus-line"></i>
+      <span><strong>Transport</strong><small>Routes & Riders</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/hostel/' %}is-active{% endif %}" href="/super-admin/hostel/">
+      <i class="ri-hotel-bed-line"></i>
+      <span><strong>Hostel</strong><small>Rooms & Beds</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/library/' %}is-active{% endif %}" href="/super-admin/library/">
+      <i class="ri-book-open-line"></i>
+      <span><strong>Library</strong><small>Issue & Return</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/inventory/' %}is-active{% endif %}" href="/super-admin/inventory/">
+      <i class="ri-inbox-archive-line"></i>
+      <span><strong>Inventory</strong><small>Stock & PO</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/fees/' %}is-active{% endif %}" href="/super-admin/fees/">
+      <i class="ri-money-rupee-circle-line"></i>
+      <span><strong>Fee Reconciliation</strong><small>Collections & Refunds</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/security/' %}is-active{% endif %}" href="/platform/security/">
+      <i class="ri-shield-flash-line"></i>
+      <span><strong>Security</strong><small>Auth Signals</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/support/' %}is-active{% endif %}" href="/platform/support/">
+      <i class="ri-customer-service-2-line"></i>
+      <span><strong>Support</strong><small>Ticket Queue</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/domains/' %}is-active{% endif %}" href="/platform/domains/">
+      <i class="ri-global-line"></i>
+      <span><strong>Domains</strong><small>Routing</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/tokens/' %}is-active{% endif %}" href="/platform/tokens/">
+      <i class="ri-key-2-line"></i>
+      <span><strong>Tokens</strong><small>API Access</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/platform/announcements/' %}is-active{% endif %}" href="/platform/announcements/">
+      <i class="ri-notification-3-line"></i>
+      <span><strong>Announcements</strong><small>Broadcasts</small></span>
+    </a>
+  </div>
+</section>

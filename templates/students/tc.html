@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transfer Certificate | School ERP{% endblock %}
+{% block page_eyebrow %}Transfer Certificate{% endblock %}
+{% block page_heading %}Generate TC for {{ student.first_name }} {{ student.last_name }}{% endblock %}
+{% block page_copy %}Issue transfer certificate in a cleaner workflow and keep the student lifecycle status fully traceable.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="tc" %}</div>
+    <div class="col-xxl-6">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
+            <div>
+              <h6 class="mb-4">Transfer certificate form</h6>
+              <p class="text-neutral-600 text-sm mb-0">Generate or update the TC record for this student and mark the exit properly.</p>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-10 mb-16">
+            <a class="btn btn-outline-secondary btn-sm radius-8" href="/students/{{ student.slug }}/tc/requests/">Open TC Requests</a>
+            {% if pending_tc_requests_count %}
+              <span class="student-pill warning">{{ pending_tc_requests_count }} pending request{{ pending_tc_requests_count|pluralize }}</span>
+            {% endif %}
+          </div>
+          <div class="student-pill success mb-20">Auto TC No: {{ suggested_tc_number }}</div>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="issue">
+            <div class="row gy-4">
+              <div class="col-md-6"><label class="form-label">Certificate number</label><input type="text" name="certificate_no" class="form-control" value="{% if student.transfer_certificate %}{{ student.transfer_certificate.certificate_no }}{% else %}{{ suggested_tc_number }}{% endif %}" readonly required></div>
+              <div class="col-md-6"><label class="form-label">Issue date</label><input type="date" name="issue_date" class="form-control" value="{% if student.transfer_certificate %}{{ student.transfer_certificate.issue_date|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" required></div>
+              <div class="col-12"><label class="form-label">Destination school</label><input type="text" name="destination_school" class="form-control" value="{% if student.transfer_certificate %}{{ student.transfer_certificate.destination_school }}{% endif %}"></div>
+              <div class="col-12"><label class="form-label">Reason</label><textarea name="reason" class="form-control" rows="4">{% if student.transfer_certificate %}{{ student.transfer_certificate.reason }}{% endif %}</textarea></div>
+            </div>
+            <div class="d-flex flex-wrap gap-12 mt-24">
+              <button type="submit" class="btn btn-danger radius-8 px-20 py-11">Generate TC</button>
+              {% if student.transfer_certificate %}
+                <a class="btn btn-outline-danger radius-8 px-20 py-11" href="/students/{{ student.slug }}/tc/pdf/">Download TC PDF</a>
+              {% endif %}
+              <a class="btn btn-outline-secondary radius-8 px-20 py-11" href="/students/{{ student.slug }}/">Back to profile</a>
+            </div>
+          </form>
+          <hr class="my-20">
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="request">
+            <div class="col-12">
+              <label class="form-label">New TC Request Reason</label>
+              <textarea name="reason" class="form-control" rows="3" placeholder="Parent request / relocation / other reason"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Requested Destination School</label>
+              <input type="text" name="destination_school" class="form-control">
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-outline-primary radius-8 px-20 py-11">Create TC Request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-xxl-6">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
+            <div>
+              <h6 class="mb-4">Current certificate status</h6>
+              <p class="text-neutral-600 text-sm mb-0">See the latest issued certificate details for this student.</p>
+            </div>
+          </div>
+          {% if student.transfer_certificate %}
+            <div class="timeline-entry">
+              <strong class="d-block mb-2">TC {{ student.transfer_certificate.certificate_no }}</strong>
+              <span class="text-neutral-600 text-sm d-block">Issue date: {{ student.transfer_certificate.issue_date }}</span>
+              <span class="text-neutral-600 text-sm d-block mt-2">Destination: {{ student.transfer_certificate.destination_school|default:"Not specified" }}</span>
+              <span class="text-neutral-600 text-sm d-block mt-2">Reason: {{ student.transfer_certificate.reason|default:"Not specified" }}</span>
+              <div class="mt-16">
+                <a class="btn btn-outline-danger btn-sm radius-8" href="/students/{{ student.slug }}/tc/pdf/">Open TC PDF</a>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-center py-40 text-neutral-500">No transfer certificate generated yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Export Integrity Error{% endblock %}
+{% block page_heading %}Export Integrity Error{% endblock %}
+{% block page_copy %}Stored file checksum does not match the recorded SHA256.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="alert alert-danger mb-0">
+        <strong>Integrity verification failed.</strong>
+        <div class="mt-2 text-sm">
+          Export <code>#{{ export.id }}</code> expected <code>{{ export.sha256 }}</code> but computed <code>{{ actual_sha256 }}</code>.
+        </div>
+        <div class="mt-2 text-sm">
+          Do not trust this export. Investigate storage and access controls.
+        </div>
+      </div>
+      <div class="d-flex gap-10 mt-3">
+        <a href="/activity/exports/" class="btn btn-outline-secondary">Back to Exports</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

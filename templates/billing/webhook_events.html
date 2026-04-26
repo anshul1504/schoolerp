@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Billing Webhook Events{% endblock %}
+{% block page_heading %}Billing Webhook Events{% endblock %}
+{% block page_copy %}Incoming payment provider callbacks (idempotent).{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Webhook Events</h6>
+          <p>Endpoint: <code>/billing/webhooks/generic/</code></p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/billing/invoices/">Back</a>
+        </div>
+      </div>
+      <div class="text-muted text-sm mt-2">
+        Payload expects: <code>event_id</code>, <code>invoice_id</code>, <code>amount</code>, <code>method</code>, <code>transaction_ref</code>, <code>status</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Provider</th>
+              <th>Event</th>
+              <th>Invoice</th>
+              <th>Status</th>
+              <th>Processed</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in events %}
+              <tr>
+                <td class="text-muted text-sm">{{ e.created_at }}</td>
+                <td class="text-muted text-sm">{{ e.provider }}</td>
+                <td class="text-muted text-sm">{{ e.event_id }}</td>
+                <td class="text-muted text-sm">{{ e.invoice_id|default:"—" }}</td>
+                <td class="text-muted text-sm">{{ e.status|default:"—" }}</td>
+                <td>{% if e.processed_at %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+                <td class="text-muted text-sm">{{ e.process_error|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7" class="text-center text-muted">No events yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

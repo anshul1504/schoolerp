@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}School Team{% endblock %}
+{% block page_heading %}School Team{% endblock %}
+{% block page_copy %}Invite teachers, receptionist, and staff for this school. Users activate via a one-time link.{% endblock %}
+{% block page_eyebrow %}Schools{% endblock %}
+
+{% block content %}
+  <div class="card mb-4">
+    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
+      <div>
+        <h6 class="mb-2">{{ school.name }}</h6>
+        <div class="text-neutral-600 text-sm">School-scoped users only. Super Admin users are not managed here.</div>
+      </div>
+      <div class="d-flex gap-10 flex-wrap">
+        <a href="/schools/{{ school.id }}/" class="btn btn-outline-secondary">Back</a>
+        <a href="/schools/{{ school.id }}/setup/" class="btn btn-outline-primary">Setup Checklist</a>
+        <a href="#invite" class="btn btn-primary-600">Invite</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row gy-4">
+    <div class="col-xl-5">
+      <div class="card h-100">
+        <div class="card-body p-24" id="invite">
+          <h6 class="mb-4">Invite Member</h6>
+          <p class="text-neutral-600 text-sm mb-16">Create an inactive user and generate an activation link (7 days).</p>
+          <div class="d-flex flex-wrap gap-10 mb-16">
+            <a class="btn btn-sm btn-outline-primary" href="/schools/{{ school.id }}/team/?role=TEACHER#invite">Invite Teacher</a>
+            <a class="btn btn-sm btn-outline-primary" href="/schools/{{ school.id }}/team/?role=RECEPTIONIST#invite">Invite Receptionist</a>
+            <a class="btn btn-sm btn-outline-primary" href="/schools/{{ school.id }}/team/?role=ACCOUNTANT#invite">Invite Accountant</a>
+          </div>
+          <form method="post" action="/schools/{{ school.id }}/team/invite/" class="row gy-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+              <label class="form-label">Username *</label>
+              <input type="text" name="username" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Role *</label>
+              <select name="role" class="form-select" required>
+                <option value="" selected disabled>Select role</option>
+                {% for value,label in role_choices %}
+                  <option value="{{ value }}" {% if prefill_role and prefill_role == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" placeholder="Optional">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">First name</label>
+              <input type="text" name="first_name" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Last name</label>
+              <input type="text" name="last_name" class="form-control">
+            </div>
+            <div class="col-12 d-grid">
+              <button type="submit" class="btn btn-primary-600 radius-8 py-11">Create Invitation</button>
+            </div>
+            <div class="col-12 text-neutral-500 text-sm">
+              Tip: If email is not configured yet, create the invite and copy the activation link from the success message.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-7">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <h6 class="mb-14">Members</h6>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in members %}
+                  <tr>
+                    <td>
+                      <strong>{{ u.get_full_name|default:u.username }}</strong>
+                      <div class="text-neutral-500 text-sm">{{ u.email|default:"-" }}</div>
+                    </td>
+                    <td>{{ u.get_role_display }}</td>
+                    <td>
+                      {% if u.is_active %}
+                        <span class="badge bg-success">Active</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Inactive</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-neutral-500 text-sm">No members yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-body p-24">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-12 mb-16">
+        <div>
+          <h6 class="mb-2">Pending Invitations</h6>
+          <div class="text-neutral-600 text-sm">Copy activation links if email sending is not configured.</div>
+        </div>
+        {% if can_view_all_invitations %}
+          <a href="/users/invitations/" class="btn btn-outline-secondary">All Invitations</a>
+        {% endif %}
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Expires</th>
+              <th>Status</th>
+              <th>Link</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for invite in invitations %}
+              <tr>
+                <td>
+                  <strong>{{ invite.obj.user.get_full_name|default:invite.obj.user.username }}</strong>
+                  <div class="text-neutral-500 text-sm">{{ invite.obj.user.get_role_display }}</div>
+                </td>
+                <td>{{ invite.obj.expires_at }}</td>
+                <td>
+                  {% if invite.obj.accepted_at %}
+                    <span class="badge bg-success">Accepted</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not invite.obj.accepted_at %}
+                    <div class="d-flex flex-column gap-6">
+                      <code>{{ invite.activation_path }}</code>
+                      <div class="d-flex gap-8">
+                        <input type="text" class="form-control form-control-sm" value="{{ invite.activation_url }}" readonly>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyInviteLink(this)">Copy</button>
+                      </div>
+                    </div>
+                  {% else %}
+                    <span class="text-neutral-500">-</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if not invite.obj.accepted_at %}
+                    <form method="post" action="/schools/{{ school.id }}/team/invitations/{{ invite.obj.id }}/resend/" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Resend/Refresh</button>
+                    </form>
+                  {% else %}
+                    <span class="text-neutral-500">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-neutral-500 text-sm">No invitations yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function copyInviteLink(btn) {
+    try {
+      const wrapper = btn.closest("td");
+      const input = wrapper.querySelector("input");
+      if (!input) return;
+      navigator.clipboard.writeText(input.value);
+      btn.textContent = "Copied";
+      setTimeout(() => (btn.textContent = "Copy"), 900);
+    } catch (e) {
+      // no-op
+    }
+  }
+</script>
+{% endblock %}

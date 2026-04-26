@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Import Staff{% endblock %}
+{% block page_eyebrow %}HRM{% endblock %}
+{% block page_heading %}Import Staff{% endblock %}
+{% block page_copy %}Upload a CSV or XLSX file to create/update staff records. Preview comes first.{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Staff Import</h6>
+          <p>School-scoped import (selected school required).</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/staff/">Back to Staff</a>
+          {% if selected_school %}
+            <a class="btn btn-outline-secondary" href="/staff/import/sample/csv/?school={{ selected_school.id }}">Download sample CSV</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="get" class="sf-filters mt-3">
+        {% if request.user.role == "SUPER_ADMIN" %}
+          <div class="row gy-3 gx-3 align-items-end">
+            <div class="col-md-6">
+              <label class="form-label">School</label>
+              <select class="form-control" name="school" required>
+                <option value="">Select school</option>
+                {% for s in school_options %}
+                  <option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end gap-10">
+              <button class="btn btn-outline-secondary" type="submit">Set School</button>
+            </div>
+          </div>
+        {% endif %}
+      </form>
+
+      <div class="sf-card mt-3">
+        <div class="sf-card__body">
+          <div class="mb-3">
+            <div class="fw-semibold mb-1">Expected headers</div>
+            <div class="text-muted text-sm">{{ headers|join:", " }}</div>
+          </div>
+
+          {% if selected_school %}
+            <form method="post" enctype="multipart/form-data" class="row gy-3">
+              {% csrf_token %}
+              <input type="hidden" name="stage" value="preview">
+              <div class="col-md-8">
+                <label class="form-label">CSV / XLSX file</label>
+                <input type="file" name="import_file" class="form-control" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+              </div>
+              <div class="col-md-4 d-flex align-items-end gap-10">
+                <button type="submit" class="btn btn-primary">Preview</button>
+                <a class="btn btn-outline-secondary" href="/staff/?school={{ selected_school.id }}">Cancel</a>
+              </div>
+            </form>
+          {% else %}
+            <div class="text-muted">Select a school to enable import.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

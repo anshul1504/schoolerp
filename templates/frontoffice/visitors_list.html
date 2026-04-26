@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitors | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Visitor Register{% endblock %}
+{% block page_copy %}Track entries, exits, and open visitors.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+      <div>
+        <h6 class="mb-4">Visitors</h6>
+        <p class="text-neutral-600 text-sm mb-0">Latest visitor entries for your school scope.</p>
+      </div>
+      <a href="/frontoffice/visitors/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Log Visitor</a>
+    </div>
+
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-4"><label class="form-label">School</label><select name="school" class="form-control"><option value="">All schools</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-md-4">
+        <div class="form-check mt-28">
+          <input class="form-check-input" type="checkbox" name="open" value="1" id="open_only" {% if open_only %}checked{% endif %}>
+          <label class="form-check-label" for="open_only">Show only open visitors</label>
+        </div>
+      </div>
+      <div class="col-md-4"><button type="submit" class="btn btn-outline-primary w-100">Apply</button></div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Visitor</th>
+            <th>Purpose</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>Status</th>
+            <th class="text-end">Open</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in visitors %}
+            <tr>
+              <td>{{ v.visitor_name }}</td>
+              <td>{{ v.get_purpose_display }}</td>
+              <td>{{ v.entry_time|date:"d M Y, h:i A" }}</td>
+              <td>{% if v.exit_time %}{{ v.exit_time|date:"d M Y, h:i A" }}{% else %}-{% endif %}</td>
+              <td>
+                {% if v.exit_time %}
+                  <span class="badge bg-success">Checked out</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Inside</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-8">
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/visitors/{{ v.id }}/">View</a>
+                  {% if can_manage and not v.exit_time %}
+                    <form method="post" action="/frontoffice/visitors/{{ v.id }}/checkout/">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-primary-600">Checkout</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-neutral-500 text-sm">No visitor logs.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

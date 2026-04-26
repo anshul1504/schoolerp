@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Discipline | School ERP{% endblock %}
+{% block page_eyebrow %}Students{% endblock %}
+{% block page_heading %}Discipline Tracking{% endblock %}
+{% block page_copy %}Log incidents, warnings, and resolution status for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="discipline" %}</div>
+    <div class="col-xl-5">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Add Incident</h6>
+          {% if can_manage_students %}
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            <div class="col-12"><label class="form-label">Title</label><input name="title" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Severity</label><select name="severity" class="form-control">{% for v,l in discipline_severity_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+            <div class="col-md-6"><label class="form-label">Status</label><select name="status" class="form-control">{% for v,l in discipline_status_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label">Incident date</label><input type="date" name="incident_date" class="form-control" value="{{ today|date:'Y-m-d' }}"></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3"></textarea></div>
+            <div class="col-12"><button class="btn btn-primary-600 radius-8 px-20 py-11">Save Incident</button></div>
+          </form>
+          {% else %}<div class="text-neutral-600 text-sm">View-only access.</div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-7">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Incident Timeline</h6>
+          {% if incidents %}
+            <div class="d-flex flex-column gap-12">
+              {% for item in incidents %}
+                <div class="timeline-entry">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-8">
+                    <strong>{{ item.title }}</strong>
+                    <small class="text-neutral-500">{{ item.incident_date|default:item.created_at|date:"d M Y" }}</small>
+                  </div>
+                  <div class="text-neutral-600 text-sm mt-1">{{ item.get_severity_display }} · {{ item.get_status_display }}</div>
+                  {% if item.description %}<div class="text-neutral-600 text-sm mt-1">{{ item.description }}</div>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}<div class="text-neutral-600 text-sm">No incidents logged.</div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

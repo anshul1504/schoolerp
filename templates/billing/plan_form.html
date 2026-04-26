@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{% if plan %}Edit Plan{% else %}Create Plan{% endif %}{% endblock %}
+{% block page_heading %}{% if plan %}Edit Plan{% else %}Create Plan{% endif %}{% endblock %}
+{% block page_copy %}Define pricing and limits for the subscription tier.{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body p-24">
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-md-6">
+          <label class="form-label">Name *</label>
+          <input type="text" name="name" class="form-control" required value="{{ plan.name|default:'' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Code *</label>
+          <input type="text" name="code" class="form-control" required value="{{ plan.code|default:'' }}" placeholder="BASIC / PRO / ENTERPRISE">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Tier</label>
+          <select name="tier" class="form-select" id="planTier">
+            {% for value,label in tier_choices %}
+              <option value="{{ value }}" {% if plan and plan.tier == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Monthly price (Rs)</label>
+          <input type="number" step="0.01" name="price_monthly" class="form-control" value="{{ plan.price_monthly|default:'0' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Billing mode</label>
+          <select name="billing_mode" class="form-select" id="billingMode">
+            {% for value,label in billing_mode_choices %}
+              <option value="{{ value }}" {% if plan and plan.billing_mode == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Unit price (Rs)</label>
+          <input type="number" step="0.01" name="unit_price" class="form-control" value="{{ plan.unit_price|default:'0' }}" placeholder="Per student or per 500">
+          <div class="form-text">Used when billing mode is per-student or per-500.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Max students</label>
+          <input type="number" name="max_students" class="form-control" value="{{ plan.max_students|default:'1000' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Max campuses (1/3/5)</label>
+          <input type="number" name="max_campuses" class="form-control" value="{{ plan.max_campuses|default:'1' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Features</label>
+          <div class="row gy-2">
+            {% for feature in features %}
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="feature_ids" id="feature_{{ feature.id }}" value="{{ feature.id }}"
+                    {% if selected_feature_ids and feature.id in selected_feature_ids %}checked{% endif %}>
+                  <label class="form-check-label" for="feature_{{ feature.id }}">
+                    <strong>{{ feature.name }}</strong>
+                    {% if feature.description %}<span class="text-muted text-sm">— {{ feature.description }}</span>{% endif %}
+                  </label>
+                </div>
+              </div>
+            {% empty %}
+              <div class="text-muted">No features yet. Create features first.</div>
+            {% endfor %}
+          </div>
+          <div class="mt-2">
+            <a href="/billing/features/create/" class="text-primary-600 fw-semibold text-sm">+ Add feature</a>
+          </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if plan.is_active or not plan %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-10">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <a href="/billing/plans/" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    (function () {
+      const tier = document.getElementById("planTier");
+      const maxCampuses = document.querySelector('input[name="max_campuses"]');
+      const maxStudents = document.querySelector('input[name="max_students"]');
+
+      if (!tier || !maxCampuses || !maxStudents) return;
+
+      function applyDefaults() {
+        const value = tier.value;
+        if (!maxStudents.value) maxStudents.value = 1000;
+        if (value === "SILVER") maxCampuses.value = 1;
+        if (value === "GOLD") maxCampuses.value = 3;
+        if (value === "PLATINUM") maxCampuses.value = 5;
+      }
+
+      tier.addEventListener("change", applyDefaults);
+      applyDefaults();
+    })();
+  </script>
+{% endblock %}

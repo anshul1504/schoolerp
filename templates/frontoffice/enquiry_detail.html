@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Enquiry | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Enquiry Detail{% endblock %}
+{% block page_copy %}Follow-ups, conversion, and status updates in one place.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-14">
+          <div>
+            <h6 class="mb-2">{{ enquiry.student_name }}</h6>
+            <div class="text-neutral-600 text-sm">{{ enquiry.guardian_name }} | {{ enquiry.phone }}</div>
+          </div>
+          <span class="badge bg-primary-50 text-primary-600 px-16 py-8 radius-8">{{ enquiry.get_status_display }}</span>
+        </div>
+
+        <div class="text-neutral-600 text-sm mb-12">School: {{ enquiry.school.name }}</div>
+        <div class="text-neutral-600 text-sm mb-12">Source: {{ enquiry.get_source_display }} | Interested: {{ enquiry.interested_class|default:"-" }}</div>
+        <div class="text-neutral-600 text-sm mb-16">Next follow-up: {{ enquiry.follow_up_date|default:"-" }}</div>
+
+        {% if enquiry.converted_student %}
+          <div class="alert alert-success">Converted to student: <a href="/students/{{ enquiry.converted_student.slug }}/">{{ enquiry.converted_student }}</a></div>
+        {% endif %}
+
+        {% if can_manage %}
+          <div class="d-flex flex-wrap gap-10">
+            <a href="/frontoffice/enquiries/{{ enquiry.id }}/edit/" class="btn btn-outline-primary">Edit</a>
+            <a href="/frontoffice/calls/create/?school={{ enquiry.school_id }}&enquiry_id={{ enquiry.id }}&phone={{ enquiry.phone }}&caller_name={{ enquiry.guardian_name|urlencode }}" class="btn btn-outline-primary">Log Call</a>
+            <form method="post" action="/frontoffice/enquiries/{{ enquiry.id }}/delete/" onsubmit="return confirm('Delete this enquiry?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger">Delete</button>
+            </form>
+            {% if not enquiry.converted_student %}
+              <form method="post" action="/frontoffice/enquiries/{{ enquiry.id }}/convert/">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary-600">Convert To Admission</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <hr class="my-18">
+
+        <h6 class="mb-10">Quick status update</h6>
+        <form method="post" action="/frontoffice/enquiries/{{ enquiry.id }}/update/" class="row gy-2">
+          {% csrf_token %}
+          <div class="col-12"><select name="status" class="form-control">{% for value,label in enquiry_status_choices %}<option value="{{ value }}" {% if enquiry.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+          <div class="col-12"><input type="date" name="follow_up_date" class="form-control" value="{% if enquiry.follow_up_date %}{{ enquiry.follow_up_date|date:'Y-m-d' }}{% endif %}"></div>
+          <div class="col-12"><textarea name="notes" class="form-control" rows="3">{{ enquiry.notes }}</textarea></div>
+          <div class="col-12"><button type="submit" class="btn btn-outline-primary w-100">Update</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="card mb-4">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-14">
+          <h6 class="mb-0">Log Follow-up</h6>
+        </div>
+        <form method="post" action="/frontoffice/enquiries/{{ enquiry.id }}/follow-ups/create/" class="row gy-3">
+          {% csrf_token %}
+          <div class="col-md-4"><label class="form-label">Follow-up on</label><input type="date" name="follow_up_on" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label">Outcome</label><select name="outcome" class="form-control">{% for value,label in follow_up_outcome_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          <div class="col-md-4"><label class="form-label">Next follow-up</label><input type="date" name="next_follow_up_date" class="form-control"></div>
+          <div class="col-12"><label class="form-label">Summary</label><textarea name="summary" class="form-control" rows="3"></textarea></div>
+          <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Save Follow-up</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Follow-up History</h6>
+        {% for f in follow_ups %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-8">
+              <strong>{{ f.follow_up_on }}</strong>
+              <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ f.get_outcome_display }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm mb-6">{{ f.summary|default:"-" }}</div>
+            <div class="text-neutral-500 text-xs">{% if f.next_follow_up_date %}Next: {{ f.next_follow_up_date }}{% else %}No next reminder{% endif %}</div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No follow-ups yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-14">
+          <h6 class="mb-0">Call Logs</h6>
+          {% if can_manage %}
+            <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ enquiry.school_id }}&enquiry_id={{ enquiry.id }}&phone={{ enquiry.phone }}&caller_name={{ enquiry.guardian_name|urlencode }}">Add</a>
+          {% endif %}
+        </div>
+        {% for c in calls %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-6">
+              <strong>{{ c.phone }}</strong>
+              <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ c.get_call_type_display }} | {{ c.get_status_display }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm">{{ c.caller_name|default:"-" }}{% if c.purpose %} | {{ c.purpose }}{% endif %}</div>
+            <div class="text-neutral-500 text-xs mt-6">{% if c.follow_up_date %}Follow-up: {{ c.follow_up_date }}{% else %}No follow-up set{% endif %}</div>
+            <div class="mt-10"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/{{ c.id }}/">Open</a></div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No calls logged yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

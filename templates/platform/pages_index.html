@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Super Admin Pages Index{% endblock %}
+{% block page_heading %}Super Admin Pages Index{% endblock %}
+{% block page_copy %}Single navigation list for all superadmin and platform control pages.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Pages Directory</span>
+    <h5 class="mb-2">All Super Admin pages in one place</h5>
+    <p class="mb-0">Total listed pages: <strong>{{ page_total }}</strong></p>
+  </section>
+
+  {% for group, pages in page_groups.items %}
+    <section class="platform-panel mb-16">
+      <div class="platform-panel__head">
+        <div><h6>{{ group }}</h6><p>Quick navigation links</p></div>
+      </div>
+      <div class="platform-list">
+        {% for page in pages %}
+          <a class="platform-row" href="{{ page.url }}">
+            <span class="platform-row__icon"><i class="{{ page.icon }}"></i></span>
+            <span>
+              <strong>{{ page.label }}</strong>
+              <small>{{ page.desc }}</small>
+            </span>
+            <em class="status-pill">Open</em>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+{% endblock %}

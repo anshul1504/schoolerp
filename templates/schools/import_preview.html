@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Schools Import Preview{% endblock %}
+{% block page_heading %}Schools Import Preview{% endblock %}
+{% block page_copy %}Review validation results before importing.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Preview</h6>
+          <p>Total rows: {{ total_rows }}. Invalid: {{ invalid_count }}.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/schools/import/">Upload new file</a>
+          <a class="btn btn-outline-secondary" href="/schools/">Back to Schools</a>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+        <div class="text-muted text-sm">Showing first 50 rows only.</div>
+        <div class="d-flex gap-10">
+          <a class="btn btn-outline-secondary" href="/schools/import/errors/">Download errors CSV (after import)</a>
+          <form method="post" action="/schools/import/" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="stage" value="confirm">
+            <button type="submit" class="btn btn-primary" {% if total_rows == 0 %}disabled{% endif %}>Confirm Import</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th class="sf-th-72">Row</th>
+              <th class="sf-th-220">Status</th>
+              {% for h in headers %}
+                <th>{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in preview_rows %}
+              <tr>
+                <td class="text-muted text-sm">#{{ row.row_index }}</td>
+                <td>
+                  {% if row.errors %}
+                    <span class="badge bg-danger">Invalid</span>
+                    <div class="text-muted text-sm mt-1">{{ row.errors|join:", " }}</div>
+                  {% else %}
+                    <span class="badge bg-success">OK</span>
+                  {% endif %}
+                </td>
+                {% for cell in row.cells %}
+                  <td class="text-muted text-sm">{{ cell|default:"" }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr><td colspan="{{ headers|length|add:2 }}" class="text-center text-muted">No rows found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-muted text-sm mt-3">Note: Confirm Import will import valid rows and skip invalid rows.</div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Exams | School ERP{% endblock %}
+{% block page_eyebrow %}Exam Desk{% endblock %}
+{% block page_heading %}Exams, Subjects, And Marks Entry{% endblock %}
+{% block page_copy %}Create class exams, enter subject-wise marks, and review completion status from one academic workflow.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .exam-card,
+  .metric-card {
+    border: 1px solid #dbe4ee;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff, #fbfdff);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+
+  .exam-card__head {
+    padding: 20px 22px;
+    border-bottom: 1px solid #dbe4ee;
+    background: linear-gradient(135deg, #f8fbff, #eef4fb);
+  }
+
+  .exam-card__body,
+  .metric-card .card-body {
+    padding: 22px;
+  }
+
+  .exam-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .exam-table th,
+  .exam-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .exam-table th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    font-weight: 800;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  .status-chip.complete { background: #dcfce7; color: #166534; }
+  .status-chip.pending { background: #fef3c7; color: #92400e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="row gy-4">
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-primary-600">Exams</span><h4 class="mt-10 mb-6">{{ exams_stats.exams }}</h4><p class="text-neutral-600 text-sm mb-0">Exam sessions created.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-info-600">Subjects</span><h4 class="mt-10 mb-6">{{ exams_stats.subjects }}</h4><p class="text-neutral-600 text-sm mb-0">Available academic subjects.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-success-600">Students</span><h4 class="mt-10 mb-6">{{ exams_stats.students }}</h4><p class="text-neutral-600 text-sm mb-0">Students in current exam scope.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-warning-600">Marks Entered</span><h4 class="mt-10 mb-6">{{ exams_stats.marks }}</h4><p class="text-neutral-600 text-sm mb-0">Subject-wise marks stored.</p></div></div></div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="exam-card">
+      <div class="exam-card__head"><h6 class="mb-4">Scope</h6><p class="text-neutral-600 text-sm mb-0">Choose school, class, and exam before marks entry.</p></div>
+      <div class="exam-card__body">
+        <form method="get" class="row gy-3 align-items-end">
+          {% if request.user.role == "SUPER_ADMIN" %}
+            <div class="col-lg-3"><label class="form-label">School</label><select name="school" class="form-control"><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and selected_school.id == school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+          {% endif %}
+          <div class="col-lg-3"><label class="form-label">Class</label><select name="academic_class" class="form-control"><option value="">Select class</option>{% for academic_class in academic_classes %}<option value="{{ academic_class.id }}" {% if selected_class and selected_class.id == academic_class.id %}selected{% endif %}>{{ academic_class.name }} - {{ academic_class.section }}</option>{% endfor %}</select></div>
+          <div class="col-lg-3"><label class="form-label">Exam</label><select name="exam" class="form-control"><option value="">Select exam</option>{% for exam in exams %}<option value="{{ exam.id }}" {% if selected_exam and selected_exam.id == exam.id %}selected{% endif %}>{{ exam.name }} - {{ exam.exam_date }}</option>{% endfor %}</select></div>
+          <div class="col-lg-2"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Apply</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="exam-card h-100">
+      <div class="exam-card__head"><h6 class="mb-4">Create Exam</h6><p class="text-neutral-600 text-sm mb-0">Define the class exam and marks pattern first.</p></div>
+      <div class="exam-card__body">
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_exam">
+          {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+          <div class="col-12"><label class="form-label">Class</label><select name="academic_class" class="form-control"><option value="">Select class</option>{% for academic_class in academic_classes %}<option value="{{ academic_class.id }}" {% if selected_class and selected_class.id == academic_class.id %}selected{% endif %}>{{ academic_class.name }} - {{ academic_class.section }}</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label">Exam Name</label><input type="text" name="name" class="form-control" placeholder="Unit Test 1"></div>
+          <div class="col-12"><label class="form-label">Exam Date</label><input type="date" name="exam_date" class="form-control"></div>
+          <div class="col-6"><label class="form-label">Total Marks</label><input type="number" name="total_marks" class="form-control" value="100"></div>
+          <div class="col-6"><label class="form-label">Passing Marks</label><input type="number" name="passing_marks" class="form-control" value="33"></div>
+          <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Create Exam</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8">
+    <div class="exam-card h-100">
+      <div class="exam-card__head"><h6 class="mb-4">Recent Exams</h6><p class="text-neutral-600 text-sm mb-0">Latest scheduled exams for the current scope.</p></div>
+      <div class="exam-card__body">
+        {% if exams %}
+          <table class="exam-table">
+            <thead><tr><th>Name</th><th>Class</th><th>Date</th><th>Pattern</th></tr></thead>
+            <tbody>
+              {% for exam in exams %}
+                <tr>
+                  <td><strong>{{ exam.name }}</strong></td>
+                  <td>{{ exam.academic_class.name }} - {{ exam.academic_class.section }}</td>
+                  <td>{{ exam.exam_date }}</td>
+                  <td>{{ exam.total_marks }} / pass {{ exam.passing_marks }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="text-neutral-500 text-sm">No exams created yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="exam-card">
+      <div class="exam-card__head d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h6 class="mb-4">Marks Entry</h6>
+          <p class="text-neutral-600 text-sm mb-0">{% if selected_exam %}{{ selected_exam.name }} | {{ selected_exam.academic_class.name }} - {{ selected_exam.academic_class.section }}{% else %}Choose an exam to start marks entry.{% endif %}</p>
+        </div>
+        <div class="d-flex gap-10">
+          {% if selected_exam %}
+            <a class="btn btn-outline-secondary" href="/exams/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}academic_class={{ selected_class.id }}&exam={{ selected_exam.id }}&dataset=marks&export=csv">Export CSV</a>
+            <a class="btn btn-outline-secondary" href="/exams/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}academic_class={{ selected_class.id }}&exam={{ selected_exam.id }}&dataset=marks&export=excel">Export Excel</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="exam-card__body">
+        {% if selected_exam and result_rows %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_marks">
+            <input type="hidden" name="exam" value="{{ selected_exam.id }}">
+            <table class="exam-table">
+              <thead>
+                <tr>
+                  <th class="sf-th-icon"></th>
+                  <th>Student</th>
+                  {% for subject in exam_subjects %}
+                    <th>{{ subject.name }}</th>
+                  {% endfor %}
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in result_rows %}
+                  <tr>
+                    <td><input type="checkbox" class="form-check-input exam-student-select" value="{{ row.student.id }}" aria-label="Select {{ row.student.admission_no }}"></td>
+                    <td><strong>{{ row.student.first_name }} {{ row.student.last_name }}</strong><br><span class="text-neutral-500 text-sm">{{ row.student.admission_no }}</span></td>
+                    {% for score in row.subject_scores %}
+                      <td>
+                        <input type="number" step="0.01" name="marks_{{ row.student.id }}_{{ score.subject.id }}" class="form-control mb-1" value="{{ score.entry.marks_obtained|default:'' }}" placeholder="Marks">
+                        <input type="text" name="remark_{{ row.student.id }}_{{ score.subject.id }}" class="form-control" value="{{ score.entry.remark|default:'' }}" placeholder="Remark">
+                      </td>
+                    {% endfor %}
+                    <td>{{ row.total }}</td>
+                    <td><span class="status-chip {{ row.status|lower }}">{{ row.status }}</span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="mt-20 d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary-600 radius-8 px-24 py-11">Save Marks</button>
+            </div>
+          </form>
+          <div class="d-flex gap-10 mt-3 flex-wrap">
+            <button type="button" class="btn btn-outline-secondary" id="exportSelectedExamCsvBtn" disabled>Export Selected (CSV)</button>
+            <button type="button" class="btn btn-outline-secondary" id="exportSelectedExamExcelBtn" disabled>Export Selected (Excel)</button>
+          </div>
+        {% elif selected_exam %}
+          <div class="text-neutral-500 text-sm">No students found in this class-section.</div>
+        {% else %}
+          <div class="text-neutral-500 text-sm">Select an exam to open marks entry.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const boxes = Array.from(document.querySelectorAll(".exam-student-select"));
+    const csvBtn = document.getElementById("exportSelectedExamCsvBtn");
+    const xlsBtn = document.getElementById("exportSelectedExamExcelBtn");
+    function selectedIds() {
+      return boxes.filter((b) => b.checked).map((b) => b.value).filter(Boolean);
+    }
+    function updateButtons() {
+      const enabled = selectedIds().length > 0;
+      if (csvBtn) csvBtn.disabled = !enabled;
+      if (xlsBtn) xlsBtn.disabled = !enabled;
+    }
+    function exportSelected(fmt) {
+      const ids = selectedIds().join(",");
+      const params = new URLSearchParams({
+        {% if selected_school %}school: "{{ selected_school.id }}",{% endif %}
+        academic_class: "{{ selected_class.id|default:'' }}",
+        exam: "{{ selected_exam.id|default:'' }}",
+        dataset: "marks",
+        export: fmt,
+        student_ids: ids,
+      });
+      window.location.href = "/exams/?" + params.toString();
+    }
+    boxes.forEach((b) => b.addEventListener("change", updateButtons));
+    csvBtn && csvBtn.addEventListener("click", () => exportSelected("csv"));
+    xlsBtn && xlsBtn.addEventListener("click", () => exportSelected("excel"));
+    updateButtons();
+  });
+</script>
+{% endblock %}

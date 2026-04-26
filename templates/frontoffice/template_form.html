@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == "edit" %}Edit Template{% else %}Create Template{% endif %} | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Template{% else %}Create Template{% endif %}{% endblock %}
+{% block page_copy %}Templates reduce mistakes and keep messaging consistent.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-4">
+      {% csrf_token %}
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-lg-6"><label class="form-label">School<span class="text-danger ms-1">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-lg-6"><label class="form-label">Name<span class="text-danger ms-1">*</span></label><input type="text" name="name" class="form-control" required value="{{ template.name|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Channel</label><select name="channel" class="form-control">{% for value,label in channel_choices %}<option value="{{ value }}" {% if template and template.channel == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-lg-6"><label class="form-label">Target</label><select name="target" class="form-control">{% for value,label in target_choices %}<option value="{{ value }}" {% if template and template.target == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-12"><label class="form-label">Subject (Email)</label><input type="text" name="subject" class="form-control" placeholder="Optional for WhatsApp" value="{{ template.subject|default:'' }}"></div>
+      <div class="col-12"><label class="form-label">Body<span class="text-danger ms-1">*</span></label><textarea name="body" class="form-control" rows="6" required placeholder="Use plain text. Example: Dear parent, please visit school with documents...">{{ template.body|default:'' }}</textarea></div>
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if template %}{% if template.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+          <label class="form-check-label" for="is_active">Active</label>
+        </div>
+      </div>
+      <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
+        <a href="/frontoffice/messages/templates/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if mode == "edit" %}Update Template{% else %}Save Template{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Permissions Matrix{% endblock %}
+{% block page_heading %}Permissions Matrix{% endblock %}
+{% block page_copy %}Fine-grained action permissions per role (checkbox-based).{% endblock %}
+{% block page_eyebrow %}Settings{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Permissions Matrix</span>
+    <h5 class="mb-2">Fine-grained permissions per role</h5>
+    <p class="mb-0">Fine-grained action permissions per role (checkbox-based).</p>
+  </section>
+
+  <div class="platform-panel mb-16">
+    <div class="platform-panel__head">
+      <div><h6>Choose Role</h6><p>Load the permission set to review or adjust.</p></div>
+    </div>
+    <div class="platform-shell">
+      <form method="get" class="row gy-3 gx-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label">Role</label>
+          <select name="role" class="form-select">
+            {% for group_label, options in grouped_role_choices %}
+              <optgroup label="{{ group_label }}">
+                {% for value,label in options %}
+                  <option value="{{ value }}" {% if value == current_role %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6 d-flex gap-10">
+          <button type="submit" class="btn btn-outline-secondary">Load</button>
+          <a href="/settings/" class="btn btn-outline-secondary">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div>
+        <h6>Permissions for {{ current_role_label }}</h6>
+        <p>{% if using_defaults %}Currently showing defaults (no override saved yet).{% else %}Override saved for this role.{% endif %}</p>
+      </div>
+    </div>
+    <div class="platform-shell">
+      <section class="platform-kpi-grid mb-16">
+        <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Matched</span><strong>{{ matched_permissions|length }}</strong><small>Aligned with defaults</small></div></article>
+        <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-add-circle-line"></i></div><div><span>Added</span><strong>{{ added_permissions|length }}</strong><small>Extra permissions</small></div></article>
+        <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-subtract-line"></i></div><div><span>Removed</span><strong>{{ removed_permissions|length }}</strong><small>Removed defaults</small></div></article>
+      </section>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="platform-panel h-100">
+            <div class="platform-panel__head"><div><h6>Added Overrides</h6><p>Permissions granted above default.</p></div></div>
+            <div class="platform-shell">
+              {% if added_permissions %}
+                <div class="d-flex flex-wrap gap-2">
+                  {% for label in added_permission_labels %}
+                    <span class="badge bg-primary">{{ label }}</span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="text-muted text-sm">No added overrides.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-panel h-100">
+            <div class="platform-panel__head"><div><h6>Removed Defaults</h6><p>Permissions not granted for this role.</p></div></div>
+            <div class="platform-shell">
+              {% if removed_permissions %}
+                <div class="d-flex flex-wrap gap-2">
+                  {% for label in removed_permission_labels %}
+                    <span class="badge bg-danger">{{ label }}</span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="text-muted text-sm">No removed defaults.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="{{ current_role }}">
+        <div class="col-12">
+          <div class="row gy-2">
+            {% for code,label in catalog %}
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="permissions" id="perm_{{ forloop.counter }}" value="{{ code }}"
+                    {% if code in selected_permissions %}checked{% endif %}>
+                  <label class="form-check-label" for="perm_{{ forloop.counter }}">{{ label }}</label>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-10">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <a href="/settings/permissions/?role={{ current_role }}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

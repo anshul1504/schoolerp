@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Hostel Operations{% endblock %}
+{% block page_heading %}Hostel Operations{% endblock %}
+{% block page_copy %}Hostel occupancy, room coverage, wardens, and mess plan tracking.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Hostel Operations</span>
+    <h5 class="mb-2">Occupancy, room coverage, wardens, and mess plan tracking</h5>
+    <p class="mb-0">Hostel occupancy, room coverage, wardens, and mess plan tracking.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-user-line"></i></div><div><span>Students</span><strong>{{ hostel_summary.students }}</strong><small>Hostel residents</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-home-5-line"></i></div><div><span>Rooms</span><strong>{{ hostel_summary.rooms }}</strong><small>Room coverage</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-shield-user-line"></i></div><div><span>Wardens</span><strong>{{ hostel_summary.wardens }}</strong><small>Staff coverage</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-bed-line"></i></div><div><span>Allocations</span><strong>{{ hostel_summary.allocations }}</strong><small>Active beds</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-error-warning-line"></i></div><div><span>Needs Setup</span><strong>{{ hostel_summary.needs_setup }}</strong><small>Pending setup</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head"><div><h6>Hostel Coverage</h6><p>Occupancy and operations readiness by school.</p></div></div>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_room">
+      <div class="col-md-2"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><input class="form-control" name="room_number" placeholder="Room Number" required></div>
+      <div class="col-md-2"><input class="form-control" name="block_name" placeholder="Block"></div>
+      <div class="col-md-2"><input class="form-control" name="bed_capacity" type="number" min="1" value="1" placeholder="Beds"></div>
+      <div class="col-md-2"><input class="form-control" name="warden_name" placeholder="Warden"></div>
+      <div class="col-md-2"><input class="form-control" name="mess_plan" placeholder="Mess Plan"></div>
+      <div class="col-12"><button class="btn btn-primary btn-sm" type="submit">Add Room</button></div>
+    </form>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="allocate_student">
+      <div class="col-md-3"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><select class="form-select" name="room_id" required><option value="">Room</option>{% for room in hostel_rooms %}<option value="{{ room.id }}">{{ room.school.code }} - {{ room.room_number }} ({{ room.occupied_beds }}/{{ room.bed_capacity }})</option>{% endfor %}</select></div>
+      <div class="col-md-3"><select class="form-select" name="student_id" required><option value="">Student</option>{% for student in hostel_students %}<option value="{{ student.id }}">{{ student.school.code }} - {{ student.first_name }} {{ student.last_name }} ({{ student.admission_no }})</option>{% endfor %}</select></div>
+      <div class="col-md-2"><input class="form-control" name="bed_label" placeholder="Bed label"></div>
+      <div class="col-md-1"><input class="form-control" name="fee_amount" placeholder="Fee" type="number" min="0" step="0.01" value="1200"></div>
+      <div class="col-12"><button class="btn btn-outline-primary btn-sm" type="submit">Allocate Bed</button></div>
+    </form>
+    <div class="table-responsive mb-3">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Room</th>
+            <th>Student</th>
+            <th>Bed</th>
+            <th>Allocated</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for allocation in open_hostel_allocations %}
+            <tr>
+              <td>{{ allocation.school.code }}</td>
+              <td>{{ allocation.room.room_number }}</td>
+              <td>{{ allocation.student.first_name }} {{ allocation.student.last_name }}</td>
+              <td>{{ allocation.bed_label|default:"-" }}</td>
+              <td>{{ allocation.allocated_on }}</td>
+              <td>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="release_allocation">
+                  <input type="hidden" name="allocation_id" value="{{ allocation.id }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Release</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No active allocations.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Occupancy</th>
+            <th>Rooms</th>
+            <th>Wardens</th>
+            <th>Mess Plans</th>
+            <th>Allocations</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in hostel_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted small">{{ row.school.code }}</span></td>
+              <td>{{ row.hostel_students }}</td>
+              <td class="small">{% if row.rooms %}{{ row.rooms|join:", " }}{% else %}-{% endif %}</td>
+              <td class="small">{% if row.wardens %}{{ row.wardens|join:", " }}{% else %}-{% endif %}</td>
+              <td class="small">{% if row.mess_plans %}{{ row.mess_plans|join:", " }}{% else %}-{% endif %}</td>
+              <td>{{ row.allocation_count }}</td>
+              <td>{% if row.status == "Ready" %}<span class="status-pill status-pill--success">Ready</span>{% else %}<span class="status-pill status-pill--warning">Needs setup</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Inventory Lifecycle{% endblock %}
+{% block page_heading %}Inventory Lifecycle{% endblock %}
+{% block page_copy %}Stock movement, issue/return, and low-stock readiness across schools.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Inventory Lifecycle</span>
+    <h5 class="mb-2">Stock movement, issue/return, and low-stock readiness</h5>
+    <p class="mb-0">Stock movement, issue/return, and low-stock readiness across schools.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-school-line"></i></div><div><span>Schools</span><strong>{{ inventory_summary.schools }}</strong><small>Tracked schools</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Ready</span><strong>{{ inventory_summary.ready }}</strong><small>Ready schools</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-error-warning-line"></i></div><div><span>Needs Setup</span><strong>{{ inventory_summary.needs_setup }}</strong><small>Pending setup</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-inbox-archive-line"></i></div><div><span>Low Stock</span><strong>{{ inventory_summary.low_stock }}</strong><small>Needs replenishment</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-history-line"></i></div><div><span>Movements</span><strong>{{ inventory_summary.movements }}</strong><small>Stock transactions</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-store-2-line"></i></div><div><span>Vendors</span><strong>{{ inventory_summary.vendors }}</strong><small>Active suppliers</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-file-list-3-line"></i></div><div><span>Open POs</span><strong>{{ inventory_summary.pos_open }}</strong><small>Pending receipts</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head"><div><h6>Inventory Coverage</h6><p>School readiness for inventory workflows.</p></div></div>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_item">
+      <div class="col-md-2"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><input class="form-control" name="sku" placeholder="SKU" required></div>
+      <div class="col-md-3"><input class="form-control" name="name" placeholder="Item Name" required></div>
+      <div class="col-md-2"><input class="form-control" name="category" placeholder="Category"></div>
+      <div class="col-md-1"><input class="form-control" name="quantity_on_hand" placeholder="Qty" type="number" step="0.01" min="0"></div>
+      <div class="col-md-1"><input class="form-control" name="reorder_level" placeholder="Reorder" type="number" step="0.01" min="0"></div>
+      <div class="col-md-1"><input class="form-control" name="unit" placeholder="Unit"></div>
+      <div class="col-12"><button class="btn btn-primary btn-sm" type="submit">Add Item</button></div>
+    </form>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="move_stock">
+      <div class="col-md-3"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><select class="form-select" name="item_id" required><option value="">Item</option>{% for item in inventory_items %}<option value="{{ item.id }}">{{ item.school.code }} - {{ item.name }} ({{ item.quantity_on_hand }} {{ item.unit }})</option>{% endfor %}</select></div>
+      <div class="col-md-2"><select class="form-select" name="movement_type" required><option value="">Type</option><option value="IN">IN</option><option value="OUT">OUT</option><option value="ADJUST">ADJUST</option></select></div>
+      <div class="col-md-1"><input class="form-control" name="quantity" type="number" step="0.01" min="0.01" placeholder="Qty" required></div>
+      <div class="col-md-2"><input class="form-control" name="notes" placeholder="Notes"></div>
+      <div class="col-12"><button class="btn btn-outline-primary btn-sm" type="submit">Record Movement</button></div>
+    </form>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_vendor">
+      <div class="col-md-2"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><input class="form-control" name="name" placeholder="Vendor Name" required></div>
+      <div class="col-md-2"><input class="form-control" name="contact_person" placeholder="Contact"></div>
+      <div class="col-md-2"><input class="form-control" name="phone" placeholder="Phone"></div>
+      <div class="col-md-2"><input class="form-control" name="email" placeholder="Email"></div>
+      <div class="col-md-1"><input class="form-control" name="gstin" placeholder="GSTIN"></div>
+      <div class="col-12"><button class="btn btn-outline-secondary btn-sm" type="submit">Add Vendor</button></div>
+    </form>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_po">
+      <div class="col-md-2"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><select class="form-select" name="vendor_id" required><option value="">Vendor</option>{% for vendor in inventory_vendors %}<option value="{{ vendor.id }}">{{ vendor.school.code }} - {{ vendor.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><select class="form-select" name="item_id" required><option value="">Item</option>{% for item in inventory_items %}<option value="{{ item.id }}">{{ item.school.code }} - {{ item.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><input class="form-control" name="po_number" placeholder="PO Number" required></div>
+      <div class="col-md-1"><input class="form-control" name="quantity" type="number" step="0.01" min="0.01" placeholder="Qty" required></div>
+      <div class="col-md-1"><input class="form-control" name="unit_cost" type="number" step="0.01" min="0" placeholder="Cost"></div>
+      <div class="col-md-1"><input class="form-control" name="notes" placeholder="Notes"></div>
+      <div class="col-12"><button class="btn btn-outline-dark btn-sm" type="submit">Create PO</button></div>
+    </form>
+    <div class="table-responsive mb-3">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>PO</th>
+            <th>School</th>
+            <th>Vendor</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for po in inventory_purchase_orders %}
+            <tr>
+              <td>{{ po.po_number }}</td>
+              <td>{{ po.school.code }}</td>
+              <td>{{ po.vendor.name }}</td>
+              <td>{{ po.item.name }}</td>
+              <td>{{ po.quantity }}</td>
+              <td>{{ po.status }}</td>
+              <td>
+                {% if po.status != "RECEIVED" %}
+                  <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="receive_po">
+                    <input type="hidden" name="po_id" value="{{ po.id }}">
+                    <button class="btn btn-success btn-sm" type="submit">Receive</button>
+                  </form>
+                {% else %}
+                  <span class="status-pill status-pill--success">Received</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">No purchase orders yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-responsive mb-3">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Item</th>
+            <th>Type</th>
+            <th>Qty</th>
+            <th>Notes</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in inventory_movements %}
+            <tr>
+              <td>{{ m.school.code }}</td>
+              <td>{{ m.item.name }}</td>
+              <td>{{ m.movement_type }}</td>
+              <td>{{ m.quantity }}</td>
+              <td>{{ m.notes|default:"-" }}</td>
+              <td>{{ m.created_at }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No stock movements yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Stock Items</th>
+            <th>Issues</th>
+            <th>Returns</th>
+            <th>Low Stock</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in inventory_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted small">{{ row.school.code }}</span></td>
+              <td>{{ row.stock_items }}</td>
+              <td>{{ row.issue_count }}</td>
+              <td>{{ row.return_count }}</td>
+              <td>{{ row.low_stock_count }}</td>
+              <td>{% if row.status == "Ready" %}<span class="status-pill status-pill--success">Ready</span>{% else %}<span class="status-pill status-pill--warning">Needs setup</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="text-muted small mt-3">Stock movement ledger is now active.</div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Enquiries | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Enquiries{% endblock %}
+{% block page_copy %}Search, filter, and convert admission enquiries.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+      <div>
+        <h6 class="mb-4">Enquiry list</h6>
+        <p class="text-neutral-600 text-sm mb-0">Most recent enquiries in your school scope.</p>
+      </div>
+      {% if request.user.role != "TEACHER" %}
+        <a href="/frontoffice/enquiries/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Add Enquiry</a>
+      {% endif %}
+    </div>
+
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-3"><label class="form-label">School</label><select name="school" class="form-control"><option value="">All schools</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-md-4"><label class="form-label">Search</label><input type="text" name="q" class="form-control" value="{{ q }}" placeholder="Student / guardian / phone"></div>
+      <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-control"><option value="">All</option>{% for value,label in enquiry_status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Filter</button></div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Guardian</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Follow-up</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in enquiries %}
+            <tr>
+              <td>{{ e.student_name }}</td>
+              <td>{{ e.guardian_name }}</td>
+              <td>{{ e.phone }}</td>
+              <td>{{ e.get_status_display }}</td>
+              <td>{{ e.follow_up_date|default:"-" }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-8">
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ e.id }}/">View</a>
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ e.school_id }}&enquiry_id={{ e.id }}&phone={{ e.phone }}&caller_name={{ e.guardian_name|urlencode }}">Log Call</a>
+                  {% if not e.converted_student %}
+                    <form method="post" action="/frontoffice/enquiries/{{ e.id }}/convert/">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-primary-600">Convert</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-neutral-500 text-sm">No enquiries found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

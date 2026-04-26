@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Fee Reconciliation{% endblock %}
+{% block page_heading %}Fee Reconciliation{% endblock %}
+{% block page_copy %}Collection coverage and reconciliation readiness across schools.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Fee Reconciliation</span>
+    <h5 class="mb-2">Collection coverage and reconciliation readiness</h5>
+    <p class="mb-0">Collection coverage and reconciliation readiness across schools.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-file-list-3-line"></i></div><div><span>Ledgers</span><strong>{{ fee_summary.ledgers }}</strong><small>Fee ledgers</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-bank-card-line"></i></div><div><span>Payments</span><strong>{{ fee_summary.payments }}</strong><small>Payment records</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-refund-2-line"></i></div><div><span>Refund Cases</span><strong>{{ fee_summary.refund_cases }}</strong><small>Policy-driven cases</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-money-rupee-circle-line"></i></div><div><span>Refund Exposure</span><strong>{{ fee_summary.refund_exposure }}</strong><small>Recommended amount</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Ready</span><strong>{{ fee_summary.ready }}</strong><small>Ready schools</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-error-warning-line"></i></div><div><span>Needs Setup</span><strong>{{ fee_summary.needs_setup }}</strong><small>Pending setup</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head"><div><h6>Fee Coverage</h6><p>Reconciliation readiness by school.</p></div></div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Ledgers</th>
+            <th>Payments</th>
+            <th>Students Paid</th>
+            <th>Refunds</th>
+            <th>Refund Amount</th>
+            <th>Concessions</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in fee_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted small">{{ row.school.code }}</span></td>
+              <td>{{ row.ledger_count }}</td>
+              <td>{{ row.payment_count }}</td>
+              <td>{{ row.paid_students }}</td>
+              <td>{{ row.refund_count }}</td>
+              <td>{{ row.refund_amount }}</td>
+              <td>{{ row.concession_count }}</td>
+              <td>{% if row.status == "Ready" %}<span class="status-pill status-pill--success">Ready</span>{% else %}<span class="status-pill status-pill--warning">Needs setup</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="8" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="text-muted small mt-3">Refund policy computes recommended refund on transport/hostel discontinuation using paid amount x remaining-days ratio.</div>
+    </div>
+  </div>
+{% endblock %}

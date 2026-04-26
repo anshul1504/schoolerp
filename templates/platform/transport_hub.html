@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Transport Operations{% endblock %}
+{% block page_heading %}Transport Operations{% endblock %}
+{% block page_copy %}School transport demand, routes, buses, and pickup coverage.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Transport Operations</span>
+    <h5 class="mb-2">School transport demand, routes, buses, and pickup coverage</h5>
+    <p class="mb-0">School transport demand, routes, buses, and pickup coverage.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-group-line"></i></div><div><span>Students</span><strong>{{ transport_summary.students }}</strong><small>Transport demand</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-route-line"></i></div><div><span>Routes</span><strong>{{ transport_summary.routes }}</strong><small>Configured routes</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-bus-line"></i></div><div><span>Buses</span><strong>{{ transport_summary.buses }}</strong><small>Vehicle coverage</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-map-pin-user-line"></i></div><div><span>Assignments</span><strong>{{ transport_summary.assignments }}</strong><small>Active riders</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-error-warning-line"></i></div><div><span>Needs Setup</span><strong>{{ transport_summary.needs_setup }}</strong><small>Pending setup</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Transport Coverage</h6><p>School demand, fleet, and pickup points.</p></div>
+    </div>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_route">
+      <div class="col-md-2"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><input class="form-control" name="route_code" placeholder="Route Code" required></div>
+      <div class="col-md-2"><input class="form-control" name="route_name" placeholder="Route Name"></div>
+      <div class="col-md-2"><input class="form-control" name="vehicle_number" placeholder="Vehicle No"></div>
+      <div class="col-md-2"><input class="form-control" name="driver_name" placeholder="Driver"></div>
+      <div class="col-md-2"><input class="form-control" name="stops" placeholder="Stops (comma separated)"></div>
+      <div class="col-12"><button class="btn btn-primary btn-sm" type="submit">Add Route</button></div>
+    </form>
+    <form method="post" class="row g-2 mb-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="assign_student">
+      <div class="col-md-3"><select class="form-select" name="school_id" required><option value="">School</option>{% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><select class="form-select" name="route_id" required><option value="">Route</option>{% for route in transport_routes %}<option value="{{ route.id }}">{{ route.school.code }} - {{ route.route_code }}{% if route.route_name %} ({{ route.route_name }}){% endif %}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><select class="form-select" name="student_id" required><option value="">Student</option>{% for student in transport_students %}<option value="{{ student.id }}">{{ student.school.code }} - {{ student.first_name }} {{ student.last_name }} ({{ student.admission_no }})</option>{% endfor %}</select></div>
+      <div class="col-md-2"><input class="form-control" name="pickup_stop" placeholder="Pickup stop"></div>
+      <div class="col-md-1"><input class="form-control" name="fee_amount" placeholder="Fee" type="number" min="0" step="0.01" value="500"></div>
+      <div class="col-12"><button class="btn btn-outline-primary btn-sm" type="submit">Assign Student</button></div>
+    </form>
+    <div class="table-responsive mb-3">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Route</th>
+            <th>Student</th>
+            <th>Pickup</th>
+            <th>Assigned On</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in open_transport_assignments %}
+            <tr>
+              <td>{{ assignment.school.code }}</td>
+              <td>{{ assignment.route.route_code }}</td>
+              <td>{{ assignment.student.first_name }} {{ assignment.student.last_name }}</td>
+              <td>{{ assignment.pickup_stop|default:"-" }}</td>
+              <td>{{ assignment.assigned_on }}</td>
+              <td>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="release_assignment">
+                  <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Release</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No active assignments.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Demand</th>
+            <th>Routes</th>
+            <th>Buses</th>
+            <th>Pickups</th>
+            <th>Assignments</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in transport_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted small">{{ row.school.code }}</span></td>
+              <td>{{ row.transport_students }}</td>
+              <td class="small">{% if row.routes %}{{ row.routes|join:", " }}{% else %}-{% endif %}</td>
+              <td class="small">{% if row.buses %}{{ row.buses|join:", " }}{% else %}-{% endif %}</td>
+              <td class="small">{% if row.pickups %}{{ row.pickups|join:", " }}{% else %}-{% endif %}</td>
+              <td>{{ row.assignment_count }}</td>
+              <td>
+                {% if row.status == "Ready" %}
+                  <span class="status-pill status-pill--success">Ready</span>
+                {% else %}
+                  <span class="status-pill status-pill--warning">Needs setup</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

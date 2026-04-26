@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit School | School ERP{% endblock %}
+{% block page_eyebrow %}School Update{% endblock %}
+{% block page_heading %}Edit school profile{% endblock %}
+{% block page_copy %}Update school setup in the same guided flow used during registration.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .setup-wizard {
+    display: grid;
+    gap: 20px;
+  }
+
+  .setup-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .setup-step {
+    border: 1px solid var(--neutral-200);
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .setup-step strong,
+  .setup-step span {
+    display: block;
+  }
+
+  .setup-step span {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--neutral-500);
+  }
+
+  .setup-step.active {
+    border-color: rgba(30, 41, 59, 0.22);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.08), rgba(71, 85, 105, 0.06));
+  }
+
+  .setup-panel {
+    display: none;
+  }
+
+  .setup-panel.active {
+    display: block;
+  }
+
+  .setup-card {
+    border: 1px solid var(--neutral-200);
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .setup-card__head {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--neutral-200);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.1), rgba(71, 85, 105, 0.08));
+  }
+
+  .setup-card__body {
+    padding: 20px;
+  }
+
+  .required-mark {
+    color: var(--danger-600);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  .setup-card__body .form-label {
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 767.98px) {
+    .setup-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" enctype="multipart/form-data" class="setup-wizard" id="schoolSetupWizard">
+      {% csrf_token %}
+
+      {% if form and form.errors %}
+        <div class="alert alert-danger mb-0">
+          <strong>Please fix the highlighted errors:</strong>
+          <ul class="mb-0 mt-2">
+            {% for field, errors in form.errors.items %}
+              {% for error in errors %}
+                <li>{{ field|capfirst }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="setup-steps">
+        <div class="setup-step active" data-step="0"><strong>Step 1</strong><span>Basic</span></div>
+        <div class="setup-step" data-step="1"><strong>Step 2</strong><span>Contact</span></div>
+        <div class="setup-step" data-step="2"><strong>Step 3</strong><span>Academics</span></div>
+        <div class="setup-step" data-step="3"><strong>Step 4</strong><span>Address</span></div>
+      </div>
+
+      <section class="setup-panel active" data-panel="0">
+        <div class="setup-card">
+          <div class="setup-card__head">
+            <h6 class="mb-4">Basic school details</h6>
+            <p class="text-neutral-600 text-sm mb-0">Update core school identity, leadership, and status.</p>
+          </div>
+          <div class="setup-card__body">
+            <div class="row gy-4">
+              <div class="col-lg-6"><label class="form-label">School name<span class="required-mark">*</span></label><input type="text" name="name" class="form-control" value="{% if form %}{{ form.name.value|default:school.name }}{% else %}{{ school.name }}{% endif %}" required></div>
+              <div class="col-lg-6">
+                <label class="form-label">School code<span class="required-mark">*</span></label>
+                <div class="input-group">
+                  <input type="text" name="code" id="schoolCode" class="form-control" value="{% if form %}{{ form.code.value|default:school.code }}{% else %}{{ school.code }}{% endif %}" required>
+                  <button type="button" class="btn btn-outline-secondary" id="regenCode">Auto</button>
+                </div>
+                <div class="text-neutral-500 text-sm mt-6">Tip: Use Auto to generate a short code from the name (editable).</div>
+              </div>
+              <div class="col-lg-6"><label class="form-label">Principal name<span class="required-mark">*</span></label><input type="text" name="principal_name" class="form-control" value="{% if form %}{{ form.principal_name.value|default:school.principal_name }}{% else %}{{ school.principal_name }}{% endif %}" required></div>
+              <div class="col-lg-3"><label class="form-label">Established year<span class="required-mark">*</span></label><input type="number" name="established_year" class="form-control" min="1900" max="2100" value="{% if form %}{{ form.established_year.value|default:school.established_year }}{% else %}{{ school.established_year }}{% endif %}" required></div>
+              <div class="col-lg-3 d-flex align-items-center"><div class="form-check mt-24"><input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if school.is_active %}checked{% endif %}><label class="form-check-label" for="is_active">School active</label></div></div>
+              <div class="col-lg-6"><label class="form-label">Student capacity<span class="required-mark">*</span></label><input type="number" name="student_capacity" class="form-control" min="1" value="{% if form %}{{ form.student_capacity.value|default:school.student_capacity }}{% else %}{{ school.student_capacity }}{% endif %}" required></div>
+              <div class="col-lg-6"><label class="form-label">Allowed campuses / schools<span class="required-mark">*</span></label><input type="number" name="allowed_campuses" class="form-control" min="1" value="{% if form %}{{ form.allowed_campuses.value|default:school.allowed_campuses }}{% else %}{{ school.allowed_campuses }}{% endif %}" required></div>
+              <div class="col-lg-6">
+                <label class="form-label">School logo</label>
+                <input type="file" name="logo" class="form-control" accept="image/*" id="schoolLogo">
+                <div class="d-flex align-items-center gap-12 mt-10">
+                  {% if school.logo %}
+                    <img id="schoolLogoPreview" src="{{ school.logo.url }}" alt="Logo preview" class="sf-logo-preview">
+                    <span class="text-neutral-500 text-sm" id="schoolLogoPreviewText">Current logo</span>
+                  {% else %}
+                    <img id="schoolLogoPreview" alt="Logo preview" class="sf-logo-preview d-none">
+                    <span class="text-neutral-500 text-sm" id="schoolLogoPreviewText">Preview appears here.</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-24">
+              <button type="button" class="btn btn-primary-600 radius-8 px-20 py-11 wizard-next">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup-panel" data-panel="1">
+        <div class="setup-card">
+          <div class="setup-card__head">
+            <h6 class="mb-4">Contact details</h6>
+            <p class="text-neutral-600 text-sm mb-0">Update official contact information for the school.</p>
+          </div>
+          <div class="setup-card__body">
+            <div class="row gy-4">
+              <div class="col-lg-6"><label class="form-label">Official email<span class="required-mark">*</span></label><input type="email" name="email" class="form-control" value="{% if form %}{{ form.email.value|default:school.email }}{% else %}{{ school.email }}{% endif %}" required></div>
+              <div class="col-lg-6"><label class="form-label">Official phone<span class="required-mark">*</span></label><input type="text" name="phone" class="form-control" value="{% if form %}{{ form.phone.value|default:school.phone }}{% else %}{{ school.phone }}{% endif %}" required></div>
+              <div class="col-lg-6"><label class="form-label">Support email</label><input type="email" name="support_email" class="form-control" value="{% if form %}{{ form.support_email.value|default:school.support_email }}{% else %}{{ school.support_email }}{% endif %}" placeholder="Optional"></div>
+              <div class="col-lg-6"><label class="form-label">Website</label><input type="url" name="website" class="form-control" value="{% if form %}{{ form.website.value|default:school.website }}{% else %}{{ school.website }}{% endif %}" placeholder="https://"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-24">
+              <button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev">Back</button>
+              <button type="button" class="btn btn-primary-600 radius-8 px-20 py-11 wizard-next">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup-panel" data-panel="2">
+        <div class="setup-card">
+          <div class="setup-card__head">
+            <h6 class="mb-4">Academic identity</h6>
+            <p class="text-neutral-600 text-sm mb-0">Board/medium details help keep documents and messaging consistent.</p>
+          </div>
+          <div class="setup-card__body">
+            <div class="row gy-4">
+              <div class="col-lg-6">
+                <label class="form-label">Board / Affiliation</label>
+                <input type="text" name="board" class="form-control" value="{% if form %}{{ form.board.value|default:school.board }}{% else %}{{ school.board }}{% endif %}" placeholder="CBSE / ICSE / State Board">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">Medium</label>
+                <input type="text" name="medium" class="form-control" value="{% if form %}{{ form.medium.value|default:school.medium }}{% else %}{{ school.medium }}{% endif %}" placeholder="English / Hindi">
+              </div>
+            </div>
+            <div class="d-flex justify-content-between mt-24">
+              <button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev">Back</button>
+              <button type="button" class="btn btn-primary-600 radius-8 px-20 py-11 wizard-next">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup-panel" data-panel="3">
+        <div class="setup-card">
+          <div class="setup-card__head">
+            <h6 class="mb-4">Address details</h6>
+            <p class="text-neutral-600 text-sm mb-0">Keep state, city, and address accurate for official records.</p>
+          </div>
+          <div class="setup-card__body">
+            <div class="row gy-4">
+              <div class="col-lg-6"><label class="form-label">State<span class="required-mark">*</span></label><select name="state" id="schoolState" class="form-control" data-selected="{{ school.state }}" required><option value="">Select state</option></select></div>
+              <div class="col-lg-6"><label class="form-label">City<span class="required-mark">*</span></label><select name="city" id="schoolCity" class="form-control" data-selected="{{ school.city }}" required><option value="">Select city</option></select></div>
+              <div class="col-12"><label class="form-label">Address line 1<span class="required-mark">*</span></label><textarea name="address" class="form-control" rows="3" required>{% if form %}{{ form.address.value|default:school.address }}{% else %}{{ school.address }}{% endif %}</textarea></div>
+              <div class="col-12"><label class="form-label">Address line 2</label><input type="text" name="address_line2" class="form-control" value="{% if form %}{{ form.address_line2.value|default:school.address_line2 }}{% else %}{{ school.address_line2 }}{% endif %}" placeholder="Landmark / area / near..."></div>
+              <div class="col-lg-6"><label class="form-label">Pincode</label><input type="text" name="pincode" class="form-control" value="{% if form %}{{ form.pincode.value|default:school.pincode }}{% else %}{{ school.pincode }}{% endif %}" placeholder="Optional"></div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between gap-12 mt-24">
+              <button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev">Back</button>
+              <div class="d-flex flex-wrap gap-12">
+                <a class="btn btn-outline-secondary radius-8 px-20 py-11" href="/schools/">Back to schools</a>
+                <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Update School</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </form>
+  </div>
+</div>
+{{ state_city_map|json_script:"school-state-city-map" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const panels = Array.from(document.querySelectorAll(".setup-panel"));
+    const steps = Array.from(document.querySelectorAll(".setup-step"));
+    const nextButtons = document.querySelectorAll(".wizard-next");
+    const prevButtons = document.querySelectorAll(".wizard-prev");
+    const stateSelect = document.getElementById("schoolState");
+    const citySelect = document.getElementById("schoolCity");
+    const stateCityMap = JSON.parse(document.getElementById("school-state-city-map").textContent);
+    const selectedState = stateSelect.dataset.selected;
+    const selectedCity = citySelect.dataset.selected;
+    let currentStep = 0;
+    const nameInput = document.querySelector('input[name="name"]');
+    const codeInput = document.getElementById("schoolCode");
+    const regenCode = document.getElementById("regenCode");
+    const logoInput = document.getElementById("schoolLogo");
+    const logoPreview = document.getElementById("schoolLogoPreview");
+    const logoPreviewText = document.getElementById("schoolLogoPreviewText");
+
+    function generateSchoolCode() {
+      const raw = (nameInput.value || "").trim().toUpperCase();
+      const letters = raw.replace(/[^A-Z0-9 ]/g, "").split(/\s+/).filter(Boolean);
+      if (!letters.length) return "";
+      const base = letters.map((chunk) => chunk[0]).join("").slice(0, 5);
+      const suffix = String(new Date().getFullYear()).slice(-2);
+      return (base + suffix).replace(/[^A-Z0-9]/g, "");
+    }
+
+    regenCode.addEventListener("click", function () {
+      const generated = generateSchoolCode();
+      if (generated) codeInput.value = generated;
+    });
+
+    logoInput.addEventListener("change", function () {
+      const file = logoInput.files && logoInput.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      logoPreview.src = url;
+      logoPreview.classList.remove("d-none");
+      logoPreviewText.textContent = file.name;
+    });
+
+    function renderStep() {
+      panels.forEach((panel, index) => panel.classList.toggle("active", index === currentStep));
+      steps.forEach((step, index) => step.classList.toggle("active", index === currentStep));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function validateCurrentStep() {
+      const activePanel = panels[currentStep];
+      const requiredFields = activePanel.querySelectorAll("[required]");
+      for (const field of requiredFields) {
+        if (!field.value.trim()) {
+          field.reportValidity();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    nextButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        if (!validateCurrentStep()) return;
+        if (currentStep < panels.length - 1) {
+          currentStep += 1;
+          renderStep();
+        }
+      });
+    });
+
+    prevButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        if (currentStep > 0) {
+          currentStep -= 1;
+          renderStep();
+        }
+      });
+    });
+
+    Object.keys(stateCityMap).sort().forEach((state) => {
+      const option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      if (state === selectedState) option.selected = true;
+      stateSelect.appendChild(option);
+    });
+
+    function fillCities(selected) {
+      citySelect.innerHTML = '<option value="">Select city</option>';
+      (stateCityMap[stateSelect.value] || []).forEach((city) => {
+        const option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        if (city === selected) option.selected = true;
+        citySelect.appendChild(option);
+      });
+    }
+
+    stateSelect.addEventListener("change", function () {
+      fillCities("");
+    });
+
+    if (selectedState) {
+      fillCities(selectedCity);
+    }
+
+    renderStep();
+  });
+</script>
+{% endblock %}

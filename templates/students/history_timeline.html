@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student History | School ERP{% endblock %}
+{% block page_eyebrow %}Students{% endblock %}
+{% block page_heading %}Student History Timeline{% endblock %}
+{% block page_copy %}Profile edits, class changes, and activity logs for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">
+      {% include "students/_student_nav.html" with student_nav_active="history" %}
+    </div>
+    <div class="col-xl-4">
+      <div class="platform-panel h-100">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Profile Edit History</h6>
+          {% if profile_edits %}
+            <div class="d-flex flex-column gap-12">
+              {% for item in profile_edits %}
+                <div class="timeline-entry">
+                  <strong class="d-block mb-1">{{ item.summary|default:"Profile updated" }}</strong>
+                  <div class="text-neutral-600 text-sm">{{ item.changed_fields|join:", " }}</div>
+                  <small class="text-neutral-500 d-block mt-1">{{ item.created_at|date:"d M Y, h:i A" }}</small>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-neutral-600 text-sm">No profile edits captured.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="platform-panel h-100">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Class Change History</h6>
+          {% if class_changes %}
+            <div class="d-flex flex-column gap-12">
+              {% for item in class_changes %}
+                <div class="timeline-entry">
+                  <strong class="d-block mb-1">{{ item.from_class }}-{{ item.from_section }} -> {{ item.to_class }}-{{ item.to_section }}</strong>
+                  <div class="text-neutral-600 text-sm">{{ item.get_source_display }}{% if item.reason %} · {{ item.reason }}{% endif %}</div>
+                  <small class="text-neutral-500 d-block mt-1">{{ item.changed_on|default:item.created_at|date:"d M Y" }}</small>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-neutral-600 text-sm">No class changes captured.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="platform-panel h-100">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Activity Logs</h6>
+          {% if history_events %}
+            <div class="d-flex flex-column gap-12">
+              {% for event in history_events %}
+                <div class="timeline-entry">
+                  <strong class="d-block mb-1">{{ event.get_action_display }}</strong>
+                  <div class="text-neutral-600 text-sm">{{ event.message }}</div>
+                  <small class="text-neutral-500 d-block mt-1">{{ event.created_at|date:"d M Y, h:i A" }}</small>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-neutral-600 text-sm">No activity logs.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

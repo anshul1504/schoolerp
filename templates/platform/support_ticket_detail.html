@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.id }}{% endblock %}
+{% block page_heading %}Ticket #{{ ticket.id }}{% endblock %}
+{% block page_copy %}{{ ticket.title }}{% endblock %}
+{% block page_eyebrow %}Platform Support{% endblock %}
+
+{% block content %}
+  <div class="row gy-4">
+    <div class="col-xl-4">
+      <div class="sf-card">
+        <div class="sf-card__body">
+          <div class="d-flex align-items-center justify-content-between mb-12">
+            <h6 class="mb-0">Details</h6>
+            <a class="btn btn-sm btn-outline-secondary" href="/platform/support/">Back</a>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_ticket">
+
+            <div class="mb-12">
+              <label class="form-label">Status</label>
+              <select class="form-control" name="status">
+                {% for value,label in status_choices %}
+                  <option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-12">
+              <label class="form-label">Priority</label>
+              <select class="form-control" name="priority">
+                {% for value,label in priority_choices %}
+                  <option value="{{ value }}" {% if ticket.priority == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-12">
+              <label class="form-label">School</label>
+              <select class="form-control" name="school_id">
+                <option value="">—</option>
+                {% for s in schools %}
+                  <option value="{{ s.id }}" {% if ticket.school and ticket.school.id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-12">
+              <label class="form-label">Assigned to</label>
+              <select class="form-control" name="assigned_to_id">
+                <option value="">—</option>
+                {% for u in agents %}
+                  <option value="{{ u.id }}" {% if ticket.assigned_to and ticket.assigned_to.id == u.id %}selected{% endif %}>{{ u.username }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Save</button>
+          </form>
+
+          <hr class="my-16">
+          <div class="text-muted text-sm">
+            <div><strong>School:</strong> {% if ticket.school %}{{ ticket.school.name }}{% else %}—{% endif %}</div>
+            <div><strong>Requester:</strong> {{ ticket.requester_email|default:"—" }} {% if ticket.requester_phone %}• {{ ticket.requester_phone }}{% endif %}</div>
+            <div><strong>Created:</strong> {{ ticket.created_at }}</div>
+            <div><strong>Updated:</strong> {{ ticket.updated_at }}</div>
+            <div><strong>Resolved:</strong> {{ ticket.resolved_at|default:"—" }}</div>
+            <div><strong>Closed:</strong> {{ ticket.closed_at|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-8">
+      <div class="sf-card mb-24">
+        <div class="sf-card__body">
+          <h6 class="mb-12">Description</h6>
+          <div class="text-muted">{{ ticket.description|default:"—" }}</div>
+        </div>
+      </div>
+
+      <div class="sf-card">
+        <div class="sf-card__body">
+          <div class="d-flex align-items-center justify-content-between mb-12">
+            <h6 class="mb-0">Messages</h6>
+          </div>
+
+          <div class="d-flex flex-column gap-12">
+            {% for m in ticket_messages %}
+              <div class="border border-neutral-200 radius-12 p-16">
+                <div class="d-flex justify-content-between gap-12 flex-wrap">
+                  <strong>{% if m.author %}{{ m.author.username }}{% else %}—{% endif %}</strong>
+                  <span class="text-muted text-sm">{{ m.created_at }}</span>
+                </div>
+                <div class="text-muted text-sm mt-1">
+                  {% if m.is_internal %}
+                    <span class="badge bg-secondary">Internal</span>
+                  {% else %}
+                    <span class="badge bg-info">External</span>
+                  {% endif %}
+                </div>
+                <div class="mt-2">{{ m.body }}</div>
+              </div>
+            {% empty %}
+              <div class="text-muted">No messages yet.</div>
+            {% endfor %}
+          </div>
+
+          <hr class="my-16">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_message">
+            <div class="mb-12">
+              <label class="form-label">Add message</label>
+              <textarea class="form-control" name="body" rows="4" required></textarea>
+            </div>
+            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="internalCheck" name="is_internal" checked>
+                <label class="form-check-label" for="internalCheck">Internal note</label>
+              </div>
+              <button class="btn btn-primary" type="submit">Post</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Import Users{% endblock %}
+{% block page_heading %}Import Users{% endblock %}
+{% block page_copy %}Upload a CSV or XLSX file to create or update users. You will see a preview before import.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell user-page">
+    <div class="platform-panel">
+      <div class="user-section">
+        <div class="user-toolbar">
+          <div class="sf-toolbar__title">
+            <h6>Users Import</h6>
+            <p>CSV/XLSX. Headers must match the sample.</p>
+          </div>
+          <div class="user-actions">
+            <a class="btn btn-outline-secondary" href="/users/import/sample/csv/">Download sample CSV</a>
+            <a class="btn btn-outline-secondary" href="/users/">Back to Users</a>
+          </div>
+        </div>
+
+        <div class="user-summary mb-3">
+          <div class="user-summary-card">
+            <span>Expected Headers</span>
+            <strong>{{ headers|length }}</strong>
+            <small>Columns required in the file</small>
+          </div>
+          <div class="user-summary-card">
+            <span>File Types</span>
+            <strong>CSV + XLSX</strong>
+            <small>Standard import formats</small>
+          </div>
+          <div class="user-summary-card">
+            <span>Flow</span>
+            <strong>Preview</strong>
+            <small>Validate before import</small>
+          </div>
+        </div>
+
+        <div class="user-note mb-3">{{ headers|join:", " }}</div>
+
+        <form method="post" enctype="multipart/form-data" class="row gy-3">
+          {% csrf_token %}
+          <input type="hidden" name="stage" value="preview">
+          <div class="col-md-8">
+            <label class="form-label">CSV / XLSX file</label>
+            <input type="file" name="import_file" class="form-control" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+            <div class="text-muted text-sm mt-1">Tip: use the sample file to avoid header mismatches.</div>
+          </div>
+          <div class="col-md-4 d-flex align-items-end gap-10">
+            <button type="submit" class="btn btn-primary-600">Preview</button>
+            <a href="/users/" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

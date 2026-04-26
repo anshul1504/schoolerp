@@ -1,0 +1,80 @@
+﻿{% extends "base.html" %}
+{% block title %}Role Completion Sheet{% endblock %}
+{% block page_heading %}Role Completion Sheet{% endblock %}
+{% block page_copy %}Single sheet for role rollout status across the app.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Role Coverage</span>
+    <h5 class="mb-2">Completion sheet</h5>
+    <p class="mb-0">Role rollout status across the application, shown as a single operational sheet.</p>
+  </section>
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Role Status Table</h6><p>Clear completion markers with traffic health status.</p></div>
+    </div>
+    <section class="platform-kpi-grid mb-16">
+      <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>&#x2705; Complete</span><strong>{{ role_sheet_summary.complete }}</strong><small>Roles production-ready</small></div></article>
+      <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-time-line"></i></div><div><span>&#x26A0;&#xFE0F; Partial</span><strong>{{ role_sheet_summary.partial }}</strong><small>Need module depth</small></div></article>
+      <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-alert-line"></i></div><div><span>&#x274C; Pending</span><strong>{{ role_sheet_summary.pending }}</strong><small>Need implementation</small></div></article>
+    </section>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <span class="status-pill status-pill--success">&#x2705; Complete</span>
+      <span class="status-pill status-pill--warning">&#x26A0;&#xFE0F; Partial</span>
+      <span class="status-pill status-pill--danger">&#x274C; Pending</span>
+      <span class="status-pill status-pill--success">&#x1F7E2; Green</span>
+      <span class="status-pill status-pill--warning">&#x1F7E1; Yellow</span>
+      <span class="status-pill status-pill--danger">&#x1F534; Red</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Mark</th>
+            <th>Status</th>
+            <th>Traffic</th>
+            <th>Completion</th>
+            <th>Users</th>
+            <th>&#x1F7E2;</th>
+            <th>&#x1F7E1;</th>
+            <th>&#x1F534;</th>
+            <th>Tracked Modules</th>
+            <th>White</th>
+            <th>Blue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in role_rows %}
+            <tr>
+              <td>
+                <strong><a href="{% url 'super-admin-role-detail' row.role %}">{{ row.label }}</a></strong><br>
+                <span class="text-muted text-sm">{{ row.role }}</span>
+              </td>
+              <td>
+                {% if row.status == "Complete" %}&#x2705;{% elif row.status == "Partial" %}&#x1F7E1;{% else %}&#x274C;{% endif %}
+              </td>
+              <td>
+                <span class="status-pill {% if row.status == 'Complete' %}status-pill--success{% elif row.status == 'Partial' %}status-pill--warning{% else %}status-pill--danger{% endif %}">
+                  {{ row.status }}
+                </span>
+              </td>
+              <td>
+                {% if row.status_color == "GREEN" %}&#x1F7E2;{% elif row.status_color == "YELLOW" %}&#x1F7E1;{% else %}&#x1F534;{% endif %}
+              </td>
+              <td>{{ row.completion_pct }}%</td>
+              <td>{{ row.assigned_users }}</td>
+              <td>{{ row.green }}</td>
+              <td>{{ row.yellow }}</td>
+              <td>{{ row.red }}</td>
+              <td><span class="text-muted text-sm">{{ row.tracked_modules }}</span></td>
+              <td>{{ row.white }}</td>
+              <td>{{ row.blue }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "accounts/auth_base.html" %}
+
+{% block title %}Logged Out | SchoolFlow{% endblock %}
+
+{% block auth_visual_badge_icon %}<i class="ri-logout-circle-r-line"></i>{% endblock %}
+{% block auth_visual_badge_text %}Session ended{% endblock %}
+{% block auth_visual_title %}You’re signed out.{% endblock %}
+{% block auth_visual_subtitle %}For security, always log out on shared devices. See you again soon.{% endblock %}
+
+{% block content %}
+  <div class="text-center">
+    <h3 class="auth-title mb-2">You’re logged out</h3>
+    <p class="auth-subtitle mb-3">Redirecting to login…</p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+      <a href="{% url 'login-page' %}" class="btn btn-primary">Go to login</a>
+      <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload()">Refresh</button>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    setTimeout(function () {
+      window.location.href = "{% url 'login-page' %}";
+    }, 1600);
+  </script>
+{% endblock %}

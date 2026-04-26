@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Quick Search | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Quick Search{% endblock %}
+{% block page_copy %}Search students/parents and enquiries by phone, name, or admission number.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-3">
+          <label class="form-label">School</label>
+          <select name="school" class="form-control">
+            <option value="">All schools</option>
+            {% for s in school_options %}
+              <option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+      <div class="col-md-7">
+        <label class="form-label">Search</label>
+        <input type="text" name="q" class="form-control" value="{{ q }}" placeholder="Phone / Name / Admission No">
+      </div>
+      <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Search</button>
+      </div>
+    </form>
+
+    {% if q %}
+      <div class="row gy-4">
+        <div class="col-xl-6">
+          <div class="border border-neutral-200 radius-12 p-16 h-100">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-12">
+              <h6 class="mb-0">Students</h6>
+              <span class="text-neutral-500 text-sm">Top 50</span>
+            </div>
+
+            {% for s in students %}
+              <div class="border border-neutral-200 radius-12 p-16 mb-12">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <strong>{{ s.first_name }} {{ s.last_name }}</strong>
+                  <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ s.class_name }}{% if s.section %} - {{ s.section }}{% endif %}</span>
+                </div>
+                <div class="text-neutral-600 text-sm mt-6">
+                  Adm: {{ s.admission_no }} | Guardian: {{ s.guardian_name }} | {{ s.guardian_phone }}
+                </div>
+                <div class="mt-10 d-flex flex-wrap gap-10">
+                  <a class="btn btn-sm btn-outline-primary" href="/students/{{ s.slug }}/">Open Profile</a>
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ s.school_id }}&phone={{ s.guardian_phone }}&caller_name={{ s.guardian_name|urlencode }}">Log Call</a>
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/messages/">Messages</a>
+                </div>
+              </div>
+            {% empty %}
+              <div class="text-neutral-500 text-sm">No students found.</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="col-xl-6">
+          <div class="border border-neutral-200 radius-12 p-16 h-100">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-12">
+              <h6 class="mb-0">Enquiries</h6>
+              <span class="text-neutral-500 text-sm">Top 50</span>
+            </div>
+
+            {% for e in enquiries %}
+              <div class="border border-neutral-200 radius-12 p-16 mb-12">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <strong>{{ e.student_name }}</strong>
+                  <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ e.get_status_display }}</span>
+                </div>
+                <div class="text-neutral-600 text-sm mt-6">
+                  {{ e.guardian_name }} | {{ e.phone }}{% if e.follow_up_date %} | Follow-up: {{ e.follow_up_date }}{% endif %}
+                </div>
+                <div class="mt-10 d-flex flex-wrap gap-10">
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ e.id }}/">Open Enquiry</a>
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ e.school_id }}&enquiry_id={{ e.id }}&phone={{ e.phone }}&caller_name={{ e.guardian_name|urlencode }}">Log Call</a>
+                </div>
+              </div>
+            {% empty %}
+              <div class="text-neutral-500 text-sm">No enquiries found.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="text-neutral-600 text-sm">
+        Tip: phone number type karo for fastest lookup. Admission number bhi supported hai.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

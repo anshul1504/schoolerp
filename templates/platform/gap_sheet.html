@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}ERP Gap Sheet{% endblock %}
+{% block page_heading %}ERP Gap Sheet{% endblock %}
+{% block page_copy %}Missing school ERP features that need further development.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Gap Sheet</span>
+    <h5 class="mb-2">Development priorities</h5>
+    <p class="mb-0">Missing school ERP features that need further development.</p>
+  </section>
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>ERP Gaps</h6><p>Feature status and detail.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Status</th>
+            <th>Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in gap_rows %}
+            <tr>
+              <td><strong>{{ row.name }}</strong></td>
+              <td><span class="status-pill {% if row.status == 'GREEN' %}status-pill--success{% elif row.status == 'YELLOW' %}status-pill--warning{% elif row.status == 'RED' %}status-pill--danger{% endif %}">{{ row.status }}</span></td>
+              <td>{{ row.detail }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

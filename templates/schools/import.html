@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Import Schools{% endblock %}
+{% block page_heading %}Import Schools{% endblock %}
+{% block page_copy %}Upload a CSV file to create/update schools. You will see a preview before import.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Schools Import</h6>
+          <p>CSV. Headers must match the sample.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/schools/import/sample/csv/">Download sample CSV</a>
+          <a class="btn btn-outline-secondary" href="/schools/">Back to Schools</a>
+        </div>
+      </div>
+
+      <div class="sf-card mt-3">
+        <div class="sf-card__body">
+          <div class="mb-3">
+            <div class="fw-semibold mb-1">Expected headers</div>
+            <div class="text-muted text-sm">{{ headers|join:", " }}</div>
+          </div>
+
+          <form method="post" enctype="multipart/form-data" class="row gy-3">
+            {% csrf_token %}
+            <input type="hidden" name="stage" value="preview">
+            <div class="col-md-8">
+              <label class="form-label">CSV file</label>
+              <input type="file" name="import_file" class="form-control" accept=".csv,text/csv" required>
+              <div class="text-muted text-sm mt-1">Tip: use the sample file to avoid header mismatches.</div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-10">
+              <button type="submit" class="btn btn-primary">Preview</button>
+              <a href="/schools/" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

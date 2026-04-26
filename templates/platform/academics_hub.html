@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Academic Control Center{% endblock %}
+{% block page_heading %}Academic Control Center{% endblock %}
+{% block page_copy %}Classes, subjects, allocations, and current year coverage in one view.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Academic Control Center</span>
+    <h5 class="mb-2">Classes, subjects, allocations, and current year coverage</h5>
+    <p class="mb-0">Classes, subjects, allocations, and current year coverage in one view.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-school-line"></i></div><div><span>Schools</span><strong>{{ academics_counts.schools }}</strong><small>Across the platform</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-calendar-event-line"></i></div><div><span>Years</span><strong>{{ academics_counts.current_years }}</strong><small>Current academic years</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-layout-grid-line"></i></div><div><span>Classes</span><strong>{{ academics_counts.classes }}</strong><small>Active class sections</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-book-open-line"></i></div><div><span>Subjects</span><strong>{{ academics_counts.subjects }}</strong><small>Subject definitions</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-account-box-line"></i></div><div><span>Allocations</span><strong>{{ academics_counts.allocations }}</strong><small>Teacher assignments</small></div></article>
+  </section>
+
+  <div class="row gy-4">
+    <div class="col-lg-4">
+      <div class="platform-panel h-100">
+        <div class="platform-panel__head"><div><h6>Current Academic Years</h6><p>Schools with an active current year.</p></div></div>
+        <div class="platform-list">
+          {% for year in current_years %}
+            <div class="platform-row">
+              <span class="platform-row__icon"><i class="ri-calendar-check-line"></i></span>
+              <span><strong>{{ year.school.name }}</strong><small>{{ year.name }}</small></span>
+            </div>
+          {% empty %}
+            <div class="platform-empty">No current academic year set.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="platform-panel h-100">
+        <div class="platform-panel__head"><div><h6>Recent Classes</h6><p>Latest class and section setup.</p></div></div>
+        <div class="platform-list">
+          {% for item in recent_classes %}
+            <div class="platform-row">
+              <span class="platform-row__icon"><i class="ri-layout-grid-line"></i></span>
+              <span><strong>{{ item.school.name }}</strong><small>{{ item.name }} - {{ item.section }}</small></span>
+            </div>
+          {% empty %}
+            <div class="platform-empty">No classes yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="platform-panel h-100">
+        <div class="platform-panel__head"><div><h6>Recent Allocations</h6><p>Teacher subject assignments.</p></div></div>
+        <div class="platform-list">
+          {% for item in recent_allocations %}
+            <div class="platform-row">
+              <span class="platform-row__icon"><i class="ri-user-settings-line"></i></span>
+              <span><strong>{{ item.teacher.get_full_name|default:item.teacher.username }}</strong><small>{{ item.academic_class.name }} - {{ item.academic_class.section }} | {{ item.subject.name }}</small></span>
+            </div>
+          {% empty %}
+            <div class="platform-empty">No allocations yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

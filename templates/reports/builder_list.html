@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Report Builder{% endblock %}
+{% block page_heading %}Report Builder{% endblock %}
+{% block page_copy %}Create saved report templates and export CSV on demand.{% endblock %}
+{% block page_eyebrow %}Reports{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Templates</h6>
+          <p>Saved datasets + filters for quick MIS exports.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/reports/">Back</a>
+          <a class="btn btn-primary" href="/reports/builder/create/">Create</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Dataset</th>
+              <th>Status</th>
+              <th>Updated</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in templates %}
+              <tr>
+                <td class="fw-semibold">{{ t.name }}</td>
+                <td class="text-muted text-sm">{{ t.get_dataset_display }}</td>
+                <td>{% if t.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Paused</span>{% endif %}</td>
+                <td class="text-muted text-sm">{{ t.updated_at }}</td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-2">
+                    <a class="btn btn-sm btn-outline-secondary" href="/reports/builder/{{ t.id }}/export/csv/">Export CSV</a>
+                    <a class="btn btn-sm btn-outline-primary" href="/reports/builder/{{ t.id }}/edit/">Edit</a>
+                    <form method="post" action="/reports/builder/{{ t.id }}/delete/" class="d-inline" onsubmit="return confirm('Delete this report template?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center text-muted">No templates yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Scheduled Report{% else %}Create Scheduled Report{% endif %}{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Scheduled Report{% else %}Create Scheduled Report{% endif %}{% endblock %}
+{% block page_copy %}Configure report type, frequency, recipients and optional JSON filters.{% endblock %}
+{% block page_eyebrow %}Reports{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="{% if report %}{{ report.name }}{% endif %}" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Type</label>
+          <select name="report_type" class="form-control" required>
+            <option value="">Select</option>
+            {% for value,label in report_choices %}
+              <option value="{{ value }}" {% if report and report.report_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Frequency</label>
+          <select name="frequency" class="form-control" required>
+            {% for value,label in frequency_choices %}
+              <option value="{{ value }}" {% if report and report.frequency == value %}selected{% endif %}>{{
+                label
+              }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Recipients (comma separated)</label>
+          <input type="text" name="recipients" class="form-control" value="{% if report %}{{ report.recipients }}{% endif %}" placeholder="ops@example.com, owner@example.com" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Filters (JSON)</label>
+          <textarea name="filters" rows="7" class="form-control" placeholder='{"school_id": "1", "status": "PAID"}'>{% if report %}{{ filters_json }}{% endif %}</textarea>
+          <div class="text-muted text-sm mt-1">Optional. Unknown keys are ignored by the runner in this MVP.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-check">
+            <input type="checkbox" class="form-check-input" name="is_active" {% if report and report.is_active %}checked{% elif not report %}checked{% endif %}>
+            <span class="form-check-label">Active</span>
+          </label>
+        </div>
+        <div class="col-12 d-flex gap-10">
+          <button type="submit" class="btn btn-primary">{% if mode == "edit" %}Save{% else %}Create{% endif %}</button>
+          <a class="btn btn-outline-secondary" href="/reports/scheduled/">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

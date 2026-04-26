@@ -1,0 +1,60 @@
+{% comment %}
+Reusable student profile navigation.
+Requires: student, can_manage_students, can_promote_students
+Optional: student_nav_active (overview|edit|documents|guardians|workflow|history|discipline|health|compliance|communication|promotion|tc|tc_requests|id_cards)
+{% endcomment %}
+
+{% with active=student_nav_active|default:"overview" %}
+<div class="student-subnav-wrap">
+  <div class="student-subnav">
+    <a class="student-subnav__item {% if active == 'overview' %}is-active{% endif %}" href="/students/{{ student.slug }}/">
+      <i class="ri-user-3-line"></i><span>Overview</span>
+    </a>
+    {% if can_manage_students %}
+      <a class="student-subnav__item {% if active == 'edit' %}is-active{% endif %}" href="/students/{{ student.slug }}/edit/">
+        <i class="ri-edit-2-line"></i><span>Edit</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'documents' %}is-active{% endif %}" href="/students/{{ student.slug }}/documents/">
+        <i class="ri-folder-upload-line"></i><span>Documents</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'guardians' %}is-active{% endif %}" href="/students/{{ student.slug }}/guardians/">
+        <i class="ri-parent-line"></i><span>Guardians</span>
+      </a>
+    {% endif %}
+    {% if can_manage_students or can_promote_students %}
+      <a class="student-subnav__item {% if active == 'workflow' %}is-active{% endif %}" href="/students/{{ student.slug }}/workflow/">
+        <i class="ri-route-line"></i><span>Workflow</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'history' %}is-active{% endif %}" href="/students/{{ student.slug }}/history/">
+        <i class="ri-history-line"></i><span>History</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'discipline' %}is-active{% endif %}" href="/students/{{ student.slug }}/discipline/">
+        <i class="ri-alarm-warning-line"></i><span>Discipline</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'health' %}is-active{% endif %}" href="/students/{{ student.slug }}/health/">
+        <i class="ri-health-book-line"></i><span>Health</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'compliance' %}is-active{% endif %}" href="/students/{{ student.slug }}/compliance/">
+        <i class="ri-shield-check-line"></i><span>Compliance</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'communication' %}is-active{% endif %}" href="/students/{{ student.slug }}/communication-logs/">
+        <i class="ri-message-3-line"></i><span>Communication</span>
+      </a>
+    {% endif %}
+    {% if can_promote_students %}
+      <a class="student-subnav__item {% if active == 'promotion' %}is-active{% endif %}" href="/students/{{ student.slug }}/promotion/">
+        <i class="ri-arrow-up-circle-line"></i><span>Promotion</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'tc' %}is-active{% endif %}" href="/students/{{ student.slug }}/tc/">
+        <i class="ri-file-paper-2-line"></i><span>TC</span>
+      </a>
+      <a class="student-subnav__item {% if active == 'tc_requests' %}is-active{% endif %}" href="/students/{{ student.slug }}/tc/requests/">
+        <i class="ri-file-list-3-line"></i><span>TC Requests</span>
+      </a>
+    {% endif %}
+    <a class="student-subnav__item {% if active == 'id_cards' %}is-active{% endif %}" href="/students/id-cards/designer/?student_ids={{ student.id }}">
+      <i class="ri-bank-card-line"></i><span>ID Cards</span>
+    </a>
+  </div>
+</div>
+{% endwith %}

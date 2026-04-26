@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Print Sheet</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+
+    body {
+      margin: 0;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 10px;
+      color: #172033;
+    }
+
+    .header {
+      padding: 14px 16px;
+      border: 1px solid #dbe4ee;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ffffff, #eef4fb);
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .copy {
+      color: #475569;
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #dbe4ee;
+      padding: 8px 9px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 8px;
+      font-weight: 800;
+    }
+
+    td {
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .photo-cell {
+      width: 78px;
+      text-align: center;
+    }
+
+    .photo,
+    .photo-placeholder {
+      width: 54px;
+      height: 66px;
+      border-radius: 10px;
+      border: 1px solid #dbe4ee;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      object-fit: cover;
+      box-sizing: border-box;
+      margin: 0 auto;
+    }
+
+    .photo-placeholder {
+      text-align: center;
+      line-height: 64px;
+      font-weight: 800;
+      font-size: 22px;
+      color: #1d4ed8;
+    }
+
+    .small {
+      display: block;
+      color: #64748b;
+      font-size: 8px;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Student Photo And Print Sheet</div>
+    <div class="copy">
+      {% if school %}School: {{ school.name }}. {% endif %}
+      Simple vendor-ready sheet with photo reference, admission details, and guardian contact. Generated on {{ generated_on|date:"d M Y, h:i A" }}.
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Photo</th>
+        <th>Student</th>
+        <th>Admission No</th>
+        <th>Class</th>
+        <th>Guardian</th>
+        <th>Contact</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+        <tr>
+          <td class="photo-cell">
+            {% if student.photo %}
+              <img src="{{ student.photo.url }}" alt="Student Photo" class="photo">
+            {% elif student.passport_photo %}
+              <img src="{{ student.passport_photo.url }}" alt="Student Photo" class="photo">
+            {% else %}
+              <div class="photo-placeholder">{{ student.first_name|first|upper }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <strong>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</strong>
+            <span class="small">{{ student.school.name }}</span>
+          </td>
+          <td>{{ student.admission_no }}</td>
+          <td>{{ student.class_name }} - {{ student.section }}</td>
+          <td>
+            {{ student.guardian_name|default:"-" }}
+            <span class="small">{{ student.relation_with_student|default:"-" }}</span>
+          </td>
+          <td>{{ student.guardian_phone|default:"-" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

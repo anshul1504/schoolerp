@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | School ERP{% endblock %}
+{% block page_eyebrow %}Dashboard{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+{% block page_copy %}Role-based overview of your workspace.{% endblock %}
+{% block page_intro_heading %}Workspace Overview{% endblock %}
+
+{% block content %}
+  <script id="dashboard-charts" type="application/json">{{ dashboard_charts_json|safe }}</script>
+
+  <section class="erp-dashboard-head">
+    <div>
+      <span>{{ role_config.label }}</span>
+      <h5>Welcome, {{ request.user.get_full_name|default:request.user.username }}</h5>
+      <p>
+        {{ role_config.welcome }}
+        {% if request.user.school %} Current school: <strong>{{ request.user.school.name }}</strong>.{% endif %}
+      </p>
+    </div>
+    <div class="erp-dashboard-head__actions">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <a href="/platform/" class="btn btn-primary-600"><i class="ri-command-line"></i>Platform</a>
+        <a href="/schools/create/" class="btn btn-outline-secondary"><i class="ri-school-line"></i>Add School</a>
+        <a href="/users/create/" class="btn btn-outline-secondary"><i class="ri-user-add-line"></i>Create User</a>
+      {% elif request.user.role == "SCHOOL_OWNER" %}
+        {% if "schools" in nav_keys %}
+          <a href="/schools/profile/" class="btn btn-primary-600"><i class="ri-school-line"></i>School Profile</a>
+        {% endif %}
+        {% if ui_capabilities.can_manage_students and "students" in nav_keys %}
+          <a href="/students/create/" class="btn btn-outline-secondary"><i class="ri-user-add-line"></i>Add Student</a>
+        {% endif %}
+        {% if "admissions" in nav_keys %}
+          <a href="/admissions/" class="btn btn-outline-secondary"><i class="ri-file-list-2-line"></i>Admissions</a>
+        {% endif %}
+        {% if "fees" in nav_keys %}
+          <a href="/fees/" class="btn btn-outline-secondary"><i class="ri-money-rupee-circle-line"></i>Fees</a>
+        {% endif %}
+      {% elif request.user.role == "ADMIN" %}
+        {% if "schools" in nav_keys %}
+          <a href="/schools/profile/" class="btn btn-primary-600"><i class="ri-school-line"></i>School Profile</a>
+        {% endif %}
+        {% if ui_capabilities.can_manage_students and "students" in nav_keys %}
+          <a href="/students/create/" class="btn btn-outline-secondary"><i class="ri-user-add-line"></i>Add Student</a>
+        {% endif %}
+        {% if "admissions" in nav_keys %}
+          <a href="/admissions/" class="btn btn-outline-secondary"><i class="ri-file-list-2-line"></i>Admissions</a>
+        {% endif %}
+        {% if "fees" in nav_keys %}
+          <a href="/fees/" class="btn btn-outline-secondary"><i class="ri-money-rupee-circle-line"></i>Fees</a>
+        {% endif %}
+      {% elif request.user.role == "PRINCIPAL" %}
+        {% if "students" in nav_keys %}
+          <a href="/students/" class="btn btn-primary-600"><i class="ri-graduation-cap-line"></i>Students</a>
+        {% endif %}
+        {% if "academics" in nav_keys %}
+          <a href="/academics/" class="btn btn-outline-secondary"><i class="ri-book-open-line"></i>Academics</a>
+        {% endif %}
+        {% if "attendance" in nav_keys %}
+          <a href="/attendance/" class="btn btn-outline-secondary"><i class="ri-calendar-check-line"></i>Attendance</a>
+        {% endif %}
+        {% if "reports" in nav_keys %}
+          <a href="/reports/" class="btn btn-outline-secondary"><i class="ri-bar-chart-box-line"></i>Reports</a>
+        {% endif %}
+      {% elif request.user.role == "VICE_PRINCIPAL" %}
+        {% if "students" in nav_keys %}
+          <a href="/students/" class="btn btn-primary-600"><i class="ri-graduation-cap-line"></i>Students</a>
+        {% endif %}
+        {% if "academics" in nav_keys %}
+          <a href="/academics/" class="btn btn-outline-secondary"><i class="ri-book-open-line"></i>Academics</a>
+        {% endif %}
+        {% if "attendance" in nav_keys %}
+          <a href="/attendance/" class="btn btn-outline-secondary"><i class="ri-calendar-check-line"></i>Attendance</a>
+        {% endif %}
+        {% if "exams" in nav_keys %}
+          <a href="/exams/" class="btn btn-outline-secondary"><i class="ri-file-edit-line"></i>Exams</a>
+        {% endif %}
+      {% elif request.user.role == "MANAGEMENT_TRUSTEE" %}
+        {% if "schools" in nav_keys %}
+          <a href="/schools/profile/" class="btn btn-primary-600"><i class="ri-school-line"></i>School Profile</a>
+        {% endif %}
+        {% if "reports" in nav_keys %}
+          <a href="/reports/" class="btn btn-outline-secondary"><i class="ri-bar-chart-box-line"></i>Reports</a>
+        {% endif %}
+        {% if "students" in nav_keys %}
+          <a href="/students/" class="btn btn-outline-secondary"><i class="ri-graduation-cap-line"></i>Students</a>
+        {% endif %}
+        {% if "fees" in nav_keys %}
+          <a href="/fees/" class="btn btn-outline-secondary"><i class="ri-money-rupee-circle-line"></i>Fees</a>
+        {% endif %}
+      {% elif request.user.role == "REPORT_VIEWER" %}
+        {% if "reports" in nav_keys %}
+          <a href="/reports/" class="btn btn-primary-600"><i class="ri-bar-chart-box-line"></i>Reports</a>
+        {% endif %}
+        {% if "students" in nav_keys %}
+          <a href="/students/" class="btn btn-outline-secondary"><i class="ri-graduation-cap-line"></i>Students</a>
+        {% endif %}
+        {% if "attendance" in nav_keys %}
+          <a href="/attendance/" class="btn btn-outline-secondary"><i class="ri-calendar-check-line"></i>Attendance</a>
+        {% endif %}
+        {% if "fees" in nav_keys %}
+          <a href="/fees/" class="btn btn-outline-secondary"><i class="ri-money-rupee-circle-line"></i>Fees</a>
+        {% endif %}
+      {% endif %}
+      <a href="/profile/" class="btn btn-outline-secondary"><i class="ri-user-settings-line"></i>Profile</a>
+    </div>
+  </section>
+
+  {% if dashboard_metrics %}
+    <section class="erp-kpi-grid">
+      {% for metric in dashboard_metrics %}
+        <article class="erp-kpi">
+          <span class="erp-kpi__icon"><i class="ri-pulse-line"></i></span>
+          <div>
+            <span class="erp-kpi__label">{{ metric.label }}</span>
+            <strong>{{ metric.value }}</strong>
+            <small>{{ metric.trend }}</small>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <section class="erp-dashboard-grid">
+    <article class="erp-panel erp-panel--span-2">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Operational Highlights</h6>
+          <p>Accessible modules and common workflows for this role.</p>
+        </div>
+      </div>
+
+      {% if navigation %}
+        <div class="erp-module-grid">
+          {% for item in navigation %}
+            <a href="{{ item.url }}" class="erp-module">
+              <span class="erp-module__icon"><i class="{{ item.icon }}"></i></span>
+              <span>
+                <strong>{{ item.label }}</strong>
+                <small>Open module</small>
+              </span>
+              <i class="ri-arrow-right-line"></i>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="erp-empty">No modules enabled for this account.</div>
+      {% endif %}
+    </article>
+
+    <aside class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Shortcuts</h6>
+          <p>Frequent actions.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if request.user.role == "SCHOOL_OWNER" and request.user.school_id %}
+          {% if "schools" in nav_keys %}
+            <a href="/schools/profile/"><i class="ri-school-line"></i>School profile</a>
+            <a href="/schools/{{ request.user.school_id }}/setup/"><i class="ri-list-check-3"></i>Setup checklist</a>
+            <a href="/schools/{{ request.user.school_id }}/team/"><i class="ri-team-line"></i>Team management</a>
+            {% if ui_capabilities.can_manage_comm_settings %}
+              <a href="/schools/communication/"><i class="ri-mail-settings-line"></i>Communication setup</a>
+            {% endif %}
+            <a href="/schools/{{ request.user.school_id }}/campuses/"><i class="ri-community-line"></i>Campuses</a>
+          {% endif %}
+          {% if "students" in nav_keys %}
+            <a href="/students/"><i class="ri-graduation-cap-line"></i>Student directory</a>
+          {% endif %}
+          {% if "admissions" in nav_keys %}
+            <a href="/admissions/"><i class="ri-file-list-2-line"></i>Admissions pipeline</a>
+          {% endif %}
+          {% if "attendance" in nav_keys %}
+            <a href="/attendance/"><i class="ri-calendar-check-line"></i>Attendance</a>
+          {% endif %}
+          {% if "fees" in nav_keys %}
+            <a href="/fees/"><i class="ri-money-rupee-circle-line"></i>Fee collections</a>
+          {% endif %}
+          {% if "communication" in nav_keys %}
+            <a href="/communication/manage/"><i class="ri-message-2-line"></i>Notices</a>
+          {% endif %}
+          {% if "reports" in nav_keys %}
+            <a href="/reports/"><i class="ri-bar-chart-box-line"></i>Reports</a>
+          {% endif %}
+        {% else %}
+          {% if request.user.role == "ADMIN" and request.user.school_id %}
+            {% if "schools" in nav_keys %}
+              <a href="/schools/profile/"><i class="ri-school-line"></i>School profile</a>
+              <a href="/schools/{{ request.user.school_id }}/setup/"><i class="ri-list-check-3"></i>Setup checklist</a>
+              <a href="/schools/{{ request.user.school_id }}/team/"><i class="ri-team-line"></i>Team management</a>
+              {% if ui_capabilities.can_manage_comm_settings %}
+                <a href="/schools/communication/"><i class="ri-mail-settings-line"></i>Communication setup</a>
+              {% endif %}
+              <a href="/schools/{{ request.user.school_id }}/campuses/"><i class="ri-community-line"></i>Campuses</a>
+            {% endif %}
+          {% endif %}
+          {% for item in navigation %}
+            {% if item.key == "students" %}
+              <a href="{{ item.url }}"><i class="ri-graduation-cap-line"></i>Student directory</a>
+            {% endif %}
+            {% if item.key == "admissions" %}
+              <a href="{{ item.url }}"><i class="ri-file-list-2-line"></i>Admissions pipeline</a>
+            {% endif %}
+            {% if item.key == "attendance" %}
+              <a href="{{ item.url }}"><i class="ri-calendar-check-line"></i>Attendance Entries</a>
+            {% endif %}
+            {% if item.key == "fees" %}
+              <a href="{{ item.url }}"><i class="ri-money-rupee-circle-line"></i>Fee collections</a>
+            {% endif %}
+            {% if item.key == "reports" %}
+              <a href="{{ item.url }}"><i class="ri-bar-chart-box-line"></i>Reports</a>
+            {% endif %}
+            {% if item.key == "communication" %}
+              <a href="{{ item.url }}"><i class="ri-message-2-line"></i>Communication</a>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+        <a href="/profile/"><i class="ri-user-settings-line"></i>My profile</a>
+      </div>
+    </aside>
+  </section>
+
+  <section class="erp-dashboard-grid erp-dashboard-grid--charts">
+    {% if request.user.role == "SCHOOL_OWNER" %}
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Owner Control Board</h6>
+          <p>School leadership shortcuts and oversight actions.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if "schools" in nav_keys and request.user.school_id %}<a href="/schools/profile/"><i class="ri-school-line"></i>School profile</a>{% endif %}
+        {% if "schools" in nav_keys and request.user.school_id %}<a href="/schools/{{ request.user.school_id }}/setup/"><i class="ri-list-check-3"></i>Setup checklist</a>{% endif %}
+        {% if "schools" in nav_keys and request.user.school_id %}<a href="/schools/{{ request.user.school_id }}/team/"><i class="ri-team-line"></i>Team management</a>{% endif %}
+        {% if "students" in nav_keys %}<a href="/students/"><i class="ri-graduation-cap-line"></i>Student directory</a>{% endif %}
+        {% if "admissions" in nav_keys %}<a href="/admissions/"><i class="ri-file-list-2-line"></i>Admissions pipeline</a>{% endif %}
+        {% if "academics" in nav_keys %}<a href="/academics/"><i class="ri-book-open-line"></i>Academic operations</a>{% endif %}
+        {% if "attendance" in nav_keys %}<a href="/attendance/"><i class="ri-calendar-check-line"></i>Attendance supervision</a>{% endif %}
+        {% if "fees" in nav_keys %}<a href="/fees/"><i class="ri-money-rupee-circle-line"></i>Fee collections</a>{% endif %}
+        {% if "reports" in nav_keys %}<a href="/reports/"><i class="ri-bar-chart-box-line"></i>Leadership reports</a>{% endif %}
+      </div>
+    </article>
+    {% endif %}
+
+    {% if request.user.role == "ADMIN" %}
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Admin Control Board</h6>
+          <p>Role-focused execution shortcuts.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if ui_capabilities.can_manage_admissions and "admissions" in nav_keys %}<a href="/admissions/"><i class="ri-file-list-2-line"></i>Admission queue</a>{% endif %}
+        {% if ui_capabilities.can_manage_students and "students" in nav_keys %}<a href="/students/create/"><i class="ri-user-add-line"></i>Add student</a>{% endif %}
+        {% if ui_capabilities.can_manage_academics and "academics" in nav_keys %}<a href="/academics/"><i class="ri-book-open-line"></i>Academic setup</a>{% endif %}
+        {% if ui_capabilities.can_manage_staff and "staff" in nav_keys %}<a href="/staff/"><i class="ri-team-line"></i>Staff operations</a>{% endif %}
+        {% if ui_capabilities.can_manage_fees and "fees" in nav_keys %}<a href="/fees/"><i class="ri-money-rupee-circle-line"></i>Fee desk</a>{% endif %}
+      </div>
+    </article>
+    {% endif %}
+    {% if request.user.role == "PRINCIPAL" %}
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Principal Control Board</h6>
+          <p>Academic and student operations shortcuts.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if ui_capabilities.can_manage_students and "students" in nav_keys %}<a href="/students/"><i class="ri-graduation-cap-line"></i>Student directory</a>{% endif %}
+        {% if ui_capabilities.can_manage_students and "students" in nav_keys %}<a href="/students/create/"><i class="ri-user-add-line"></i>Add student</a>{% endif %}
+        {% if ui_capabilities.can_manage_academics and "academics" in nav_keys %}<a href="/academics/"><i class="ri-book-open-line"></i>Academic setup</a>{% endif %}
+        {% if "attendance" in nav_keys %}<a href="/attendance/"><i class="ri-calendar-check-line"></i>Attendance desk</a>{% endif %}
+        {% if "exams" in nav_keys %}<a href="/exams/"><i class="ri-file-edit-line"></i>Exam operations</a>{% endif %}
+        {% if ui_capabilities.can_manage_staff and "staff" in nav_keys %}<a href="/staff/"><i class="ri-team-line"></i>Staff operations</a>{% endif %}
+        {% if "admissions" in nav_keys %}<a href="/admissions/"><i class="ri-file-list-2-line"></i>Admissions queue</a>{% endif %}
+      </div>
+    </article>
+    {% endif %}
+    {% if request.user.role == "VICE_PRINCIPAL" %}
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Vice Principal Desk</h6>
+          <p>Oversight shortcuts for daily academic operations.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if ui_capabilities.can_manage_students and "students" in nav_keys %}<a href="/students/"><i class="ri-graduation-cap-line"></i>Student directory</a>{% endif %}
+        {% if ui_capabilities.can_manage_academics and "academics" in nav_keys %}<a href="/academics/"><i class="ri-book-open-line"></i>Academic operations</a>{% endif %}
+        {% if "attendance" in nav_keys %}<a href="/attendance/"><i class="ri-calendar-check-line"></i>Attendance supervision</a>{% endif %}
+        {% if "exams" in nav_keys %}<a href="/exams/"><i class="ri-file-edit-line"></i>Exam desk</a>{% endif %}
+        {% if ui_capabilities.can_manage_staff and "staff" in nav_keys %}<a href="/staff/"><i class="ri-team-line"></i>Staff coordination</a>{% endif %}
+        {% if "reports" in nav_keys %}<a href="/reports/"><i class="ri-bar-chart-box-line"></i>Leadership reports</a>{% endif %}
+      </div>
+    </article>
+    {% endif %}
+    {% if request.user.role == "MANAGEMENT_TRUSTEE" %}
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Management Trustee Board</h6>
+          <p>Leadership visibility shortcuts for key operations.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if "schools" in nav_keys %}<a href="/schools/"><i class="ri-school-line"></i>School visibility</a>{% endif %}
+        {% if "students" in nav_keys %}<a href="/students/"><i class="ri-graduation-cap-line"></i>Student insights</a>{% endif %}
+        {% if "academics" in nav_keys %}<a href="/academics/"><i class="ri-book-open-line"></i>Academic insights</a>{% endif %}
+        {% if "staff" in nav_keys %}<a href="/staff/"><i class="ri-team-line"></i>Staff visibility</a>{% endif %}
+        {% if "attendance" in nav_keys %}<a href="/attendance/"><i class="ri-calendar-check-line"></i>Attendance snapshot</a>{% endif %}
+        {% if "fees" in nav_keys %}<a href="/fees/"><i class="ri-money-rupee-circle-line"></i>Finance snapshot</a>{% endif %}
+        {% if "reports" in nav_keys %}<a href="/reports/"><i class="ri-bar-chart-box-line"></i>Leadership reports</a>{% endif %}
+      </div>
+    </article>
+    {% endif %}
+    {% if request.user.role == "REPORT_VIEWER" %}
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Report Viewer Hub</h6>
+          <p>Read-only reporting shortcuts and leadership snapshots.</p>
+        </div>
+      </div>
+      <div class="erp-shortcuts">
+        {% if "reports" in nav_keys %}<a href="/reports/"><i class="ri-bar-chart-box-line"></i>Operational reports</a>{% endif %}
+        {% if "students" in nav_keys %}<a href="/students/"><i class="ri-graduation-cap-line"></i>Student analytics</a>{% endif %}
+        {% if "academics" in nav_keys %}<a href="/academics/"><i class="ri-book-open-line"></i>Academic analytics</a>{% endif %}
+        {% if "attendance" in nav_keys %}<a href="/attendance/"><i class="ri-calendar-check-line"></i>Attendance insights</a>{% endif %}
+        {% if "fees" in nav_keys %}<a href="/fees/"><i class="ri-money-rupee-circle-line"></i>Fee insights</a>{% endif %}
+      </div>
+    </article>
+    {% endif %}
+
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Attendance Health</h6>
+          <p>Attendance Entries: present vs remaining.</p>
+        </div>
+        <span class="erp-panel__tag">Today</span>
+      </div>
+      <div id="sfAttendanceDonut" class="erp-chart"></div>
+    </article>
+
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Fees Snapshot</h6>
+          <p>Outstanding dues in current scope.</p>
+        </div>
+        <span class="erp-panel__tag">INR</span>
+      </div>
+      <div id="sfFeesBar" class="erp-chart"></div>
+    </article>
+
+    <article class="erp-panel">
+      <div class="erp-panel__head">
+        <div>
+          <h6>Insights</h6>
+          <p>Current operational notes.</p>
+        </div>
+      </div>
+      {% if dashboard_insights %}
+        <div class="erp-insight-list">
+          {% for item in dashboard_insights %}
+            <div class="erp-insight">
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.body }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="erp-empty">No insights available yet.</div>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const node = document.getElementById("dashboard-charts");
+      if (!node) return;
+      let charts = {};
+      try { charts = JSON.parse(node.textContent || "{}"); } catch (e) { charts = {}; }
+
+      const blue = "#0288d1";
+      const pale = "#e2e8f0";
+      const grid = "#e2e8f0";
+      const attendanceRate = Math.max(0, Math.min(100, Number(charts.attendance_rate || 0)));
+      const attendanceSeries = [attendanceRate, Math.max(0, 100 - attendanceRate)];
+
+      if (window.ApexCharts && document.querySelector("#sfAttendanceDonut")) {
+        new ApexCharts(document.querySelector("#sfAttendanceDonut"), {
+          chart: { type: "donut", height: 250, toolbar: { show: false }, fontFamily: "inherit" },
+          series: attendanceSeries,
+          labels: ["Present", "Remaining"],
+          colors: [blue, pale],
+          dataLabels: { enabled: false },
+          legend: { position: "bottom" },
+          stroke: { width: 0 },
+          plotOptions: { pie: { donut: { size: "70%" } } },
+        }).render();
+      }
+
+      const outstanding = Math.max(0, Number(charts.outstanding || 0));
+      if (window.ApexCharts && document.querySelector("#sfFeesBar")) {
+        new ApexCharts(document.querySelector("#sfFeesBar"), {
+          chart: { type: "bar", height: 250, toolbar: { show: false }, fontFamily: "inherit" },
+          series: [{ name: "Outstanding", data: [outstanding] }],
+          xaxis: { categories: ["Dues"], axisBorder: { show: false }, axisTicks: { show: false } },
+          colors: [blue],
+          dataLabels: { enabled: false },
+          plotOptions: { bar: { borderRadius: 7, columnWidth: "36%" } },
+          grid: { borderColor: grid, strokeDashArray: 4 },
+          tooltip: { y: { formatter: (v) => "Rs " + (v || 0).toLocaleString() } },
+        }).render();
+      }
+    });
+  </script>
+{% endblock %}

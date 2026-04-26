@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log Exports{% endblock %}
+{% block page_heading %}Audit Log Exports{% endblock %}
+{% block page_copy %}Immutable export records (checksum + chain hash).{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Exports</h6>
+          <p>Exports are write-once records. Use “Verify” to recompute checksum from stored file.</p>
+        </div>
+        <div class="sf-actions">
+          <a href="/activity/" class="btn btn-outline-secondary">Back to Activity</a>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Created</th>
+              <th>By</th>
+              <th>Rows</th>
+              <th>SHA256</th>
+              <th>Immutable Copy</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in exports %}
+              <tr>
+                <td><strong>#{{ e.id }}</strong></td>
+                <td class="text-muted text-sm">{{ e.created_at }}</td>
+                <td>{% if e.created_by %}{{ e.created_by.username }}{% else %}—{% endif %}</td>
+                <td>{{ e.row_count }}</td>
+                <td><code>{{ e.sha256|slice:":12" }}</code><span class="text-muted text-sm ms-1">…</span></td>
+                <td class="text-muted text-sm">{% if e.immutable_copy_path %}Saved{% else %}—{% endif %}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="/activity/exports/{{ e.id }}/download/">Download</a>
+                  <a class="btn btn-sm btn-outline-secondary" href="/activity/exports/{{ e.id }}/download/?verify=1">Verify + Download</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted">No exports yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

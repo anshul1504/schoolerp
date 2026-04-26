@@ -1,0 +1,25 @@
+{% extends "accounts/auth_base.html" %}
+
+{% block title %}Request Access | SchoolFlow{% endblock %}
+
+{% block auth_visual_badge_icon %}<i class="ri-information-line"></i>{% endblock %}
+{% block auth_visual_badge_text %}Access request{% endblock %}
+{% block auth_visual_title %}Need an invitation?{% endblock %}
+{% block auth_visual_subtitle %}Your school admin can invite you and assign the right role-based access.{% endblock %}
+
+{% block content %}
+  <div class="mb-3">
+    <h3 class="auth-title mb-2">Request access</h3>
+    <p class="auth-subtitle mb-0">
+      Accounts are created by an administrator. Contact your school admin to receive an invitation link.
+    </p>
+  </div>
+
+  <div class="help-note mb-3">
+    If you already have an activation link, open it from your email to set your password.
+  </div>
+
+  <div class="d-grid">
+    <a href="{% url 'login-page' %}" class="btn btn-primary">Back to login</a>
+  </div>
+{% endblock %}

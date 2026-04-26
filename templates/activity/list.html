@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log{% endblock %}
+{% block page_heading %}Activity Log{% endblock %}
+{% block page_copy %}Audit trail of sensitive actions (POST/PUT/PATCH/DELETE).{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Activity Log</h6>
+          <p>Filter and export audit events (POST/PUT/PATCH/DELETE).</p>
+        </div>
+        <div class="sf-actions">
+          <a href="?q={{ filters.q }}&actor={{ filters.actor }}&school_id={{ filters.school_id }}&action={{ filters.action }}&method={{ filters.method }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&export=csv" class="btn btn-outline-secondary">Export CSV</a>
+          <a href="?q={{ filters.q }}&actor={{ filters.actor }}&school_id={{ filters.school_id }}&action={{ filters.action }}&method={{ filters.method }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&export=excel" class="btn btn-outline-secondary">Export Excel</a>
+          <a href="/activity/changes/" class="btn btn-outline-secondary">Change Logs</a>
+          <a href="/activity/exports/" class="btn btn-outline-secondary">Exports</a>
+          <form method="post" action="/activity/exports/create/" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="q" value="{{ filters.q }}">
+            <input type="hidden" name="actor" value="{{ filters.actor }}">
+            <input type="hidden" name="school_id" value="{{ filters.school_id }}">
+            <input type="hidden" name="action" value="{{ filters.action }}">
+            <input type="hidden" name="method" value="{{ filters.method }}">
+            <input type="hidden" name="date_from" value="{{ filters.date_from }}">
+            <input type="hidden" name="date_to" value="{{ filters.date_to }}">
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Create immutable export for current filters?');">Create Immutable Export</button>
+          </form>
+        </div>
+      </div>
+
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="username, email, path, action">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Actor</label>
+            <input type="text" name="actor" class="form-control" value="{{ filters.actor }}" placeholder="username/email">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">School ID</label>
+            <input type="text" name="school_id" class="form-control" value="{{ filters.school_id }}" placeholder="e.g. 1">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Action</label>
+            <input type="text" name="action" class="form-control" value="{{ filters.action }}" placeholder="users.created, billing.updated">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Method</label>
+            <input type="text" name="method" class="form-control" value="{{ filters.method }}" placeholder="POST">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">From</label>
+            <input type="date" name="date_from" class="form-control" value="{{ filters.date_from }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">To</label>
+            <input type="date" name="date_to" class="form-control" value="{{ filters.date_to }}">
+          </div>
+          <div class="col-md-9 d-flex gap-10">
+            <button type="submit" class="btn btn-outline-secondary">Apply</button>
+            <a href="/activity/" class="btn btn-outline-secondary">Reset</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Actor</th>
+              <th>School</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in page_obj.object_list %}
+              <tr>
+                <td class="text-muted text-sm">{{ log.created_at }}</td>
+                <td>
+                  <strong>{% if log.actor %}{{ log.actor.username|default:"Unknown" }}{% else %}Unknown{% endif %}</strong>
+                  <div class="text-muted text-sm">{% if log.actor %}{{ log.actor.email|default:"—" }}{% else %}—{% endif %}</div>
+                </td>
+                <td>{% if log.school %}{{ log.school.name }}{% else %}—{% endif %}</td>
+                <td>
+                  <code>{{ log.method }}</code>
+                  <span class="ms-1">{{ log.path }}</span>
+                  {% if log.view_name %}
+                    <div class="text-muted text-sm">{{ log.view_name }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if log.status_code and log.status_code < 400 %}
+                    <span class="badge bg-success">{{ log.status_code }}</span>
+                  {% else %}
+                    <span class="badge bg-danger">{{ log.status_code|default:"—" }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-muted text-sm">{{ log.ip_address|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center text-muted">No activity yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-between mt-3">
+        <div class="text-muted text-sm">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+        <div class="d-flex gap-10">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="?q={{ filters.q }}&actor={{ filters.actor }}&school_id={{ filters.school_id }}&action={{ filters.action }}&method={{ filters.method }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&page={{ page_obj.previous_page_number }}">Prev</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="?q={{ filters.q }}&actor={{ filters.actor }}&school_id={{ filters.school_id }}&action={{ filters.action }}&method={{ filters.method }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&page={{ page_obj.next_page_number }}">Next</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

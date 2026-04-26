@@ -1,0 +1,79 @@
+{% extends "accounts/auth_base.html" %}
+
+{% block title %}Activate Account | SchoolFlow{% endblock %}
+
+{% block auth_visual_badge_icon %}<i class="ri-user-add-line"></i>{% endblock %}
+{% block auth_visual_badge_text %}First time setup{% endblock %}
+{% block auth_visual_title %}Set your password to get started.{% endblock %}
+{% block auth_visual_subtitle %}Your activation link is one-time use. Create a strong password to protect your account.{% endblock %}
+
+{% block content %}
+  <div class="mb-3">
+    <h3 class="auth-title mb-2">Activate your account</h3>
+    <p class="auth-subtitle mb-0">
+      Activating <strong>{{ invitation.user.username }}</strong>
+      {% if invitation.user.school %}for <strong>{{ invitation.user.school.name }}</strong>{% endif %}.
+    </p>
+  </div>
+
+  <div class="help-note mb-3">
+    Use a strong password. This link is one-time and expires automatically.
+  </div>
+
+  <form method="post" class="d-flex flex-column gap-3">
+    {% csrf_token %}
+
+    <div>
+      <label class="form-label" for="activate-password">New password</label>
+      <div class="position-relative">
+        <input type="password" id="activate-password" name="password" class="form-control pe-5" required autocomplete="new-password">
+        <button
+          type="button"
+          class="btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-3 text-secondary"
+          data-toggle-password="#activate-password"
+          aria-label="Toggle password visibility"
+        >
+          <i class="ri-eye-line"></i>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label class="form-label" for="activate-password2">Confirm password</label>
+      <div class="position-relative">
+        <input type="password" id="activate-password2" name="confirm_password" class="form-control pe-5" required autocomplete="new-password">
+        <button
+          type="button"
+          class="btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-3 text-secondary"
+          data-toggle-password="#activate-password2"
+          aria-label="Toggle password visibility"
+        >
+          <i class="ri-eye-line"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary">Activate</button>
+    </div>
+
+    <div class="text-center">
+      <a href="{% url 'login-page' %}" class="text-decoration-none">Back to login</a>
+    </div>
+  </form>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-toggle-password]");
+      if (!button) return;
+      const selector = button.getAttribute("data-toggle-password");
+      const input = selector ? document.querySelector(selector) : null;
+      if (!input) return;
+      input.type = input.type === "password" ? "text" : "password";
+      const icon = button.querySelector("i");
+      if (icon) icon.className = input.type === "password" ? "ri-eye-line" : "ri-eye-off-line";
+    });
+  </script>
+{% endblock %}

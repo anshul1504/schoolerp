@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Create API Token{% endblock %}
+{% block page_heading %}Create API Token{% endblock %}
+{% block page_copy %}Scopes are comma-separated, e.g. <code>provision.users</code>.{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-md-6">
+          <label class="form-label">Name *</label>
+          <input class="form-control" name="name" placeholder="SCIM connector" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Scopes</label>
+          <input class="form-control" name="scopes" value="provision.users" placeholder="provision.users">
+        </div>
+        <div class="col-12">
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="activeCheck" name="is_active" checked>
+            <label class="form-check-label" for="activeCheck">Active</label>
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-10">
+          <button type="submit" class="btn btn-primary">Create</button>
+          <a href="/platform/tokens/" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

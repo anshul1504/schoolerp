@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == "edit" %}Edit Academic Year{% else %}Add Academic Year{% endif %} | Academics{% endblock %}
+{% block page_eyebrow %}Academics{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Academic Year{% else %}Add Academic Year{% endif %}{% endblock %}
+{% block page_copy %}Define the session period and mark the current year for reports and workflows.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-4">
+      {% csrf_token %}
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-lg-6">
+          <label class="form-label">School<span class="text-danger ms-1">*</span></label>
+          <select name="school" class="form-control" required>
+            <option value="">Select school</option>
+            {% for s in school_options %}
+              <option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+      <div class="col-lg-6">
+        <label class="form-label">Name<span class="text-danger ms-1">*</span></label>
+        <input type="text" name="name" class="form-control" required value="{{ year.name|default:'' }}" placeholder="2026-2027">
+      </div>
+      <div class="col-lg-6">
+        <label class="form-label">Start Date<span class="text-danger ms-1">*</span></label>
+        <input type="date" name="start_date" class="form-control" required value="{% if year and year.start_date %}{{ year.start_date|date:'Y-m-d' }}{% endif %}">
+      </div>
+      <div class="col-lg-6">
+        <label class="form-label">End Date<span class="text-danger ms-1">*</span></label>
+        <input type="date" name="end_date" class="form-control" required value="{% if year and year.end_date %}{{ year.end_date|date:'Y-m-d' }}{% endif %}">
+      </div>
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="is_current" id="is_current" {% if year and year.is_current %}checked{% endif %}>
+          <label class="form-check-label" for="is_current">Mark as current academic year</label>
+        </div>
+      </div>
+      <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
+        <a href="/academics/years/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if mode == "edit" %}Save Changes{% else %}Save Year{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

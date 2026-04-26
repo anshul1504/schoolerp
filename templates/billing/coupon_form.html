@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Create Coupon{% endblock %}
+{% block page_heading %}Create Coupon{% endblock %}
+{% block page_copy %}Use this coupon code on invoice creation to apply discounts.{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-md-4">
+          <label class="form-label">Code *</label>
+          <input class="form-control" name="code" placeholder="E.g. LAUNCH50" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Discount Type</label>
+          <select class="form-select" name="discount_type">
+            {% for value,label in discount_type_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Value</label>
+          <input type="number" step="0.01" class="form-control" name="value" value="0">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Starts On</label>
+          <input type="date" class="form-control" name="starts_on">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Ends On</label>
+          <input type="date" class="form-control" name="ends_on">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Max Uses (0 = unlimited)</label>
+          <input type="number" class="form-control" name="max_uses" value="0" min="0">
+        </div>
+        <div class="col-md-12">
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="activeCheck" name="is_active" checked>
+            <label class="form-check-label" for="activeCheck">Active</label>
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-10">
+          <button type="submit" class="btn btn-primary">Create</button>
+          <a href="/billing/coupons/" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

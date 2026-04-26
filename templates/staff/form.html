@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff | School ERP{% endblock %}
+{% block page_eyebrow %}HRM{% endblock %}
+{% block page_heading %}{% if member %}Edit Staff{% else %}Add Staff{% endif %}{% endblock %}
+{% block page_copy %}Keep staff details simple and correct.{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body p-24">
+      {% if form and form.errors %}
+        <div class="alert alert-danger">
+          <strong>Please fix the errors and try again.</strong>
+        </div>
+      {% endif %}
+
+      <form method="post" class="row gy-4">
+        {% csrf_token %}
+        <div class="col-md-6">
+          <label class="form-label">Full name *</label>
+          <input class="form-control" name="full_name" value="{{ form.full_name.value|default:'' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Role *</label>
+          <select class="form-control" name="staff_role" required>
+            <option value="STAFF" {% if form.staff_role.value == "STAFF" %}selected{% endif %}>Staff</option>
+            <option value="TEACHER" {% if form.staff_role.value == "TEACHER" %}selected{% endif %}>Teacher</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Employee ID</label>
+          <input class="form-control" name="employee_id" value="{{ form.employee_id.value|default:'' }}">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Designation</label>
+          <input class="form-control" name="designation" value="{{ form.designation.value|default:'' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input class="form-control" name="phone" value="{{ form.phone.value|default:'' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input class="form-control" name="email" type="email" value="{{ form.email.value|default:'' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Joined on</label>
+          <input class="form-control" name="joined_on" type="date" value="{{ form.joined_on.value|default:'' }}">
+        </div>
+        <div class="col-md-6 d-flex align-items-center">
+          <div class="form-check mt-28">
+            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if form.is_active.value or form.is_active.value == None %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+
+        <div class="col-12 d-flex flex-wrap gap-10">
+          <button class="btn btn-primary-600" type="submit">Save</button>
+          <a class="btn btn-outline-secondary" href="/staff/">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

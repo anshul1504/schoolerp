@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Invitations{% endblock %}
+{% block page_heading %}Invitations{% endblock %}
+{% block page_copy %}Track pending and accepted activation links.{% endblock %}
+{% block page_eyebrow %}Users & Roles{% endblock %}
+
+{% block content %}
+  <section class="platform-shell user-page">
+    <div class="platform-panel">
+      <div class="user-section">
+        <div class="user-toolbar">
+          <div class="sf-toolbar__title">
+            <h6>Invitation links</h6>
+            <p>Share activation links securely. Links expire automatically.</p>
+          </div>
+          <div class="user-actions">
+            <a href="/users/invite/" class="btn btn-primary-600"><i class="ri-mail-send-line"></i>Invite</a>
+            <a href="/users/" class="btn btn-outline-secondary">Back to users</a>
+          </div>
+        </div>
+
+        <div class="user-summary mb-3">
+          <div class="user-summary-card">
+            <span>Invitations</span>
+            <strong>{{ invitations|length }}</strong>
+            <small>Total links in this view</small>
+          </div>
+          <div class="user-summary-card">
+            <span>Pending</span>
+            <strong>
+              {% with pending=0 %}
+                {{ pending }}
+              {% endwith %}
+            </strong>
+            <small>Accepted links are filtered in row status</small>
+          </div>
+          <div class="user-summary-card">
+            <span>Action</span>
+            <strong>Resend</strong>
+            <small>Pending links can be resent</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-table-wrap">
+        <div class="table-responsive">
+          <table class="table align-middle sf-table user-table mb-0">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>School</th>
+              <th>Expires</th>
+              <th>Status</th>
+              <th>Email</th>
+              <th>Link</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for invite in invitations %}
+              <tr>
+                <td>
+                  <div class="d-flex flex-column">
+                    <strong>{{ invite.user.get_full_name|default:invite.user.username }}</strong>
+                    <span class="text-muted text-sm">{{ invite.user.email|default:"-" }}</span>
+                  </div>
+                </td>
+                <td>{{ invite.user.get_role_display }}</td>
+                <td>{% if invite.user.school %}{{ invite.user.school.name }}{% else %}-{% endif %}</td>
+                <td>{{ invite.expires_at }}</td>
+                <td>{% if invite.accepted_at %}<span class="badge bg-success">Accepted</span>{% else %}<span class="badge bg-warning text-dark">Pending</span>{% endif %}</td>
+                <td>
+                  {% if invite.sent_at %}
+                    <span class="badge bg-success">Sent</span>
+                    <div class="text-muted text-sm">{{ invite.sent_to }}</div>
+                  {% elif invite.sent_to %}
+                    <span class="badge bg-danger">Failed</span>
+                    <div class="text-muted text-sm">{{ invite.sent_to }}</div>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>{% if not invite.accepted_at %}<code>/activate/{{ invite.token }}/</code>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                <td class="text-end">
+                  {% if not invite.accepted_at %}
+                    <form method="post" action="/users/invitations/{{ invite.id }}/resend/" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-primary" onclick="return confirm('Resend invitation to {{ invite.user.username }}?');">Resend</button>
+                    </form>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted">No invitations yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="user-section">
+        <p class="user-note mb-0">Tip: Copy the relative link and share your domain + this path.</p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

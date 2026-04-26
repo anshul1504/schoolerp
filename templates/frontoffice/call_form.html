@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == "edit" %}Edit Call{% else %}Add Call{% endif %} | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Call{% else %}Add Call{% endif %}{% endblock %}
+{% block page_copy %}Log calls and schedule follow-ups in one place.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-4">
+      {% csrf_token %}
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-12"><label class="form-label">School<span class="text-danger ms-1">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for s in school_options %}<option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      {% if enquiry or prefill.enquiry_id %}
+        <input type="hidden" name="enquiry_id" value="{{ prefill.enquiry_id }}">
+      {% endif %}
+      <div class="col-md-6"><label class="form-label">Phone<span class="text-danger ms-1">*</span></label><input type="text" name="phone" class="form-control" value="{% if call %}{{ call.phone|default:'' }}{% else %}{{ prefill.phone|default:'' }}{% endif %}" required></div>
+      <div class="col-md-6"><label class="form-label">Caller name</label><input type="text" name="caller_name" class="form-control" value="{% if call %}{{ call.caller_name|default:'' }}{% else %}{{ prefill.caller_name|default:'' }}{% endif %}"></div>
+      <div class="col-md-6"><label class="form-label">Type</label><select name="call_type" class="form-control">{% for v,l in call_type_choices %}<option value="{{ v }}" {% if call and call.call_type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label">Status</label><select name="status" class="form-control">{% for v,l in call_status_choices %}<option value="{{ v }}" {% if call and call.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-12"><label class="form-label">Purpose</label><input type="text" name="purpose" class="form-control" value="{{ call.purpose|default:'' }}" placeholder="Admission enquiry / complaint / info"></div>
+      <div class="col-md-6"><label class="form-label">Follow-up date</label><input type="date" name="follow_up_date" class="form-control" value="{% if call and call.follow_up_date %}{{ call.follow_up_date|date:'Y-m-d' }}{% endif %}"></div>
+      <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="4">{{ call.notes|default:'' }}</textarea></div>
+      <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
+        <a href="/frontoffice/calls/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if mode == "edit" %}Save{% else %}Create{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == "edit" %}Edit Visitor{% else %}Log Visitor{% endif %} | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Visitor{% else %}Log Visitor{% endif %}{% endblock %}
+{% block page_copy %}Maintain an accurate visitor register with checkout controls.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-4">
+      {% csrf_token %}
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-lg-6"><label class="form-label">School<span class="text-danger ms-1">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-lg-6"><label class="form-label">Visitor Name<span class="text-danger ms-1">*</span></label><input type="text" name="visitor_name" class="form-control" value="{{ visitor.visitor_name|default:'' }}" required></div>
+      <div class="col-lg-6"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" value="{{ visitor.phone|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Person To Meet</label><input type="text" name="person_to_meet" class="form-control" value="{{ visitor.person_to_meet|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Purpose</label><select name="purpose" class="form-control">{% for value,label in visitor_purpose_choices %}<option value="{{ value }}" {% if visitor and visitor.purpose == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-12"><label class="form-label">Remarks</label><textarea name="remarks" class="form-control" rows="4">{{ visitor.remarks|default:'' }}</textarea></div>
+      <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
+        <a href="/frontoffice/visitors/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if mode == "edit" %}Save Changes{% else %}Log Visitor{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Plan Features{% endblock %}
+{% block page_heading %}Plan Features{% endblock %}
+{% block page_copy %}Create feature toggles and attach them to plans using checkboxes.{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="card mb-24">
+    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
+      <div>
+        <h6 class="mb-4">Features</h6>
+        <p class="text-neutral-600 text-sm mb-0">These appear as checkboxes inside plan setup.</p>
+      </div>
+      <div class="d-flex gap-10">
+        <a href="/billing/plans/" class="btn btn-outline-secondary">Plans</a>
+        <a href="/billing/features/create/" class="btn btn-primary">Create Feature</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-24">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for feature in features %}
+              <tr>
+                <td><strong>{{ feature.name }}</strong></td>
+                <td class="text-muted">{{ feature.code }}</td>
+                <td class="text-muted text-sm">{{ feature.description|default:"—" }}</td>
+                <td>
+                  {% if feature.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-center text-muted">No features yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Health | School ERP{% endblock %}
+{% block page_eyebrow %}Students{% endblock %}
+{% block page_heading %}Health & Safety Records{% endblock %}
+{% block page_copy %}Track checkups, vaccination, alerts, and sick leave for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="health" %}</div>
+    <div class="col-xl-5">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Add Health Record</h6>
+          {% if can_manage_students %}
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            <div class="col-12"><label class="form-label">Title</label><input name="title" class="form-control" required></div>
+            <div class="col-12"><label class="form-label">Type</label><select name="record_type" class="form-control">{% for v,l in health_type_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+            <div class="col-md-6"><label class="form-label">Record date</label><input type="date" name="record_date" class="form-control" value="{{ today|date:'Y-m-d' }}"></div>
+            <div class="col-md-6"><label class="form-label">Next due date</label><input type="date" name="next_due_date" class="form-control"></div>
+            <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+            <div class="col-12"><button class="btn btn-primary-600 radius-8 px-20 py-11">Save Health Record</button></div>
+          </form>
+          {% else %}<div class="text-neutral-600 text-sm">View-only access.</div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-7">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Health Timeline</h6>
+          {% if health_records %}
+            <div class="d-flex flex-column gap-12">
+              {% for item in health_records %}
+                <div class="timeline-entry">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-8">
+                    <strong>{{ item.title }}</strong>
+                    <small class="text-neutral-500">{{ item.record_date|default:item.created_at|date:"d M Y" }}</small>
+                  </div>
+                  <div class="text-neutral-600 text-sm mt-1">{{ item.get_record_type_display }}</div>
+                  {% if item.notes %}<div class="text-neutral-600 text-sm mt-1">{{ item.notes }}</div>{% endif %}
+                  {% if item.next_due_date %}<div class="text-neutral-500 text-sm mt-1">Next due: {{ item.next_due_date }}</div>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}<div class="text-neutral-600 text-sm">No health records logged.</div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

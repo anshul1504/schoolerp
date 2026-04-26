@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Meetings | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Meetings{% endblock %}
+{% block page_copy %}Schedule and track meetings with the principal.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+      <div>
+        <h6 class="mb-4">Meeting requests</h6>
+        <p class="text-neutral-600 text-sm mb-0">Receptionist-safe meeting scheduling and tracking.</p>
+      </div>
+      <a href="/frontoffice/meetings/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Schedule Meeting</a>
+    </div>
+
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-4"><label class="form-label">School</label><select name="school" class="form-control"><option value="">All schools</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-md-4"><label class="form-label">Status</label><select name="status" class="form-control"><option value="">All</option>{% for value,label in meeting_status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><button type="submit" class="btn btn-outline-primary w-100">Filter</button></div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Guardian</th>
+            <th>Student</th>
+            <th>Principal</th>
+            <th>Mode</th>
+            <th>Scheduled</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in meetings %}
+            <tr>
+              <td>{{ m.guardian_name }}</td>
+              <td>{{ m.student_name|default:"-" }}</td>
+              <td>{% if m.principal %}{{ m.principal.get_full_name|default:m.principal.username }}{% else %}-{% endif %}</td>
+              <td>{{ m.get_mode_display }}</td>
+              <td>{% if m.scheduled_at %}{{ m.scheduled_at|date:"d M Y, h:i A" }}{% else %}-{% endif %}</td>
+              <td>
+                {% if can_manage %}
+                  <form method="post" action="/frontoffice/meetings/{{ m.id }}/status/" class="d-flex align-items-center gap-8">
+                    {% csrf_token %}
+                    <select name="status" class="form-control form-control-sm sf-select-maxw-190">
+                      {% for value,label in meeting_status_choices %}
+                        <option value="{{ value }}" {% if m.status == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                  </form>
+                {% else %}
+                  {{ m.get_status_display }}
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-8">
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/meetings/{{ m.id }}/">View</a>
+                  {% if can_manage %}
+                    <a class="btn btn-sm btn-outline-primary" href="/frontoffice/meetings/{{ m.id }}/edit/">Edit</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-neutral-500 text-sm">No meetings found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

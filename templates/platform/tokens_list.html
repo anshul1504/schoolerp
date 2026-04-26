@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}API Tokens{% endblock %}
+{% block page_heading %}API Tokens{% endblock %}
+{% block page_copy %}Create tokens for provisioning/integrations (keep secret).{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Integration Tokens</h6>
+          <p>Use header <code>X-API-KEY</code> for provisioning APIs.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/platform/">Back</a>
+          <a class="btn btn-primary" href="/platform/tokens/create/">Create</a>
+        </div>
+      </div>
+
+      {% if request.session.last_created_token_value %}
+        <div class="alert alert-warning mt-16">
+          <strong>Copy token now:</strong>
+          <code class="sf-token">{{ request.session.last_created_token_value }}</code>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Scopes</th>
+              <th>Status</th>
+              <th>Last Used</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tokens %}
+              <tr>
+                <td class="fw-semibold">{{ t.name }}</td>
+                <td class="text-muted text-sm">{{ t.scopes|default:"—" }}</td>
+                <td>{% if t.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Paused</span>{% endif %}</td>
+                <td class="text-muted text-sm">{{ t.last_used_at|default:"—" }}</td>
+                <td class="text-end">
+                  <form method="post" action="/platform/tokens/{{ t.id }}/toggle/" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{% if t.is_active %}Disable{% else %}Enable{% endif %}</button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center text-muted">No tokens yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

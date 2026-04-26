@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == "edit" %}Edit Enquiry{% else %}Add Enquiry{% endif %} | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Enquiry{% else %}Add Enquiry{% endif %}{% endblock %}
+{% block page_copy %}Capture admission enquiries with clean follow-up tracking.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-4">
+      {% csrf_token %}
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-lg-6"><label class="form-label">School<span class="text-danger ms-1">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-lg-6"><label class="form-label">Student Name<span class="text-danger ms-1">*</span></label><input type="text" name="student_name" class="form-control" value="{{ enquiry.student_name|default:'' }}" required></div>
+      <div class="col-lg-6"><label class="form-label">Guardian Name<span class="text-danger ms-1">*</span></label><input type="text" name="guardian_name" class="form-control" value="{{ enquiry.guardian_name|default:'' }}" required></div>
+      <div class="col-lg-6"><label class="form-label">Phone<span class="text-danger ms-1">*</span></label><input type="text" name="phone" class="form-control" value="{{ enquiry.phone|default:'' }}" required></div>
+      <div class="col-lg-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ enquiry.email|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Interested Class</label><input type="text" name="interested_class" class="form-control" value="{{ enquiry.interested_class|default:'' }}" placeholder="Class 5"></div>
+      <div class="col-lg-4"><label class="form-label">Source</label><select name="source" class="form-control">{% for value,label in enquiry_source_choices %}<option value="{{ value }}" {% if enquiry and enquiry.source == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-lg-4"><label class="form-label">Status</label><select name="status" class="form-control">{% for value,label in enquiry_status_choices %}<option value="{{ value }}" {% if enquiry and enquiry.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-lg-4"><label class="form-label">Follow-up Date</label><input type="date" name="follow_up_date" class="form-control" value="{% if enquiry and enquiry.follow_up_date %}{{ enquiry.follow_up_date|date:'Y-m-d' }}{% endif %}"></div>
+      <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="4">{{ enquiry.notes|default:'' }}</textarea></div>
+      <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
+        <a href="/frontoffice/enquiries/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if mode == "edit" %}Save Changes{% else %}Create Enquiry{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

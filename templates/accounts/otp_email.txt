@@ -1,0 +1,8 @@
+Hello {{ user.get_full_name|default:user.username }},
+
+Your SchoolFlow verification code is: {{ code }}
+
+This code expires in 10 minutes.
+
+If you did not attempt to sign in, please contact your administrator.
+

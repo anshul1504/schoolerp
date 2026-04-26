@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance | School ERP{% endblock %}
+{% block page_eyebrow %}Attendance Control{% endblock %}
+{% block page_heading %}Daily Class Attendance{% endblock %}
+{% block page_copy %}Mark attendance against real class-section records so academics, discipline, and reports stay connected.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .attendance-card,
+  .metric-card {
+    border: 1px solid #dbe4ee;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff, #fbfdff);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+
+  .attendance-card__head {
+    padding: 20px 22px;
+    border-bottom: 1px solid #dbe4ee;
+    background: linear-gradient(135deg, #f8fbff, #eef4fb);
+  }
+
+  .attendance-card__body,
+  .metric-card .card-body {
+    padding: 22px;
+  }
+
+  .attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .attendance-table th,
+  .attendance-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .attendance-table th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    font-weight: 800;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  .status-chip.present { background: #dcfce7; color: #166534; }
+  .status-chip.absent { background: #fee2e2; color: #b91c1c; }
+  .status-chip.late { background: #fef3c7; color: #92400e; }
+  .status-chip.leave { background: #eff6ff; color: #1d4ed8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="row gy-4">
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-primary-600">Sessions</span><h4 class="mt-10 mb-6">{{ attendance_stats.sessions }}</h4><p class="text-neutral-600 text-sm mb-0">Total attendance sessions in current scope.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-success-600">Today</span><h4 class="mt-10 mb-6">{{ attendance_stats.today_sessions }}</h4><p class="text-neutral-600 text-sm mb-0">Sessions already marked for today.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-info-600">Classes</span><h4 class="mt-10 mb-6">{{ attendance_stats.classes }}</h4><p class="text-neutral-600 text-sm mb-0">Academic classes available for marking.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-warning-600">Marked Entries</span><h4 class="mt-10 mb-6">{{ attendance_stats.students_marked }}</h4><p class="text-neutral-600 text-sm mb-0">Student attendance rows recorded.</p></div></div></div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="attendance-card h-100">
+      <div class="attendance-card__head">
+        <h6 class="mb-4">Attendance Scope</h6>
+        <p class="text-neutral-600 text-sm mb-0">Choose school, class, and date before marking attendance.</p>
+      </div>
+      <div class="attendance-card__body">
+        <form method="get" class="row gy-3">
+          {% if request.user.role == "SUPER_ADMIN" %}
+            <div class="col-12">
+              <label class="form-label">School</label>
+              <select name="school" class="form-control">
+                <option value="">Select school</option>
+                {% for school in school_options %}
+                  <option value="{{ school.id }}" {% if selected_school and selected_school.id == school.id %}selected{% endif %}>{{ school.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          {% else %}
+            <div class="col-12">
+              <label class="form-label">School</label>
+              <input type="text" class="form-control" value="{{ selected_school.name|default:request.user.school.name }}" disabled>
+            </div>
+          {% endif %}
+          <div class="col-12">
+            <label class="form-label">Class</label>
+            <select name="academic_class" class="form-control">
+              <option value="">Select class</option>
+              {% for academic_class in academic_classes %}
+                <option value="{{ academic_class.id }}" {% if selected_class and selected_class.id == academic_class.id %}selected{% endif %}>{{ academic_class.name }} - {{ academic_class.section }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Attendance Date</label>
+            <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Load Attendance</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8">
+    <div class="attendance-card h-100">
+      <div class="attendance-card__head d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+          <h6 class="mb-4">Recent Sessions</h6>
+          <p class="text-neutral-600 text-sm mb-0">Quick view of recently marked classes.</p>
+        </div>
+        <div class="d-flex gap-10">
+          {% if selected_school or request.user.school_id %}
+            <a class="btn btn-outline-secondary" href="/attendance/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}dataset=sessions&export=csv">Export CSV</a>
+            <a class="btn btn-outline-secondary" href="/attendance/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}dataset=sessions&export=excel">Export Excel</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="attendance-card__body">
+        {% if attendance_sessions %}
+          <table class="attendance-table">
+            <thead><tr><th class="sf-th-icon"></th><th>Date</th><th>Class</th><th>Marked By</th><th>Note</th></tr></thead>
+            <tbody>
+              {% for session in attendance_sessions %}
+                <tr>
+                  <td><input type="checkbox" class="form-check-input attendance-session-select" value="{{ session.id }}" aria-label="Select session {{ session.id }}"></td>
+                  <td>{{ session.attendance_date }}</td>
+                  <td>{{ session.academic_class.name }} - {{ session.academic_class.section }}</td>
+                  <td>{{ session.marked_by.get_full_name|default:session.marked_by.username|default:"-" }}</td>
+                  <td>{{ session.note|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div class="d-flex gap-10 mt-3 flex-wrap">
+            <button type="button" class="btn btn-outline-secondary" id="exportSelectedSessionsCsvBtn" disabled>Export Selected (CSV)</button>
+            <button type="button" class="btn btn-outline-secondary" id="exportSelectedSessionsExcelBtn" disabled>Export Selected (Excel)</button>
+          </div>
+        {% else %}
+          <div class="text-neutral-500 text-sm">No attendance sessions created yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="attendance-card">
+      <div class="attendance-card__head d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h6 class="mb-4">Mark Attendance</h6>
+          <p class="text-neutral-600 text-sm mb-0">{% if selected_class %}{{ selected_class.name }} - {{ selected_class.section }} | {{ selected_date }}{% else %}Load a class and date to begin.{% endif %}</p>
+        </div>
+        {% if active_session %}
+          <span class="status-chip present">Session already exists</span>
+        {% endif %}
+      </div>
+      <div class="attendance-card__body">
+        {% if selected_class and students %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_attendance">
+            <input type="hidden" name="school" value="{{ selected_class.school_id }}">
+            <input type="hidden" name="academic_class" value="{{ selected_class.id }}">
+            <input type="hidden" name="attendance_date" value="{{ selected_date }}">
+            <div class="mb-3">
+              <label class="form-label">Session Note</label>
+              <input type="text" name="note" class="form-control" value="{{ active_session.note|default:'' }}" placeholder="Morning assembly delay, transport issue, exam day, etc.">
+            </div>
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Admission No</th>
+                  <th>Status</th>
+                  <th>Remark</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in attendance_rows %}
+                  {% with student=row.student entry=row.entry %}
+                    <tr>
+                      <td>
+                        <input type="hidden" name="student_ids" value="{{ student.id }}">
+                        <strong>{{ student.first_name }} {{ student.last_name }}</strong><br>
+                        <span class="text-neutral-500 text-sm">{{ student.guardian_name|default:"-" }}</span>
+                      </td>
+                      <td>{{ student.admission_no }}</td>
+                      <td>
+                        <select name="status_{{ student.id }}" class="form-control">
+                          {% for status in attendance_status_options %}
+                            <option value="{{ status }}" {% if entry and entry.status == status %}selected{% elif not entry and status == 'PRESENT' %}selected{% endif %}>{{ status|title }}</option>
+                          {% endfor %}
+                        </select>
+                      </td>
+                      <td><input type="text" name="remark_{{ student.id }}" class="form-control" value="{{ entry.remark|default:'' }}" placeholder="Optional remark"></td>
+                    </tr>
+                  {% endwith %}
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="mt-20 d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary-600 radius-8 px-24 py-11">Save Attendance</button>
+            </div>
+          </form>
+        {% elif selected_class %}
+          <div class="text-neutral-500 text-sm">No active students found in this class-section yet.</div>
+        {% else %}
+          <div class="text-neutral-500 text-sm">Select a class and date to open the attendance sheet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const boxes = Array.from(document.querySelectorAll(".attendance-session-select"));
+    const csvBtn = document.getElementById("exportSelectedSessionsCsvBtn");
+    const xlsBtn = document.getElementById("exportSelectedSessionsExcelBtn");
+
+    function selectedIds() {
+      return boxes.filter((b) => b.checked).map((b) => b.value).filter(Boolean);
+    }
+
+    function updateButtons() {
+      const enabled = selectedIds().length > 0;
+      if (csvBtn) csvBtn.disabled = !enabled;
+      if (xlsBtn) xlsBtn.disabled = !enabled;
+    }
+
+    function exportSelected(fmt) {
+      const ids = selectedIds().join(",");
+      const params = new URLSearchParams({
+        {% if selected_school %}school: "{{ selected_school.id }}",{% endif %}
+        dataset: "sessions",
+        export: fmt,
+        session_ids: ids,
+      });
+      window.location.href = "/attendance/?" + params.toString();
+    }
+
+    boxes.forEach((b) => b.addEventListener("change", updateButtons));
+    csvBtn && csvBtn.addEventListener("click", () => exportSelected("csv"));
+    xlsBtn && xlsBtn.addEventListener("click", () => exportSelected("excel"));
+    updateButtons();
+  });
+</script>
+{% endblock %}

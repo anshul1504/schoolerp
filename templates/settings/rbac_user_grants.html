@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}RBAC Grants{% endblock %}
+{% block page_heading %}RBAC Grants{% endblock %}
+{% block page_copy %}Who changed user roles/school assignment/activation (from EntityChangeLog).{% endblock %}
+{% block page_eyebrow %}Settings{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">RBAC Grants</span>
+    <h5 class="mb-2">User role and assignment changes</h5>
+    <p class="mb-0">Who changed user roles, school assignment, and activation.</p>
+  </section>
+
+  <div class="platform-panel mb-16">
+    <div class="platform-panel__head">
+      <div><h6>Search</h6><p>Filter by user id or text.</p></div>
+    </div>
+    <div class="platform-shell">
+      <form method="get" class="row gy-3 gx-3 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label">Search</label>
+          <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="user id or text">
+        </div>
+        <div class="col-md-4 d-flex gap-10">
+          <button type="submit" class="btn btn-outline-secondary">Search</button>
+          <a href="/settings/rbac-grants/" class="btn btn-outline-secondary">Reset</a>
+          <a href="/settings/" class="btn btn-outline-secondary">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Grant Events</h6><p>Latest assignment and activation changes.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Actor</th>
+            <th>User ID</th>
+            <th>Changes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in logs %}
+            <tr>
+              <td class="text-muted text-sm">{{ e.created_at }}</td>
+              <td>{% if e.actor %}{{ e.actor.username }}{% else %}—{% endif %}</td>
+              <td><code>{{ e.object_id }}</code></td>
+              <td><code class="text-muted text-sm">{{ e.changes }}</code></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-center text-muted">No grant events yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="text-muted text-sm mt-2">Showing up to 200 events.</div>
+  </div>
+{% endblock %}

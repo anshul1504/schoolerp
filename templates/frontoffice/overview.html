@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}Front Office | School ERP{% endblock %}
+{% block page_eyebrow %}Reception Desk{% endblock %}
+{% block page_heading %}Reception Desk{% endblock %}
+{% block page_copy %}Enquiries, visitors, calls, meetings, and admissions in one focused workspace.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .fo-shell {
+    display: grid;
+    gap: 18px;
+  }
+
+  .fo-action {
+    border: 1px solid transparent;
+    color: #fff !important;
+    font-weight: 800;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
+  }
+
+  .fo-action:hover {
+    color: #fff !important;
+    transform: translateY(-1px);
+  }
+
+  .fo-action-primary { background: #0f766e; border-color: #0f766e; }
+  .fo-action-primary:hover { background: #115e59; border-color: #115e59; }
+  .fo-action-teal { background: #0d9488; border-color: #0d9488; }
+  .fo-action-teal:hover { background: #0f766e; border-color: #0f766e; }
+  .fo-action-amber { background: #b45309; border-color: #b45309; }
+  .fo-action-amber:hover { background: #92400e; border-color: #92400e; }
+  .fo-action-slate { background: #475569; border-color: #475569; }
+  .fo-action-slate:hover { background: #334155; border-color: #334155; }
+
+  .fo-cards {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .fo-card {
+    grid-column: span 3;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    background: #fff;
+    padding: 16px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+  }
+
+  .fo-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(15, 118, 110, 0.26);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.10);
+  }
+
+  .fo-ico {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 58, 237, 0.11);
+    color: #6d28d9;
+    flex: 0 0 auto;
+    font-size: 22px;
+  }
+
+  .fo-ico.cyan { background: rgba(15, 118, 110, 0.11); color: #0f766e; }
+  .fo-ico.amber { background: rgba(245, 158, 11, 0.16); color: rgba(217, 119, 6, 1); }
+  .fo-ico.slate { background: rgba(100, 116, 139, 0.14); color: rgba(51, 65, 85, 1); }
+  .fo-ico.rose { background: rgba(244, 63, 94, 0.12); color: #be123c; }
+
+  .fo-card strong { display:block; font-weight: 900; letter-spacing: -0.01em; }
+  .fo-card span { display:block; color: rgba(15,23,42,0.65); font-size: 0.86rem; margin-top: 2px; }
+
+  .fo-kpis {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .fo-kpi {
+    grid-column: span 3;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff, #fbfdff);
+    padding: 16px;
+  }
+
+  .fo-kpi small { color: rgba(15,23,42,0.58); text-transform: uppercase; font-weight: 800; letter-spacing: 0.06em; }
+  .fo-kpi h4 { margin: 10px 0 6px; font-weight: 950; }
+  .fo-kpi p { margin: 0; color: rgba(15,23,42,0.62); font-size: 0.86rem; }
+  .fo-kpi.is-alert { border-color: rgba(245, 158, 11, 0.28); background: linear-gradient(180deg, #fff, rgba(255, 251, 235, 0.72)); }
+  .fo-kpi.is-priority { border-color: rgba(15, 118, 110, 0.20); background: linear-gradient(180deg, #fff, rgba(240, 253, 250, 0.78)); }
+  .fo-kpi.is-violet { border-color: rgba(124, 58, 237, 0.20); background: linear-gradient(180deg, #fff, rgba(245, 243, 255, 0.76)); }
+  .fo-kpi.is-slate { border-color: rgba(71, 85, 105, 0.18); background: linear-gradient(180deg, #fff, rgba(248, 250, 252, 0.88)); }
+
+  .fo-panels {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .fo-panel {
+    grid-column: span 6;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .fo-panel__head {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.07), rgba(124, 58, 237, 0.06));
+  }
+
+  .fo-panel__head h6 { margin: 0; font-weight: 900; }
+  .fo-panel__head p { margin: 6px 0 0; color: rgba(15,23,42,0.62); font-size: 0.86rem; }
+
+  .fo-panel__body { padding: 14px 16px 16px; }
+
+  .fo-item {
+    border: 1px solid rgba(15,23,42,0.08);
+    border-radius: 14px;
+    padding: 12px 12px;
+    background: #fff;
+  }
+
+  .fo-item + .fo-item { margin-top: 10px; }
+  .fo-item a { text-decoration: none; }
+  .fo-meta { color: rgba(15,23,42,0.62); font-size: 0.82rem; margin-top: 4px; }
+
+  @media (max-width: 1199.98px) {
+    .fo-card, .fo-kpi { grid-column: span 6; }
+    .fo-panel { grid-column: span 12; }
+  }
+  @media (max-width: 767.98px) {
+    .fo-card, .fo-kpi { grid-column: span 12; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fo-shell">
+  <div class="platform-panel">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <h5>Receptionist Workspace</h5>
+        <div class="text-neutral-600">Handle walk-ins, parent calls, new enquiries, visitor entry, meeting requests, and admission handoff from one place.</div>
+      </div>
+      <div class="d-flex flex-wrap gap-10">
+        <a class="btn fo-action fo-action-primary radius-8 px-18 py-11" href="/frontoffice/enquiries/create/"><i class="ri-user-add-line me-6"></i>New Enquiry</a>
+        <a class="btn fo-action fo-action-teal radius-8 px-18 py-11" href="/frontoffice/visitors/create/"><i class="ri-walk-line me-6"></i>Log Visitor</a>
+        <a class="btn fo-action fo-action-amber radius-8 px-18 py-11" href="/frontoffice/calls/create/"><i class="ri-phone-line me-6"></i>Log Call</a>
+        <a class="btn fo-action fo-action-slate radius-8 px-18 py-11" href="/frontoffice/search/"><i class="ri-search-line me-6"></i>Search</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="fo-cards">
+    <a class="fo-card" href="/frontoffice/enquiries/">
+      <div class="fo-ico"><i class="ri-user-search-line"></i></div>
+      <div><strong>Enquiries</strong><span>Pipeline, conversion, and status tracking</span></div>
+    </a>
+    <a class="fo-card" href="/frontoffice/follow-ups/">
+      <div class="fo-ico amber"><i class="ri-customer-service-2-line"></i></div>
+      <div><strong>Follow-ups</strong><span>Call history with next reminders</span></div>
+    </a>
+    <a class="fo-card" href="/frontoffice/visitors/">
+      <div class="fo-ico cyan"><i class="ri-clipboard-line"></i></div>
+      <div><strong>Visitors</strong><span>Entry/exit register with open visitors</span></div>
+    </a>
+    <a class="fo-card" href="/frontoffice/calls/">
+      <div class="fo-ico amber"><i class="ri-phone-line"></i></div>
+      <div><strong>Calls</strong><span>Incoming/outgoing/missed with follow-ups</span></div>
+    </a>
+    <a class="fo-card" href="/frontoffice/meetings/">
+      <div class="fo-ico rose"><i class="ri-calendar-event-line"></i></div>
+      <div><strong>Meetings</strong><span>Schedule parent-principal meetings</span></div>
+    </a>
+    <a class="fo-card" href="/frontoffice/messages/">
+      <div class="fo-ico slate"><i class="ri-send-plane-line"></i></div>
+      <div><strong>Messages</strong><span>Templates + email/WhatsApp campaigns</span></div>
+    </a>
+    <a class="fo-card" href="/admissions/">
+      <div class="fo-ico cyan"><i class="ri-file-list-2-line"></i></div>
+      <div><strong>Admissions</strong><span>Move qualified enquiries forward</span></div>
+    </a>
+    <a class="fo-card" href="/frontoffice/reports/daily/">
+      <div class="fo-ico slate"><i class="ri-file-chart-line"></i></div>
+      <div><strong>Daily Report</strong><span>Reception snapshot for the day</span></div>
+    </a>
+  </div>
+
+  <div class="fo-kpis">
+    <div class="fo-kpi is-violet">
+      <small>New Enquiries</small>
+      <h4>{{ frontoffice_stats.new_enquiries }}</h4>
+      <p>Fresh leads waiting for first action</p>
+    </div>
+    <div class="fo-kpi is-priority">
+      <small>Follow-ups Today</small>
+      <h4>{{ frontoffice_stats.follow_ups_today }}</h4>
+      <p>Calls or callbacks due today</p>
+    </div>
+    <div class="fo-kpi is-alert">
+      <small>Overdue Follow-ups</small>
+      <h4>{{ frontoffice_stats.overdue_follow_ups }}</h4>
+      <p>Needs attention before new leads pile up</p>
+    </div>
+    <div class="fo-kpi is-slate">
+      <small>Visitors Today</small>
+      <h4>{{ frontoffice_stats.visitors_today }}</h4>
+      <p>Entries recorded at reception</p>
+    </div>
+    <div class="fo-kpi is-violet">
+      <small>Open Visitors</small>
+      <h4>{{ frontoffice_stats.open_visitors }}</h4>
+      <p>Visitors still inside campus</p>
+    </div>
+    <div class="fo-kpi">
+      <small>Open Calls</small>
+      <h4>{{ frontoffice_stats.open_calls }}</h4>
+      <p>Call logs still pending closure</p>
+    </div>
+    <div class="fo-kpi">
+      <small>Calls Due Today</small>
+      <h4>{{ frontoffice_stats.calls_due_today }}</h4>
+      <p>Phone follow-ups scheduled for today</p>
+    </div>
+    <div class="fo-kpi">
+      <small>Meetings Today</small>
+      <h4>{{ frontoffice_stats.meetings_today }}</h4>
+      <p>Parent or guardian meetings on calendar</p>
+    </div>
+  </div>
+
+  <div class="fo-panels">
+    <div class="fo-panel">
+      <div class="fo-panel__head">
+        <h6>Follow-up Queue</h6>
+        <p>Quick glance at the latest call history and reminders.</p>
+      </div>
+      <div class="fo-panel__body">
+        {% if recent_follow_ups %}
+          {% for item in recent_follow_ups %}
+            <div class="fo-item">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <strong>{{ item.enquiry.student_name }}</strong>
+                <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ item.get_outcome_display }}</span>
+              </div>
+              <div class="fo-meta">On {{ item.follow_up_on }}{% if item.next_follow_up_date %} | Next: {{ item.next_follow_up_date }}{% endif %}</div>
+              <div class="text-neutral-600 text-sm mt-6">{{ item.summary|default:"-" }}</div>
+              <div class="mt-8"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ item.enquiry.id }}/">Open enquiry</a></div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No call history logged yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="fo-panel">
+      <div class="fo-panel__head">
+        <h6>Latest enquiries</h6>
+        <p>Open the pipeline without leaving the dashboard.</p>
+      </div>
+      <div class="fo-panel__body">
+        {% if enquiries %}
+          {% for enquiry in enquiries %}
+            <div class="fo-item">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <strong>{{ enquiry.student_name }}</strong>
+                <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ enquiry.get_status_display }}</span>
+              </div>
+              <div class="fo-meta">{{ enquiry.guardian_name }} | {{ enquiry.phone }}{% if enquiry.follow_up_date %} | Follow-up: {{ enquiry.follow_up_date }}{% endif %}</div>
+              <div class="mt-8 d-flex flex-wrap gap-10">
+                <a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ enquiry.id }}/">Open</a>
+                {% if not enquiry.converted_student %}
+                  <form method="post" action="/frontoffice/enquiries/{{ enquiry.id }}/convert/">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-primary-600">Convert</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No enquiries found yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="fo-panel">
+      <div class="fo-panel__head">
+        <h6>Recent calls</h6>
+        <p>Incoming, outgoing, and missed calls that may need action.</p>
+      </div>
+      <div class="fo-panel__body">
+        {% if recent_calls %}
+          {% for call in recent_calls %}
+            <div class="fo-item">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <strong>{{ call.caller_name|default:call.phone }}</strong>
+                <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ call.get_call_type_display }}</span>
+              </div>
+              <div class="fo-meta">{{ call.phone }} | {{ call.get_status_display }}{% if call.follow_up_date %} | Follow-up: {{ call.follow_up_date }}{% endif %}</div>
+              <div class="text-neutral-600 text-sm mt-6">{{ call.purpose|default:"No purpose added" }}</div>
+              <div class="mt-8"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/{{ call.id }}/">Open call</a></div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No calls logged yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="fo-panel">
+      <div class="fo-panel__head">
+        <h6>Meetings</h6>
+        <p>Requested and scheduled parent/principal meetings.</p>
+      </div>
+      <div class="fo-panel__body">
+        {% if upcoming_meetings %}
+          {% for meeting in upcoming_meetings %}
+            <div class="fo-item">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <strong>{{ meeting.guardian_name }}</strong>
+                <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ meeting.get_status_display }}</span>
+              </div>
+              <div class="fo-meta">
+                {{ meeting.guardian_phone|default:"No phone" }}
+                {% if meeting.scheduled_at %} | {{ meeting.scheduled_at }}{% else %} | Not scheduled{% endif %}
+              </div>
+              <div class="text-neutral-600 text-sm mt-6">{{ meeting.student_name|default:"Student not linked" }} | {{ meeting.get_mode_display }}</div>
+              <div class="mt-8"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/meetings/{{ meeting.id }}/">Open meeting</a></div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No pending meetings.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

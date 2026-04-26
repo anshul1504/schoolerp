@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Portal{% endblock %}
+{% block page_heading %}Parent Portal{% endblock %}
+{% block page_copy %}Track your child's attendance, fee status, notices, and academic progress in one place.{% endblock %}
+{% block page_eyebrow %}Parent{% endblock %}
+
+{% block content %}
+  <section class="platform-shell">
+    <div class="platform-panel mb-3">
+      <div class="platform-panel__body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3">
+              <div class="text-xs text-uppercase fw-semibold text-primary-600">Children Linked</div>
+              <h4 class="mt-2 mb-0">{{ parent_dashboard.child_count }}</h4>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3">
+              <div class="text-xs text-uppercase fw-semibold text-success-600">Active</div>
+              <h4 class="mt-2 mb-0">{{ parent_dashboard.active_children }}</h4>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3">
+              <div class="text-xs text-uppercase fw-semibold text-warning-600">Inactive</div>
+              <h4 class="mt-2 mb-0">{{ parent_dashboard.inactive_children }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row gy-4">
+      {% for card in parent_dashboard.child_cards %}
+        <div class="col-lg-6">
+          <div class="platform-panel h-100">
+            <div class="platform-panel__body">
+              <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                <div>
+                  <h6 class="mb-1">{{ card.student.first_name }} {{ card.student.last_name }}</h6>
+                  <div class="text-muted text-sm">{{ card.class_label }} | {{ card.student.school.name }}</div>
+                </div>
+                <span class="badge bg-primary">{{ card.attendance_rate }}% attendance</span>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-6"><div class="p-3 border rounded-3"><div class="text-xs text-uppercase fw-semibold text-danger-600">Fee Due</div><div class="fw-semibold">Rs {{ card.outstanding }}</div></div></div>
+                <div class="col-6"><div class="p-3 border rounded-3"><div class="text-xs text-uppercase fw-semibold text-info-600">Marks</div><div class="fw-semibold">{{ card.average_marks }}</div></div></div>
+              </div>
+              <div class="p-3 border rounded-3 mb-3">
+                <div class="text-xs text-uppercase fw-semibold text-secondary-600 mb-2">Latest Notice</div>
+                {% if card.latest_notice %}
+                  <strong>{{ card.latest_notice.title }}</strong>
+                {% else %}
+                  <span class="text-muted">No notices available.</span>
+                {% endif %}
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <a href="/students/{{ card.student.slug }}/" class="btn btn-outline-primary">Open Profile</a>
+                <a href="/students/{{ card.student.slug }}/communication-logs/" class="btn btn-outline-secondary">Communication</a>
+                <a href="/students/{{ card.student.slug }}/compliance/" class="btn btn-outline-secondary">Compliance</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <div class="platform-panel">
+            <div class="platform-panel__body">
+              <div class="text-muted">No linked students found for this parent account.</div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

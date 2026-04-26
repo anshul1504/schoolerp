@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}School Profile | School ERP{% endblock %}
+{% block page_eyebrow %}School Profile{% endblock %}
+{% block page_heading %}{{ school.name }}{% endblock %}
+{% block page_copy %}School-level profile, contact details, and operational limits for this school.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="sf-card">
+      <div class="sf-card__body">
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-16 mb-20">
+          <div class="d-flex align-items-center gap-12">
+            {% if school.logo %}
+              <span class="sf-avatar sf-avatar--lg"><img src="{{ school.logo.url }}" alt="{{ school.name }}"></span>
+            {% else %}
+              <span class="sf-avatar sf-avatar--soft sf-avatar--lg">{{ school.name|first|upper }}</span>
+            {% endif %}
+            <div>
+              <h6 class="mb-2">{{ school.name }}</h6>
+              <div class="text-neutral-500 text-sm">{{ school.city }}, {{ school.state }} - <span class="sf-badge-soft">Code: {{ school.code }}</span></div>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-10">
+            <a href="/schools/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+            <a href="/schools/{{ school.id }}/setup/" class="btn btn-outline-primary radius-8 px-20 py-11">Setup</a>
+            <a href="/schools/{{ school.id }}/campuses/" class="btn btn-outline-primary radius-8 px-20 py-11">Campuses</a>
+            <a href="/schools/{{ school.id }}/team/" class="btn btn-outline-primary radius-8 px-20 py-11">Team</a>
+            {% if can_edit_school_profile %}
+              <a href="/schools/edit/{{ school.id }}/" class="btn btn-primary-600 radius-8 px-20 py-11">Edit Profile</a>
+            {% endif %}
+            {% if can_manage_comm_settings %}
+              <a href="/schools/{{ school.id }}/communication/" class="btn btn-outline-primary radius-8 px-20 py-11">Email/WhatsApp Setup</a>
+            {% endif %}
+            {% if can_manage_schools %}
+              <a href="/schools/{{ school.id }}/implementation/" class="btn btn-outline-primary radius-8 px-20 py-11">Implementation</a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row gy-4 mb-20">
+          <div class="col-xl-3 col-sm-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <span class="text-xs text-uppercase fw-bold text-secondary">Campuses</span>
+              <h4 class="mt-10 mb-0">{{ campus_count }}</h4>
+              <div class="text-neutral-500 text-sm mt-6">Active branches</div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-sm-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <span class="text-xs text-uppercase fw-bold text-primary-600">Active Students</span>
+              <h4 class="mt-10 mb-0">{{ active_students }}</h4>
+              <div class="text-neutral-500 text-sm mt-6">{{ total_students }} total records</div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-sm-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <span class="text-xs text-uppercase fw-bold text-info-600">Classes</span>
+              <h4 class="mt-10 mb-0">{{ classes }}</h4>
+              <div class="text-neutral-500 text-sm mt-6">Academic structure entries</div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-sm-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <span class="text-xs text-uppercase fw-bold text-success-600">Attendance Sessions</span>
+              <h4 class="mt-10 mb-0">{{ attendance_sessions }}</h4>
+              <div class="text-neutral-500 text-sm mt-6">Marked sessions</div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-sm-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <span class="text-xs text-uppercase fw-bold text-warning-600">Fees Ledgers</span>
+              <h4 class="mt-10 mb-0">{{ fee_ledgers }}</h4>
+              <div class="text-neutral-500 text-sm mt-6">Dues created</div>
+            </div>
+          </div>
+          {# Implementation tracker is shown below to avoid duplicate UI. #}
+        </div>
+
+        <div class="row gy-4">
+          <div class="col-md-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <strong class="d-block mb-8">Contact</strong>
+              <div class="text-neutral-700 text-sm">Email: {{ school.email }}</div>
+              <div class="text-neutral-700 text-sm mt-4">Phone: {{ school.phone }}</div>
+              {% if school.support_email %}
+                <div class="text-neutral-700 text-sm mt-4">Support: {{ school.support_email }}</div>
+              {% endif %}
+              {% if school.website %}
+                <div class="text-neutral-700 text-sm mt-4">Website: {{ school.website }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border border-neutral-200 radius-12 p-18 h-100">
+              <strong class="d-block mb-8">Leadership</strong>
+              <div class="text-neutral-700 text-sm">Principal: {{ school.principal_name }}</div>
+              <div class="text-neutral-700 text-sm mt-4">Established: {{ school.established_year }}</div>
+              {% if school.board %}
+                <div class="text-neutral-700 text-sm mt-4">Board: {{ school.board }}</div>
+              {% endif %}
+              {% if school.medium %}
+                <div class="text-neutral-700 text-sm mt-4">Medium: {{ school.medium }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="border border-neutral-200 radius-12 p-18">
+              <strong class="d-block mb-8">Address</strong>
+              <div class="text-neutral-700 text-sm">{{ school.address }}</div>
+              {% if school.address_line2 %}
+                <div class="text-neutral-700 text-sm mt-4">{{ school.address_line2 }}</div>
+              {% endif %}
+              <div class="text-neutral-500 text-sm mt-4">{{ school.city }}, {{ school.state }}{% if school.pincode %} - {{ school.pincode }}{% endif %}</div>
+            </div>
+          </div>
+          {% if show_advanced_school_panels %}
+            <div class="col-12">
+              <div class="border border-neutral-200 radius-12 p-18">
+                <strong class="d-block mb-8">Subscription</strong>
+                {% if subscription %}
+                  <div class="d-flex flex-wrap gap-12">
+                    <span class="sf-badge-soft">Plan: {{ subscription.plan.name }}</span>
+                    <span class="sf-badge-soft">Status: {{ subscription.status }}</span>
+                    <span class="sf-badge-soft">From: {{ subscription.starts_on }}</span>
+                    <span class="sf-badge-soft">To: {% if subscription.ends_on %}{{ subscription.ends_on }}{% else %}Ongoing{% endif %}</span>
+                  </div>
+                {% else %}
+                  <div class="text-neutral-600 text-sm">No subscription record found yet.</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+          {% if can_toggle_school_status %}
+            <div class="col-12">
+              <div class="border border-neutral-200 radius-12 p-18">
+                <strong class="d-block mb-8">School Status</strong>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-12">
+                  <div class="text-neutral-700 text-sm">
+                    Current: {% if school.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-danger">Suspended</span>{% endif %}
+                  </div>
+                  <form method="post" action="/schools/{{ school.id }}/status/" class="d-flex flex-wrap gap-10 align-items-end">
+                    {% csrf_token %}
+                    {% if school.is_active %}
+                      <input type="hidden" name="action" value="suspend">
+                      <div>
+                        <label class="form-label mb-1">Reason (optional)</label>
+                        <input type="text" name="reason" class="form-control sf-input-minw-260" placeholder="e.g., payment pending">
+                      </div>
+                      <button type="submit" class="btn btn-outline-danger">Suspend</button>
+                    {% else %}
+                      <input type="hidden" name="action" value="resume">
+                      <button type="submit" class="btn btn-outline-success">Resume</button>
+                    {% endif %}
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+          {% if show_advanced_school_panels %}
+            <div class="col-12">
+              <div class="border border-neutral-200 radius-12 p-18">
+                <strong class="d-block mb-8">Enabled Modules</strong>
+                {% if enabled_features %}
+                  <div class="d-flex flex-wrap gap-10">
+                    {% for code in enabled_features %}
+                      <span class="sf-badge-soft">{{ code }}</span>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="text-neutral-600 text-sm">No module features enabled for this school subscription.</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+          {% if can_manage_schools %}
+            <div class="col-12">
+              <div class="border border-neutral-200 radius-12 p-18">
+                <strong class="d-block mb-8">Implementation</strong>
+                {% if implementation_project %}
+                  <div class="d-flex flex-wrap gap-12 align-items-center justify-content-between">
+                    <div class="text-neutral-700 text-sm">
+                      Status: <span class="sf-badge-soft">{{ implementation_project.get_status_display }}</span>
+                    </div>
+                    <a href="/schools/{{ school.id }}/implementation/" class="btn btn-sm btn-outline-secondary">Open tracker</a>
+                  </div>
+                {% else %}
+                  <div class="d-flex flex-wrap gap-12 align-items-center justify-content-between">
+                    <div class="text-neutral-600 text-sm">No implementation tracker yet.</div>
+                    <a href="/schools/{{ school.id }}/implementation/" class="btn btn-sm btn-outline-secondary">Create tracker</a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

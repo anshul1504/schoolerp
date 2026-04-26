@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Follow-ups | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Follow-ups{% endblock %}
+{% block page_copy %}Call history, reminders, and outcomes.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-3"><label class="form-label">School</label><select name="school" class="form-control"><option value="">All schools</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" value="{{ date }}"></div>
+      <div class="col-md-4"><label class="form-label">Outcome</label><select name="outcome" class="form-control"><option value="">All</option>{% for value,label in follow_up_outcome_choices %}<option value="{{ value }}" {% if outcome == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Filter</button></div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Student</th>
+            <th>Outcome</th>
+            <th>Next</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in follow_ups %}
+            <tr>
+              <td>{{ f.follow_up_on }}</td>
+              <td>{{ f.enquiry.student_name }}</td>
+              <td>{{ f.get_outcome_display }}</td>
+              <td>{{ f.next_follow_up_date|default:"-" }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-8">
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ f.enquiry.id }}/">Open</a>
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ f.enquiry.school_id }}&enquiry_id={{ f.enquiry.id }}&phone={{ f.enquiry.phone }}&caller_name={{ f.enquiry.guardian_name|urlencode }}">Log Call</a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-neutral-500 text-sm">No follow-ups found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

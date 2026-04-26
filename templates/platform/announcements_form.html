@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Announcement{% else %}Create Announcement{% endif %}{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Announcement{% else %}Create Announcement{% endif %}{% endblock %}
+{% block page_copy %}This banner appears to all logged-in users (when active and within time window).{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row gy-3 gx-3">
+          <div class="col-lg-6">
+            <label class="form-label">Title</label>
+            <input class="form-control" name="title" value="{% if announcement %}{{ announcement.title }}{% endif %}" required>
+          </div>
+          <div class="col-lg-3">
+            <label class="form-label">Severity</label>
+            <select class="form-control" name="severity">
+              {% for value,label in severity_choices %}
+                <option value="{{ value }}" {% if announcement and announcement.severity == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-3 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="activeCheck" name="is_active" {% if announcement %}{% if announcement.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+              <label class="form-check-label" for="activeCheck">Active</label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Message</label>
+            <textarea class="form-control" name="message" rows="5" required>{% if announcement %}{{ announcement.message }}{% endif %}</textarea>
+            <div class="text-muted text-sm mt-1">Keep it short. Example: “Maintenance tonight 10:00 PM–10:30 PM IST.”</div>
+          </div>
+
+          <div class="col-lg-6">
+            <label class="form-label">Starts At (optional, ISO)</label>
+            <input class="form-control" name="starts_at" placeholder="2026-04-23T22:00:00" value="{% if announcement and announcement.starts_at %}{{ announcement.starts_at|date:'c' }}{% endif %}">
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label">Ends At (optional, ISO)</label>
+            <input class="form-control" name="ends_at" placeholder="2026-04-23T22:30:00" value="{% if announcement and announcement.ends_at %}{{ announcement.ends_at|date:'c' }}{% endif %}">
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a class="btn btn-outline-secondary" href="/platform/announcements/">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}TC Requests | School ERP{% endblock %}
+{% block page_eyebrow %}Students{% endblock %}
+{% block page_heading %}Transfer Certificate Requests{% endblock %}
+{% block page_copy %}Review and manage TC requests for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">
+      {% include "students/_student_nav.html" with student_nav_active="tc_requests" %}
+    </div>
+    <div class="col-12">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <h6 class="mb-14">Request Timeline</h6>
+          {% if tc_requests %}
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Destination</th>
+                    <th>Review Note</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in tc_requests %}
+                    <tr>
+                      <td>{{ item.created_at|date:"d M Y, h:i A" }}</td>
+                      <td><span class="student-pill">{{ item.get_status_display }}</span></td>
+                      <td>{{ item.reason|default:"-" }}</td>
+                      <td>{{ item.destination_school|default:"-" }}</td>
+                      <td>{{ item.review_note|default:"-" }}</td>
+                      <td>
+                        {% if can_manage_students and item.status == "PENDING" %}
+                          <form method="post" class="d-flex flex-wrap gap-8">
+                            {% csrf_token %}
+                            <input type="hidden" name="request_id" value="{{ item.id }}">
+                            <input type="text" name="review_note" class="form-control form-control-sm" placeholder="Review note">
+                            <button type="submit" name="decision" value="APPROVED" class="btn btn-sm btn-success">Approve</button>
+                            <button type="submit" name="decision" value="REJECTED" class="btn btn-sm btn-danger">Reject</button>
+                          </form>
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-neutral-600 text-sm">No TC requests raised yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == "edit" %}Edit Meeting{% else %}Schedule Meeting{% endif %} | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Meeting{% else %}Schedule Meeting{% endif %}{% endblock %}
+{% block page_copy %}Create a meeting request and optionally notify the principal by email.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-4">
+      {% csrf_token %}
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-lg-6"><label class="form-label">School<span class="text-danger ms-1">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and school.id == selected_school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-lg-6"><label class="form-label">Principal</label><select name="principal" class="form-control"><option value="">Select principal</option>{% for p in principals %}<option value="{{ p.id }}" {% if meeting and meeting.principal_id == p.id %}selected{% endif %}>{{ p.get_full_name|default:p.username }}</option>{% endfor %}</select></div>
+
+      <div class="col-lg-6"><label class="form-label">Guardian Name<span class="text-danger ms-1">*</span></label><input type="text" name="guardian_name" class="form-control" required value="{{ meeting.guardian_name|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Student Name</label><input type="text" name="student_name" class="form-control" value="{{ meeting.student_name|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Guardian Phone</label><input type="text" name="guardian_phone" class="form-control" value="{{ meeting.guardian_phone|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Guardian Email</label><input type="email" name="guardian_email" class="form-control" value="{{ meeting.guardian_email|default:'' }}"></div>
+
+      <div class="col-lg-6"><label class="form-label">Mode</label><select name="mode" class="form-control">{% for value,label in mode_choices %}<option value="{{ value }}" {% if meeting and meeting.mode == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-lg-6"><label class="form-label">Scheduled At</label><input type="datetime-local" name="scheduled_at" class="form-control" value="{% if meeting and meeting.scheduled_at %}{{ meeting.scheduled_at|date:'Y-m-d\\TH:i' }}{% endif %}"></div>
+
+      {% if mode == "edit" %}
+        <div class="col-lg-6"><label class="form-label">Status</label><select name="status" class="form-control">{% for value,label in meeting_status_choices %}<option value="{{ value }}" {% if meeting and meeting.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      {% endif %}
+
+      <div class="col-lg-6"><label class="form-label">Reference Name</label><input type="text" name="reference_name" class="form-control" placeholder="Who referred them?" value="{{ meeting.reference_name|default:'' }}"></div>
+      <div class="col-lg-6"><label class="form-label">Reference Platform</label><select name="reference_social" class="form-control">{% for value,label in social_choices %}<option value="{{ value }}" {% if meeting and meeting.reference_social == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="4" placeholder="Agenda, reason, any constraints">{{ meeting.notes|default:'' }}</textarea></div>
+
+      <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
+        <a href="/frontoffice/meetings/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if mode == "edit" %}Save Changes{% else %}Save Meeting{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

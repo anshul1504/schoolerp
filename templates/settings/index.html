@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+{% block page_heading %}Settings{% endblock %}
+{% block page_copy %}Manage configuration for your school workspace.{% endblock %}
+{% block page_eyebrow %}Settings{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Settings</span>
+    <h5 class="mb-2">Configuration and platform tools</h5>
+    <p class="mb-0">Manage configuration for your school workspace.</p>
+    <div class="platform-shell__actions mt-16">
+      <a class="btn btn-primary-600" href="/super-admin/"><i class="ri-dashboard-2-line"></i>Open Hub</a>
+    </div>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Settings Modules</h6><p>Platform configuration and RBAC tools.</p></div>
+    </div>
+    <div class="platform-list">
+      <a class="platform-row" href="/settings/branding/"><span class="platform-row__icon"><i class="ri-palette-line"></i></span><span><strong>Branding & Base Setup</strong><small>Theme and product identity</small></span><em class="status-pill">Open</em></a>
+      <a class="platform-row" href="/settings/role-matrix/"><span class="platform-row__icon"><i class="ri-shield-keyhole-line"></i></span><span><strong>Role Matrix</strong><small>Roles and access coverage</small></span><em class="status-pill">Open</em></a>
+      <a class="platform-row" href="/settings/permissions/"><span class="platform-row__icon"><i class="ri-lock-password-line"></i></span><span><strong>Permissions Matrix</strong><small>Permission mapping</small></span><em class="status-pill">Open</em></a>
+      <a class="platform-row" href="/settings/rbac-audit/"><span class="platform-row__icon"><i class="ri-file-list-3-line"></i></span><span><strong>RBAC Audit</strong><small>Role change history</small></span><em class="status-pill">Open</em></a>
+      <a class="platform-row" href="/settings/rbac-grants/"><span class="platform-row__icon"><i class="ri-user-settings-line"></i></span><span><strong>RBAC Grants</strong><small>User-level grants</small></span><em class="status-pill">Open</em></a>
+      <a class="platform-row" href="/settings/2fa/"><span class="platform-row__icon"><i class="ri-shield-check-line"></i></span><span><strong>2FA Policy</strong><small>Authentication policy</small></span><em class="status-pill">Open</em></a>
+      <a class="platform-row" href="/settings/email-test/"><span class="platform-row__icon"><i class="ri-mail-send-line"></i></span><span><strong>SMTP Email Test</strong><small>Mail delivery check</small></span><em class="status-pill">Open</em></a>
+    </div>
+  </div>
+{% endblock %}

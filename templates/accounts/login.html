@@ -1,0 +1,68 @@
+{% extends "accounts/auth_base.html" %}
+{% load static %}
+
+{% block title %}Login | {% if tenant_school %}{{ tenant_school.name }}{% else %}{{ platform_settings.product_name|default:"SchoolFlow" }}{% endif %}{% endblock %}
+
+{% block auth_visual_badge_icon %}<i class="ri-login-circle-line"></i>{% endblock %}
+{% block auth_visual_badge_text %}Welcome back{% endblock %}
+{% block auth_visual_title %}Pick up where you left off.{% endblock %}
+{% block auth_visual_subtitle %}Sign in to manage students, staff, attendance, fees and reports in one place.{% endblock %}
+
+{% block content %}
+  <div class="mt-2 mb-4">
+    <h1 class="h4 auth-title mb-1">Login</h1>
+    <p class="auth-subtitle mb-0">Welcome back - sign in to continue.</p>
+  </div>
+
+  <form method="post" action="{% url 'login' %}" class="d-flex flex-column gap-3">
+    {% csrf_token %}
+    <div>
+      <label for="login-username" class="form-label mb-1 fw-semibold">Username or email</label>
+      <input type="text" id="login-username" name="username" class="form-control" placeholder="Enter your username or email" autocomplete="username" autofocus required>
+    </div>
+    <div>
+      <label for="login-password" class="form-label mb-1 fw-semibold">Password</label>
+      <div class="position-relative">
+        <input type="password" id="login-password" name="password" class="form-control pe-5" placeholder="Enter your password" autocomplete="current-password" required>
+        <button type="button" class="btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-3 text-secondary" data-toggle-password="#login-password" aria-label="Toggle password visibility">
+          <i class="ri-eye-line"></i>
+        </button>
+      </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="remember-me" name="remember_me" value="1">
+        <label class="form-check-label" for="remember-me">Remember me</label>
+      </div>
+      <a href="{% url 'password_reset' %}" class="text-decoration-underline">Forgot password?</a>
+    </div>
+    <div class="auth-actions">
+      <button type="submit" class="btn btn-primary w-100">Log in</button>
+    </div>
+  </form>
+
+  {% if GOOGLE_OIDC_ENABLED %}
+    <div class="mt-3">
+      <a class="btn btn-outline-secondary w-100" href="/sso/google/start/">Continue with Google</a>
+    </div>
+  {% endif %}
+
+  <div class="mt-3 text-center text-sm text-muted">
+    Need access? Contact your administrator for an invitation link.
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-toggle-password]");
+      if (!button) return;
+      const selector = button.getAttribute("data-toggle-password");
+      const input = selector ? document.querySelector(selector) : null;
+      if (!input) return;
+      input.type = input.type === "password" ? "text" : "password";
+      const icon = button.querySelector("i");
+      if (icon) icon.className = input.type === "password" ? "ri-eye-line" : "ri-eye-off-line";
+    });
+  </script>
+{% endblock %}

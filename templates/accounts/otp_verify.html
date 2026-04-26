@@ -1,0 +1,107 @@
+{% extends "accounts/auth_base.html" %}
+
+{% block title %}Verify Login | SchoolFlow{% endblock %}
+
+{% block auth_visual_badge_icon %}<i class="ri-mail-check-line"></i>{% endblock %}
+{% block auth_visual_badge_text %}Email verification{% endblock %}
+{% block auth_visual_title %}Quick verification, safer access.{% endblock %}
+{% block auth_visual_subtitle %}Enter the 6-digit code sent to your email. It expires in 10 minutes.{% endblock %}
+
+{% block content %}
+  <div class="mb-3">
+    <h3 class="auth-title mb-2">Verify your login</h3>
+    <p class="auth-subtitle mb-0">Enter the 6-digit code sent to your email.</p>
+  </div>
+
+  {% if debug_code %}
+    <div class="help-note mb-3">
+      Dev mode code: <strong>{{ debug_code }}</strong>
+    </div>
+  {% endif %}
+
+  <form method="post" class="d-flex flex-column gap-3" data-otp-form>
+    {% csrf_token %}
+
+    <div>
+      <label class="form-label" for="otp-code">Verification code</label>
+      <input type="hidden" id="otp-code" name="code" value="">
+      <div class="d-flex gap-2" role="group" aria-label="6-digit verification code">
+        <input class="form-control text-center fw-bold sf-otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" data-otp-input autofocus>
+        <input class="form-control text-center fw-bold sf-otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-otp-input>
+        <input class="form-control text-center fw-bold sf-otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-otp-input>
+        <input class="form-control text-center fw-bold sf-otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-otp-input>
+        <input class="form-control text-center fw-bold sf-otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-otp-input>
+        <input class="form-control text-center fw-bold sf-otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-otp-input>
+      </div>
+      <div class="form-text">Tip: paste the code and it will auto-fill.</div>
+    </div>
+
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary">Verify</button>
+    </div>
+
+    <div class="text-center">
+      <a href="{% url 'login-page' %}" class="text-decoration-none">Back to login</a>
+    </div>
+  </form>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    (function () {
+      const form = document.querySelector("[data-otp-form]");
+      if (!form) return;
+      const hidden = form.querySelector("#otp-code");
+      const inputs = Array.from(form.querySelectorAll("[data-otp-input]"));
+      if (!hidden || inputs.length !== 6) return;
+
+      function normalizeDigit(value) {
+        const match = (value || "").replace(/\D/g, "");
+        return match ? match[0] : "";
+      }
+
+      function syncHidden() {
+        hidden.value = inputs.map(i => normalizeDigit(i.value)).join("");
+      }
+
+      function focusIndex(index) {
+        const next = inputs[index];
+        if (next) next.focus();
+      }
+
+      inputs.forEach((input, idx) => {
+        input.addEventListener("input", (e) => {
+          const digit = normalizeDigit(input.value);
+          input.value = digit;
+          syncHidden();
+          if (digit && idx < inputs.length - 1) focusIndex(idx + 1);
+        });
+
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Backspace" && !input.value && idx > 0) {
+            inputs[idx - 1].focus();
+            inputs[idx - 1].value = "";
+            syncHidden();
+          }
+          if (e.key === "ArrowLeft" && idx > 0) focusIndex(idx - 1);
+          if (e.key === "ArrowRight" && idx < inputs.length - 1) focusIndex(idx + 1);
+        });
+
+        input.addEventListener("paste", (e) => {
+          const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+          const digits = text.replace(/\D/g, "").slice(0, inputs.length);
+          if (!digits) return;
+          e.preventDefault();
+          digits.split("").forEach((d, i) => { inputs[i].value = d; });
+          for (let i = digits.length; i < inputs.length; i++) inputs[i].value = "";
+          syncHidden();
+          focusIndex(Math.min(digits.length, inputs.length - 1));
+        });
+      });
+
+      form.addEventListener("submit", () => {
+        syncHidden();
+      });
+    })();
+  </script>
+{% endblock %}

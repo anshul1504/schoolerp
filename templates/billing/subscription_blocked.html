@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Access Restricted{% endblock %}
+{% block page_heading %}Access Restricted{% endblock %}
+{% block page_copy %}Your subscription does not allow access to this module.{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body p-24">
+      <h6 class="mb-2">Subscription required</h6>
+      {% if blocked_reason == "campus_limit" %}
+        <p class="text-muted mb-3">
+          Your school is configured with more campuses than your current plan allows. Reduce the campus count or upgrade your plan.
+        </p>
+      {% else %}
+      <p class="text-muted mb-3">
+        Your account is linked to a school plan that is inactive/expired or does not include this module.
+        Please contact your School Owner / administrator to upgrade the plan.
+      </p>
+      {% endif %}
+      {% if subscription %}
+        <div class="border border-neutral-200 radius-12 p-16 mb-3">
+          <div class="d-flex flex-wrap gap-10 justify-content-between">
+            <div>
+              <div class="text-xs text-uppercase fw-bold text-primary-600">School</div>
+              <div class="fw-semibold">{{ subscription.school.name }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-uppercase fw-bold text-primary-600">Plan</div>
+              <div class="fw-semibold">{{ subscription.plan.name }} ({{ subscription.plan.tier }})</div>
+            </div>
+            <div>
+              <div class="text-xs text-uppercase fw-bold text-primary-600">Status</div>
+              <div class="fw-semibold">{{ subscription.status }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-uppercase fw-bold text-primary-600">Period</div>
+              <div class="fw-semibold">{{ subscription.starts_on }}{% if subscription.ends_on %} -> {{ subscription.ends_on }}{% else %} -> Ongoing{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      {% if support_email %}
+        <p class="text-muted mb-3">
+          Need help? Contact support at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+        </p>
+      {% endif %}
+      <div class="d-flex gap-10 flex-wrap">
+        <a href="/dashboard/" class="btn btn-outline-secondary">Back to dashboard</a>
+        <a href="/logout/" class="btn btn-primary">Log out</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Academic Years | Academics{% endblock %}
+{% block page_eyebrow %}Academics{% endblock %}
+{% block page_heading %}Academic Years{% endblock %}
+{% block page_copy %}Create and switch the active academic year per school.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+      <div>
+        <h6 class="mb-4">Years</h6>
+        <p class="text-neutral-600 text-sm mb-0">Keep a clean year history and mark one year as current.</p>
+      </div>
+      <div class="d-flex gap-10">
+        <a href="/academics/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+        <a href="/academics/years/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Add Year</a>
+      </div>
+    </div>
+
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-8">
+          <label class="form-label">School</label>
+          <select name="school" class="form-control">
+            <option value="">All schools</option>
+            {% for s in school_options %}
+              <option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-grid">
+          <button type="submit" class="btn btn-outline-primary">Apply</button>
+        </div>
+      {% endif %}
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Period</th>
+            <th>Current</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for y in years %}
+            <tr>
+              <td>
+                <strong>{{ y.name }}</strong>
+                <div class="text-neutral-500 text-sm">{% if y.school %}{{ y.school.name }}{% endif %}</div>
+              </td>
+              <td>{{ y.start_date }} to {{ y.end_date }}</td>
+              <td>{% if y.is_current %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-8">
+                  <a class="btn btn-sm btn-outline-primary" href="/academics/years/{{ y.id }}/edit/">Edit</a>
+                  <form method="post" action="/academics/years/{{ y.id }}/delete/" onsubmit="return confirm('Delete this academic year?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-neutral-500 text-sm">No academic years yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

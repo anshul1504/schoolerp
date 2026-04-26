@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Admission And Profile</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 12mm;
+    }
+
+    body {
+      margin: 0;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 10px;
+      color: #172033;
+    }
+
+    .page {
+      min-height: 100%;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .hero {
+      border: 1px solid #dbe4ee;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f8fbff, #eef4fb);
+      margin-bottom: 12px;
+    }
+
+    .hero-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid #dbe4ee;
+      background: linear-gradient(135deg, #0f172a, #1d4ed8);
+      color: #ffffff;
+    }
+
+    .hero-table,
+    .profile-table,
+    .detail-table,
+    .summary-table,
+    .doc-table,
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .logo-cell {
+      width: 84px;
+      vertical-align: top;
+    }
+
+    .logo,
+    .logo-fallback {
+      width: 66px;
+      height: 66px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.96);
+      object-fit: contain;
+      padding: 5px;
+      box-sizing: border-box;
+      text-align: center;
+      line-height: 56px;
+      color: #1d4ed8;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .school-name {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .school-copy {
+      font-size: 9px;
+      opacity: 0.92;
+      line-height: 1.4;
+      margin: 2px 0;
+    }
+
+    .hero-meta {
+      padding: 12px 16px;
+      background: #ffffff;
+    }
+
+    .title {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    .meta-chip {
+      display: inline-block;
+      margin: 0 6px 6px 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #dbe4ee;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 8.5px;
+      font-weight: 800;
+    }
+
+    .profile-card {
+      margin-bottom: 12px;
+      border: 1px solid #dbe4ee;
+      border-radius: 18px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .profile-card td {
+      vertical-align: top;
+    }
+
+    .photo-cell {
+      width: 130px;
+      padding: 16px;
+    }
+
+    .student-photo,
+    .student-placeholder {
+      width: 102px;
+      height: 122px;
+      border-radius: 16px;
+      border: 1px solid #dbe4ee;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      object-fit: cover;
+      box-sizing: border-box;
+    }
+
+    .student-placeholder {
+      text-align: center;
+      line-height: 120px;
+      font-size: 34px;
+      font-weight: 800;
+      color: #1d4ed8;
+    }
+
+    .profile-copy {
+      padding: 16px 16px 16px 0;
+    }
+
+    .student-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .student-subcopy {
+      font-size: 10px;
+      color: #475569;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .section {
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      padding: 9px 11px;
+      border-radius: 12px 12px 0 0;
+      border: 1px solid #dbe4ee;
+      background: linear-gradient(90deg, #f8fbff, #eef4fb);
+      color: #0f172a;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .table-shell {
+      border: 1px solid #dbe4ee;
+      border-top: 0;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .detail-table td,
+    .summary-table td,
+    .doc-table td {
+      padding: 8px 9px;
+      border: 1px solid #eef2f7;
+      vertical-align: top;
+    }
+
+    .detail-table td {
+      width: 25%;
+    }
+
+    .summary-table td {
+      width: 50%;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .value {
+      font-size: 9.6px;
+      line-height: 1.4;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .good {
+      color: #166534;
+      font-weight: 800;
+    }
+
+    .pending {
+      color: #b45309;
+      font-weight: 800;
+    }
+
+    .footer {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+      text-align: right;
+      color: #64748b;
+      font-size: 8px;
+    }
+
+    .signature-table {
+      margin-top: 16px;
+    }
+
+    .signature-table td {
+      width: 33.33%;
+      text-align: center;
+      vertical-align: bottom;
+      padding-top: 22px;
+    }
+
+    .sign-line {
+      margin: 0 10px;
+      padding-top: 6px;
+      border-top: 1px solid #94a3b8;
+      color: #334155;
+      font-size: 9px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-head">
+        <table class="hero-table">
+          <tr>
+            <td class="logo-cell">
+              {% if student.school.logo %}
+                <img src="{{ student.school.logo.url }}" alt="School Logo" class="logo">
+              {% else %}
+                <div class="logo-fallback">{{ student.school.name|first|upper }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <div class="school-name">{{ student.school.name }}</div>
+              <div class="school-copy">{{ student.school.address }}, {{ student.school.city }}, {{ student.school.state }}</div>
+              <div class="school-copy">Phone: {{ student.school.phone|default:"-" }} | Email: {{ student.school.email|default:"-" }}</div>
+              <div class="title">Student Admission And Profile</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="hero-meta">
+        <span class="meta-chip">Form No: {{ student.admission_no }}</span>
+        <span class="meta-chip">Class: {{ student.class_name }} - {{ student.section }}</span>
+        <span class="meta-chip">Academic Year: {{ student.academic_year|default:"-" }}</span>
+        <span class="meta-chip">Generated: {{ generated_on|date:"d M Y, h:i A" }}</span>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <table class="profile-table">
+        <tr>
+          <td class="photo-cell">
+            {% if student.photo %}
+              <img src="{{ student.photo.url }}" alt="Student Photo" class="student-photo">
+            {% elif student.passport_photo %}
+              <img src="{{ student.passport_photo.url }}" alt="Student Photo" class="student-photo">
+            {% else %}
+              <div class="student-placeholder">{{ student.first_name|first|upper }}</div>
+            {% endif %}
+          </td>
+          <td class="profile-copy">
+            <div class="student-name">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
+            <div class="student-subcopy">Professional student record prepared for admission file, office review, and family-facing documentation.</div>
+            <span class="meta-chip">Roll No: {{ student.roll_number|default:"-" }}</span>
+            <span class="meta-chip">Status: {% if student.is_active %}Active{% else %}Inactive{% endif %}</span>
+            <span class="meta-chip">Guardian: {{ student.guardian_name|default:"-" }}</span>
+            <span class="meta-chip">Emergency: {{ student.emergency_contact|default:"-" }}</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Core Profile</div>
+      <div class="table-shell">
+        <table class="detail-table">
+          <tr>
+            <td><span class="label">Admission Date</span><span class="value">{{ student.admission_date|default:"-" }}</span></td>
+            <td><span class="label">Date of Birth</span><span class="value">{{ student.date_of_birth|default:"-" }}</span></td>
+            <td><span class="label">Gender</span><span class="value">{{ student.get_gender_display|default:"-" }}</span></td>
+            <td><span class="label">Blood Group</span><span class="value">{{ student.blood_group|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Category</span><span class="value">{{ student.category|default:"-" }}</span></td>
+            <td><span class="label">Religion</span><span class="value">{{ student.religion|default:"-" }}</span></td>
+            <td><span class="label">Nationality</span><span class="value">{{ student.nationality|default:"-" }}</span></td>
+            <td><span class="label">Mother Tongue</span><span class="value">{{ student.mother_tongue|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Aadhar Number</span><span class="value">{{ student.aadhar_number|default:"-" }}</span></td>
+            <td><span class="label">Student Phone</span><span class="value">{{ student.student_phone|default:"-" }}</span></td>
+            <td><span class="label">Email</span><span class="value">{{ student.email|default:"-" }}</span></td>
+            <td><span class="label">Admission Status</span><span class="value">{{ student.admission_status|default:"-" }}</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Family And Guardian</div>
+      <div class="table-shell">
+        <table class="detail-table">
+          <tr>
+            <td><span class="label">Father Name</span><span class="value">{{ student.father_name|default:"-" }}</span></td>
+            <td><span class="label">Father Phone</span><span class="value">{{ student.father_phone|default:"-" }}</span></td>
+            <td><span class="label">Mother Name</span><span class="value">{{ student.mother_name|default:"-" }}</span></td>
+            <td><span class="label">Mother Phone</span><span class="value">{{ student.mother_phone|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Guardian Name</span><span class="value">{{ student.guardian_name|default:"-" }}</span></td>
+            <td><span class="label">Relation</span><span class="value">{{ student.relation_with_student|default:"-" }}</span></td>
+            <td><span class="label">Guardian Phone</span><span class="value">{{ student.guardian_phone|default:"-" }}</span></td>
+            <td><span class="label">Guardian Email</span><span class="value">{{ student.guardian_email|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td colspan="4"><span class="label">Guardian Address</span><span class="value">{{ student.guardian_address|default:"-" }}</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Address And Health</div>
+      <div class="table-shell">
+        <table class="detail-table">
+          <tr>
+            <td colspan="2"><span class="label">Current Address</span><span class="value">{{ student.current_address|default:"-" }}</span></td>
+            <td colspan="2"><span class="label">Permanent Address</span><span class="value">{{ student.permanent_address|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Current City</span><span class="value">{{ student.current_city|default:"-" }}</span></td>
+            <td><span class="label">Current State</span><span class="value">{{ student.current_state|default:"-" }}</span></td>
+            <td><span class="label">Permanent City</span><span class="value">{{ student.permanent_city|default:"-" }}</span></td>
+            <td><span class="label">Permanent State</span><span class="value">{{ student.permanent_state|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="label">Medical Conditions</span><span class="value">{{ student.medical_conditions|default:"-" }}</span></td>
+            <td colspan="2"><span class="label">Emergency Notes</span><span class="value">{{ student.emergency_medical_notes|default:"-" }}</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page page-break">
+    <div class="section">
+      <div class="section-title">Academic, Fees And Operational Summary</div>
+      <div class="table-shell">
+        <table class="summary-table">
+          <tr>
+            <td><span class="label">Previous School</span><span class="value">{{ student.previous_school|default:"-" }}</span></td>
+            <td><span class="label">Previous Class</span><span class="value">{{ student.previous_class|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Subjects</span><span class="value">{{ student.subjects|default:"-" }}</span></td>
+            <td><span class="label">Previous Result</span><span class="value">{{ student.previous_percentage|default:"-" }} {% if student.previous_grade %}| {{ student.previous_grade }}{% endif %}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Fee Category</span><span class="value">{{ student.fee_category|default:"-" }}</span></td>
+            <td><span class="label">Scholarship</span><span class="value">{{ student.scholarship|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Transport Support</span><span class="value">{% if student.transport_required %}Enabled{% else %}Not enabled{% endif %}</span></td>
+            <td><span class="label">Hostel Support</span><span class="value">{% if student.hostel_required %}Enabled{% else %}Not enabled{% endif %}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Student Login Username</span><span class="value">{{ student.student_username|default:"-" }}</span></td>
+            <td><span class="label">Parent Login Username</span><span class="value">{{ student.parent_username|default:"-" }}</span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="label">Credential Policy</span><span class="value">Passwords are hidden from PDF exports and should be managed through secure user-account workflows.</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Document Checklist</div>
+      <div class="table-shell">
+        <table class="doc-table">
+          <tr>
+            <td>Birth Certificate</td>
+            <td class="{% if student.birth_certificate %}good{% else %}pending{% endif %}">{% if student.birth_certificate %}Available{% else %}Not Uploaded{% endif %}</td>
+            <td>Aadhar Card</td>
+            <td class="{% if student.aadhar_card %}good{% else %}pending{% endif %}">{% if student.aadhar_card %}Available{% else %}Not Uploaded{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Previous Marksheet</td>
+            <td class="{% if student.previous_marksheet %}good{% else %}pending{% endif %}">{% if student.previous_marksheet %}Available{% else %}Not Uploaded{% endif %}</td>
+            <td>Transfer Certificate File</td>
+            <td class="{% if student.transfer_certificate_file %}good{% else %}pending{% endif %}">{% if student.transfer_certificate_file %}Available{% else %}Not Uploaded{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Caste Certificate</td>
+            <td class="{% if student.caste_certificate %}good{% else %}pending{% endif %}">{% if student.caste_certificate %}Available{% else %}Not Uploaded{% endif %}</td>
+            <td>Income Certificate</td>
+            <td class="{% if student.income_certificate %}good{% else %}pending{% endif %}">{% if student.income_certificate %}Available{% else %}Not Uploaded{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Passport / Profile Photo</td>
+            <td class="{% if student.passport_photo or student.photo %}good{% else %}pending{% endif %}">{% if student.passport_photo or student.photo %}Available{% else %}Not Uploaded{% endif %}</td>
+            <td>Extra Uploaded Documents</td>
+            <td>{{ student.documents.count }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Office Notes</div>
+      <div class="table-shell">
+        <table class="summary-table">
+          <tr>
+            <td><span class="label">School</span><span class="value">{{ student.school.name }}</span></td>
+            <td><span class="label">Principal</span><span class="value">{{ student.school.principal_name|default:"School Administration" }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="label">Generated On</span><span class="value">{{ generated_on|date:"d M Y, h:i A" }}</span></td>
+            <td><span class="label">Prepared For</span><span class="value">Admission file, office reference, and parent record</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer">Generated on {{ generated_on|date:"d M Y, h:i A" }}</div>
+
+    <table class="signature-table">
+      <tr>
+        <td><div class="sign-line">Class Teacher</div></td>
+        <td><div class="sign-line">Office Incharge</div></td>
+        <td><div class="sign-line">Principal / Administrator</div></td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

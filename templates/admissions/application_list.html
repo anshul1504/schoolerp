@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Admissions | School ERP{% endblock %}
+{% block page_eyebrow %}Admissions{% endblock %}
+{% block page_heading %}Admissions{% endblock %}
+{% block page_copy %}Admission applications, documents, and status workflow.{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-body p-24">
+    <form class="row gy-3 gx-3 align-items-end" method="get">
+      <div class="col-lg-3">
+        <label class="form-label">Search</label>
+        <input class="form-control" name="q" value="{{ filters.q }}" placeholder="Application no / student / phone">
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label">Status</label>
+        <select class="form-control" name="status">
+          <option value="">All</option>
+          {% for value,label in status_choices %}
+            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-3">
+        <label class="form-label">Desired Class</label>
+        <select class="form-control" name="class">
+          <option value="">All</option>
+          {% for c in class_options %}
+            <option value="{{ c.id }}" {% if filters.class == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label">From</label>
+        <input type="date" class="form-control" name="from" value="{{ filters.from }}">
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label">To</label>
+        <input type="date" class="form-control" name="to" value="{{ filters.to }}">
+      </div>
+      <div class="col-12 d-flex flex-wrap gap-10">
+        <button class="btn btn-primary-600">Filter</button>
+        {% if can_manage_admissions %}
+          <a class="btn btn-outline-primary" href="/admissions/create/">New Admission</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-14">
+      <h6 class="mb-0">Applications</h6>
+      <div class="text-neutral-500 text-sm">{% if selected_school %}School: {{ selected_school.name }}{% else %}All allowed schools{% endif %}</div>
+    </div>
+    <div class="table-responsive">
+      <table class="table basic-table mb-0">
+        <thead>
+          <tr>
+            <th>Application</th>
+            <th>Student</th>
+            <th>Desired</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applications %}
+            <tr>
+              <td>
+                <div class="fw-bold">{{ a.application_no }}</div>
+                <div class="text-neutral-500 text-xs">{% if a.enquiry_id %}From enquiry #{{ a.enquiry_id }}{% else %}Manual{% endif %}</div>
+              </td>
+              <td>
+                <div class="fw-bold">{{ a.student_name }}</div>
+                <div class="text-neutral-500 text-xs">{{ a.phone|default:"-" }}</div>
+              </td>
+              <td>
+                <div class="text-sm">{{ a.desired_class_label|default:"-" }}</div>
+                <div class="text-neutral-500 text-xs">{{ a.desired_section_label|default:"-" }}</div>
+              </td>
+              <td>
+                <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ a.get_status_display }}</span>
+              </td>
+              <td class="text-sm">{{ a.created_at|date:"Y-m-d" }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="/admissions/{{ a.id }}/">Open</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-neutral-500 text-sm">No admission applications found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

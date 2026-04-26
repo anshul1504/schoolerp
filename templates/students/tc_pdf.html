@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transfer Certificate</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 10.5px;
+      color: #172033;
+    }
+
+    .card {
+      border: 1px solid #cbd5e1;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #dbe4ee;
+      background: linear-gradient(135deg, #f8fbff, #eef4fb);
+    }
+
+    .header-table,
+    .meta-table,
+    .detail-table,
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .logo-cell {
+      width: 82px;
+      vertical-align: top;
+    }
+
+    .logo,
+    .logo-fallback {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #dbe4ee;
+      object-fit: contain;
+      padding: 5px;
+      box-sizing: border-box;
+      text-align: center;
+      line-height: 52px;
+      font-size: 24px;
+      font-weight: 800;
+      color: #1d4ed8;
+    }
+
+    .school-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .school-copy {
+      color: #475569;
+      font-size: 9px;
+      line-height: 1.4;
+      margin: 2px 0;
+    }
+
+    .title {
+      margin-top: 10px;
+      display: inline-block;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .body {
+      padding: 14px 16px 16px;
+    }
+
+    .meta-table {
+      margin-bottom: 12px;
+    }
+
+    .meta-table td {
+      padding: 8px 10px;
+      border: 1px solid #dbe4ee;
+      background: #f8fafc;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .copy-box {
+      padding: 12px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      background: #ffffff;
+      line-height: 1.75;
+      text-align: justify;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: #1e3a8a;
+      margin: 12px 0 6px;
+    }
+
+    .detail-table td {
+      width: 50%;
+      padding: 9px 10px;
+      border: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .value {
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.45;
+      color: #0f172a;
+    }
+
+    .remark-box {
+      min-height: 68px;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #ffffff;
+    }
+
+    .signature-table {
+      margin-top: 26px;
+    }
+
+    .signature-table td {
+      width: 33.33%;
+      text-align: center;
+      vertical-align: bottom;
+      padding-top: 20px;
+    }
+
+    .sign-line {
+      margin: 0 10px;
+      padding-top: 6px;
+      border-top: 1px solid #94a3b8;
+      font-size: 9px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .footer {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+      text-align: right;
+      font-size: 8px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <table class="header-table">
+        <tr>
+          <td class="logo-cell">
+            {% if student.school.logo %}
+              <img src="{{ student.school.logo.url }}" alt="School Logo" class="logo">
+            {% else %}
+              <div class="logo-fallback">{{ student.school.name|first|upper }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <div class="school-name">{{ student.school.name }}</div>
+            <div class="school-copy">{{ student.school.address }}, {{ student.school.city }}, {{ student.school.state }}</div>
+            <div class="school-copy">Phone: {{ student.school.phone|default:"-" }} | Email: {{ student.school.email|default:"-" }}</div>
+            <div class="title">Transfer Certificate</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="body">
+      <table class="meta-table">
+        <tr>
+          <td>TC Number: {{ tc.certificate_no }}</td>
+          <td>Issue Date: {{ tc.issue_date }}</td>
+          <td>Admission No: {{ student.admission_no }}</td>
+        </tr>
+      </table>
+
+      <div class="copy-box">
+        This is to certify that <strong>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</strong>,
+        child of <strong>{{ student.father_name|default:student.guardian_name|default:"-" }}</strong>, was a bona fide student of
+        <strong>{{ student.school.name }}</strong>. The student last studied in <strong>{{ student.class_name }} - {{ student.section }}</strong>
+        during the academic year <strong>{{ student.academic_year|default:"-" }}</strong>. This certificate is issued on request
+        for official transfer and continuation of studies.
+      </div>
+
+      <div class="section-title">Student Details</div>
+      <table class="detail-table">
+        <tr>
+          <td><span class="label">Student Name</span><span class="value">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</span></td>
+          <td><span class="label">Date of Birth</span><span class="value">{{ student.date_of_birth|default:"-" }}</span></td>
+        </tr>
+        <tr>
+          <td><span class="label">Father / Guardian</span><span class="value">{{ student.father_name|default:student.guardian_name|default:"-" }}</span></td>
+          <td><span class="label">Guardian Contact</span><span class="value">{{ student.guardian_phone|default:"-" }}</span></td>
+        </tr>
+        <tr>
+          <td><span class="label">Last Class Attended</span><span class="value">{{ student.class_name }} - {{ student.section }}</span></td>
+          <td><span class="label">Destination School</span><span class="value">{{ tc.destination_school|default:"Not specified" }}</span></td>
+        </tr>
+      </table>
+
+      <div class="section-title">Reason / Remark</div>
+      <div class="remark-box">
+        <span class="value">{{ tc.reason|default:"No additional remark provided." }}</span>
+      </div>
+
+      <table class="signature-table">
+        <tr>
+          <td><div class="sign-line">Class Teacher</div></td>
+          <td><div class="sign-line">Office Incharge</div></td>
+          <td><div class="sign-line">Principal</div></td>
+        </tr>
+      </table>
+
+      <div class="footer">Generated on {{ generated_on|date:"d M Y, h:i A" }}</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Admission {{ application.application_no }} | School ERP{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Edit Admission Application{% endblock %}
+{% block page_copy %}Update applicant details, desired class, and notes.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <form method="post" class="row gy-3">
+      {% csrf_token %}
+
+      <div class="col-md-6">
+        <label class="form-label">Student name</label>
+        <input class="form-control" name="student_name" value="{{ application.student_name }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Guardian name</label>
+        <input class="form-control" name="guardian_name" value="{{ application.guardian_name }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Phone</label>
+        <input class="form-control" name="phone" value="{{ application.phone }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Email</label>
+        <input class="form-control" name="email" value="{{ application.email }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Academic Year</label>
+        <select class="form-control" name="academic_year_id">
+          <option value="">Auto / Not set</option>
+          {% for y in academic_year_options %}
+            <option value="{{ y.id }}" {% if application.academic_year_id == y.id %}selected{% endif %}>{{ y.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Address</label>
+        <textarea class="form-control" name="address" rows="2">{{ application.address }}</textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Previous school</label>
+        <input class="form-control" name="previous_school" value="{{ application.previous_school }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Desired class (Master)</label>
+        <select class="form-control" name="desired_class_master_id">
+          <option value="">Select</option>
+          {% for c in class_options %}
+            <option value="{{ c.id }}" {% if application.desired_class_master_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Desired class (Text)</label>
+        <input class="form-control" name="desired_class_text" value="{{ application.desired_class_text }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Desired section (Master)</label>
+        <select class="form-control" name="desired_section_master_id">
+          <option value="">Select</option>
+          {% for s in section_options %}
+            <option value="{{ s.id }}" {% if application.desired_section_master_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Desired section (Text)</label>
+        <input class="form-control" name="desired_section_text" value="{{ application.desired_section_text }}">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" name="notes" rows="3">{{ application.notes }}</textarea>
+      </div>
+
+      <div class="col-12 d-flex flex-wrap gap-10">
+        <button class="btn btn-primary-600" type="submit">Save</button>
+        <a class="btn btn-outline-primary" href="/admissions/{{ application.id }}/">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

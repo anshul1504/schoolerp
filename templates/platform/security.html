@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Security{% endblock %}
+{% block page_heading %}Platform Security{% endblock %}
+{% block page_copy %}Monitor locked accounts, risky logins, pending invitations, and verification OTPs.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="row gy-4">
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Locked Users</p>
+          <h5 class="mb-0">{{ kpis.locked_users }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">Currently locked</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Risky Users</p>
+          <h5 class="mb-0">{{ kpis.risky_users }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">High failure / lock history</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Pending Invites</p>
+          <h5 class="mb-0">{{ kpis.pending_invites }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">Not activated</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Active OTPs</p>
+          <h5 class="mb-0">{{ kpis.active_otps }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">Unexpired + unused</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Auth Fails (24h)</p>
+          <h5 class="mb-0">{{ kpis.auth_fails_24h }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">Login + OTP fails</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Throttled (24h)</p>
+          <h5 class="mb-0">{{ kpis.auth_throttled_24h }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">Rate limit hits</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-1 radius-12 h-100">
+        <div class="card-body p-20">
+          <p class="fw-semibold text-primary-light mb-8">Auth Success (24h)</p>
+          <h5 class="mb-0">{{ kpis.auth_success_24h }}</h5>
+          <p class="fw-medium text-sm text-primary-light mt-12 mb-0">Login + OTP ok</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-16">
+            <h6 class="mb-0">Locked Accounts</h6>
+            <a href="/users/" class="text-primary-600 fw-semibold text-sm">Open Users</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>School</th>
+                  <th>Locked Until</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in locked_users %}
+                  <tr>
+                    <td><strong>{{ user.username }}</strong><div class="text-muted text-sm">{{ user.email|default:"—" }}</div></td>
+                    <td>{{ user.get_role_display }}</td>
+                    <td>{% if user.school %}{{ user.school.name }}{% else %}—{% endif %}</td>
+                    <td class="text-muted text-sm">{{ user.locked_until }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4" class="text-center text-muted">No locked accounts.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-16">
+            <h6 class="mb-0">Risky Accounts</h6>
+            <span class="text-muted text-sm">Failures ≥ 3 or ever locked</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>School</th>
+                  <th>Failures</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in risky_users %}
+                  <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>{{ user.get_role_display }}</td>
+                    <td>{% if user.school %}{{ user.school.name }}{% else %}—{% endif %}</td>
+                    <td>
+                      {% if user.failed_login_attempts >= 5 %}
+                        <span class="badge bg-danger">{{ user.failed_login_attempts }}</span>
+                      {% elif user.failed_login_attempts >= 3 %}
+                        <span class="badge bg-warning text-dark">{{ user.failed_login_attempts }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ user.failed_login_attempts }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4" class="text-center text-muted">No risky accounts.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-16">
+            <h6 class="mb-0">Pending Invitations</h6>
+            <a href="/users/invitations/" class="text-primary-600 fw-semibold text-sm">Open</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>School</th>
+                  <th>Expires</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for invite in pending_invites %}
+                  <tr>
+                    <td><strong>{{ invite.user.username }}</strong></td>
+                    <td>{% if invite.user.school %}{{ invite.user.school.name }}{% else %}—{% endif %}</td>
+                    <td class="text-muted text-sm">{{ invite.expires_at }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center text-muted">No pending invitations.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-16">
+            <h6 class="mb-0">Active Verification OTPs</h6>
+            <span class="text-muted text-sm">Visible to platform admins only</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Expires</th>
+                  <th>Attempts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for otp in active_otps %}
+                  <tr>
+                    <td><strong>{{ otp.user.username }}</strong></td>
+                    <td class="text-muted text-sm">{{ otp.expires_at }}</td>
+                    <td>
+                      {% if otp.attempts >= 5 %}
+                        <span class="badge bg-danger">{{ otp.attempts }}</span>
+                      {% elif otp.attempts >= 3 %}
+                        <span class="badge bg-warning text-dark">{{ otp.attempts }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ otp.attempts }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center text-muted">No active OTPs.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-16">
+            <h6 class="mb-0">Recent Auth Activity</h6>
+            <a href="/activity/" class="text-primary-600 fw-semibold text-sm">Open Activity</a>
+          </div>
+          <div class="d-flex flex-column gap-10">
+            {% for log in recent_auth_activity %}
+              <div class="border border-neutral-200 radius-12 p-16">
+                <div class="d-flex justify-content-between gap-12 flex-wrap">
+                  <strong>{% if log.actor %}{{ log.actor.username }}{% else %}—{% endif %}</strong>
+                  <span class="text-muted text-sm">{{ log.created_at }}</span>
+                </div>
+                <div class="text-muted text-sm mt-1">
+                  <code>{{ log.method }}</code> {{ log.path }}
+                  {% if log.school %} • {{ log.school.name }}{% endif %}
+                </div>
+              </div>
+            {% empty %}
+              <div class="text-muted">No recent auth activity found.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-16">
+            <h6 class="mb-0">Recent Auth Security Events</h6>
+            <span class="text-muted text-sm">From throttling + login/OTP telemetry</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Event</th>
+                  <th>User</th>
+                  <th>IP</th>
+                  <th>Success</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for e in recent_auth_events %}
+                  <tr>
+                    <td class="text-muted text-sm">{{ e.created_at }}</td>
+                    <td class="text-muted text-sm">{{ e.event }}</td>
+                    <td class="text-muted text-sm">{{ e.username|default:"â€”" }}</td>
+                    <td class="text-muted text-sm">{{ e.ip_address|default:"â€”" }}</td>
+                    <td>
+                      {% if e.success %}
+                        <span class="badge bg-success">Yes</span>
+                      {% else %}
+                        <span class="badge bg-secondary">No</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-muted text-sm">{{ e.details|default:"â€”" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6" class="text-center text-muted">No security events yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

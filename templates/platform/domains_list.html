@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}School Domains{% endblock %}
+{% block page_heading %}School Domains{% endblock %}
+{% block page_copy %}Map custom domains to schools for tenant branding on login.{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Domain Mappings</h6>
+          <p>Example: <code>erp.yourschool.com</code> → your school workspace.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/platform/">Back</a>
+          <a class="btn btn-primary" href="/platform/domains/create/">Create</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>School</th>
+              <th>Primary</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in domains %}
+              <tr>
+                <td class="fw-semibold">{{ d.domain }}</td>
+                <td class="text-muted text-sm">{{ d.school.name }}</td>
+                <td>{% if d.is_primary %}<span class="badge bg-info">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+                <td>{% if d.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Paused</span>{% endif %}</td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="/platform/domains/{{ d.id }}/edit/">Edit</a>
+                    <form method="post" action="/platform/domains/{{ d.id }}/delete/" class="d-inline" onsubmit="return confirm('Delete this domain mapping?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center text-muted">No domain mappings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Admission {{ application.application_no }} | School ERP{% endblock %}
+{% block page_eyebrow %}Admissions{% endblock %}
+{% block page_heading %}Admission Application{% endblock %}
+{% block page_copy %}Documents, status changes, and student creation from one place.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-14">
+          <div>
+            <h6 class="mb-2">{{ application.application_no }}</h6>
+            <div class="text-neutral-600 text-sm">{{ application.student_name }}</div>
+          </div>
+          <span class="badge bg-primary-50 text-primary-600 px-16 py-8 radius-8">{{ application.get_status_display }}</span>
+        </div>
+
+        <div class="text-neutral-600 text-sm mb-10">School: {{ application.school.name }}</div>
+        <div class="text-neutral-600 text-sm mb-10">Guardian: {{ application.guardian_name|default:"-" }}</div>
+        <div class="text-neutral-600 text-sm mb-10">Phone: {{ application.phone|default:"-" }}</div>
+        <div class="text-neutral-600 text-sm mb-10">Desired: {{ application.desired_class_label|default:"-" }} {% if application.desired_section_label %}({{ application.desired_section_label }}){% endif %}</div>
+        <div class="text-neutral-600 text-sm mb-16">Academic year: {% if application.academic_year %}{{ application.academic_year.name }}{% else %}-{% endif %}</div>
+
+        {% if can_manage_admissions or can_create_student_from_admission %}
+          <div class="d-flex flex-wrap gap-10 mb-16">
+            {% if can_manage_admissions %}
+              <a class="btn btn-outline-primary" href="/admissions/{{ application.id }}/edit/">Edit</a>
+            {% endif %}
+            {% if can_create_student_from_admission %}
+              <a class="btn btn-outline-primary" href="/admissions/{{ application.id }}/create-student/">Create Student</a>
+            {% endif %}
+            {% if can_manage_admissions %}
+              <form method="post" action="/admissions/{{ application.id }}/delete/" onsubmit="return confirm('Delete this admission application?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">Delete</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <hr class="my-18">
+
+        {% if can_manage_admissions %}
+          <h6 class="mb-10">Status</h6>
+          <form method="post" action="/admissions/{{ application.id }}/status/" class="row gy-2">
+            {% csrf_token %}
+            <div class="col-12">
+              <select name="status" class="form-control">
+                {% for value,label in status_choices %}
+                  <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12"><button class="btn btn-outline-primary w-100">Update Status</button></div>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="card mb-4">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-14">
+          <h6 class="mb-0">Document Checklist</h6>
+        </div>
+
+        {% if can_manage_admissions %}
+          <form method="post" action="/admissions/{{ application.id }}/documents/add/" class="row gy-2 mb-18">
+            {% csrf_token %}
+            <div class="col-md-9"><input class="form-control" name="title" placeholder="e.g., Birth Certificate" required></div>
+            <div class="col-md-3"><button class="btn btn-primary-600 w-100">Add</button></div>
+          </form>
+        {% endif %}
+
+        {% for d in application.documents.all %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+              <div class="fw-bold">{{ d.title }}</div>
+              <div class="text-neutral-500 text-xs">{% if d.is_received %}Received{% if d.received_at %} on {{ d.received_at|date:"Y-m-d H:i" }}{% endif %}{% else %}Pending{% endif %}</div>
+            </div>
+            {% if can_manage_admissions %}
+              <form method="post" action="/admissions/{{ application.id }}/documents/{{ d.id }}/toggle/">
+                {% csrf_token %}
+                <button class="btn btn-sm {% if d.is_received %}btn-outline-danger{% else %}btn-outline-primary{% endif %}">
+                  {% if d.is_received %}Mark Pending{% else %}Mark Received{% endif %}
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No documents added yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Activity</h6>
+        {% for e in application.events.all %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-6">
+              <strong>{{ e.get_action_display }}</strong>
+              <span class="text-neutral-500 text-xs">{{ e.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm">{{ e.message|default:"-" }}</div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No activity yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

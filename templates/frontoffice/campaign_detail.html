@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Campaign | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Campaign Detail{% endblock %}
+{% block page_copy %}Review and send with delivery logs.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-12">
+          <h6 class="mb-0">{{ campaign.title }}</h6>
+          <span class="badge bg-primary-50 text-primary-600 px-16 py-8 radius-8">{{ campaign.get_status_display }}</span>
+        </div>
+        <div class="text-neutral-600 text-sm mb-10">{{ campaign.get_channel_display }} | {{ campaign.get_target_display }}</div>
+        <div class="d-flex flex-wrap gap-10 mb-16">
+          <span class="badge bg-success-50 text-success-600 px-16 py-8 radius-8">Sent {{ delivery_stats.sent }}</span>
+          <span class="badge bg-warning-50 text-warning-600 px-16 py-8 radius-8">Queued {{ delivery_stats.queued }}</span>
+          <span class="badge bg-danger-50 text-danger-600 px-16 py-8 radius-8">Failed {{ delivery_stats.failed }}</span>
+          <span class="badge bg-info-50 text-info-600 px-16 py-8 radius-8">Read {{ delivery_stats.read }}</span>
+        </div>
+        <div class="border border-neutral-200 radius-12 p-16 mb-16">
+          <strong class="d-block mb-6">Subject</strong>
+          <div class="text-neutral-600 text-sm">{{ campaign.subject|default:"-" }}</div>
+        </div>
+        <div class="border border-neutral-200 radius-12 p-16">
+          <strong class="d-block mb-6">Body</strong>
+          <pre class="mb-0 sf-pre-wrap">{{ campaign.body }}</pre>
+        </div>
+
+        {% if can_manage %}
+          <div class="mt-16 d-flex flex-wrap gap-10">
+            <a href="/frontoffice/messages/campaigns/" class="btn btn-outline-secondary">Back</a>
+            {% if campaign.status != "SENT" %}
+              <form method="post" action="/frontoffice/messages/campaigns/{{ campaign.id }}/send/">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary-600">Send Now</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="alert alert-warning mt-16 mb-0">
+          WhatsApp is currently logged as queued until provider integration is configured.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Delivery log</h6>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Updated</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in deliveries %}
+                <tr>
+                  <td>{{ d.recipient_label|default:"-" }}</td>
+                  <td>{{ d.recipient_contact|default:"-" }}</td>
+                  <td>
+                    <div>{{ d.get_status_display }}</div>
+                    {% if d.read_at %}
+                      <div class="text-xs text-success-600">Read</div>
+                    {% endif %}
+                    {% if d.error %}
+                      <div class="text-xs text-danger-600">{{ d.error }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="text-sm text-neutral-600">
+                    {% if d.last_attempt_at %}{{ d.last_attempt_at|date:"d M Y, h:i A" }}{% else %}{{ d.created_at|date:"d M Y, h:i A" }}{% endif %}
+                  </td>
+                  <td>
+                    {% if can_manage %}
+                      <div class="d-flex flex-wrap gap-8">
+                        {% if not d.read_at and d.status == "SENT" %}
+                          <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="delivery_id" value="{{ d.id }}">
+                            <input type="hidden" name="action" value="mark_read">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Mark Read</button>
+                          </form>
+                        {% endif %}
+                        {% if d.status == "FAILED" or d.status == "SKIPPED" or d.status == "QUEUED" %}
+                          <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="delivery_id" value="{{ d.id }}">
+                            <input type="hidden" name="action" value="retry">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Retry</button>
+                          </form>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="text-neutral-500 text-sm">No deliveries yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

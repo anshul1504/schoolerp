@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}School Subscriptions{% endblock %}
+{% block page_heading %}School Subscriptions{% endblock %}
+{% block page_copy %}Assign plans and manage subscription status per school.{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="card mb-24">
+    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
+      <div>
+        <h6 class="mb-4">Subscriptions</h6>
+        <p class="text-neutral-600 text-sm mb-0">Each school can have a single active subscription record.</p>
+      </div>
+      <div class="d-flex gap-10">
+        <a href="/billing/plans/" class="btn btn-outline-secondary">Plans</a>
+        <a href="/billing/invoices/" class="btn btn-outline-secondary">Invoices</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-24">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>School</th>
+              <th>Current</th>
+              <th>Update</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for school in schools %}
+              <tr>
+                <td><strong>{{ school.name }}</strong><div class="text-muted text-sm">{{ school.code }}</div></td>
+                <td>
+                  {% if school.subscription %}
+                    <div><span class="badge bg-info">{{ school.subscription.plan.code }}</span> {{ school.subscription.plan.name }}</div>
+                    <div class="text-muted text-sm">{{ school.subscription.get_status_display }} • {{ school.subscription.starts_on }}{% if school.subscription.ends_on %} → {{ school.subscription.ends_on }}{% endif %}</div>
+                  {% else %}
+                    <span class="text-muted">No subscription</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form method="post" action="/billing/schools/{{ school.id }}/update/" class="row gy-2 gx-2 align-items-end">
+                    {% csrf_token %}
+                    <div class="col-md-4">
+                      <label class="form-label text-sm mb-1">Plan</label>
+                      <select name="plan_id" class="form-select form-select-sm" required>
+                        {% for plan in plans %}
+                          <option value="{{ plan.id }}" {% if school.subscription and school.subscription.plan_id == plan.id %}selected{% endif %}>{{ plan.name }} ({{ plan.code }})</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label text-sm mb-1">Status</label>
+                      <select name="status" class="form-select form-select-sm">
+                        {% for value,label in status_choices %}
+                          <option value="{{ value }}" {% if school.subscription and school.subscription.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label text-sm mb-1">Start</label>
+                      <input type="date" name="starts_on" class="form-control form-control-sm" value="{% if school.subscription %}{{ school.subscription.starts_on|date:'Y-m-d' }}{% endif %}">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label text-sm mb-1">End</label>
+                      <input type="date" name="ends_on" class="form-control form-control-sm" value="{% if school.subscription and school.subscription.ends_on %}{{ school.subscription.ends_on|date:'Y-m-d' }}{% endif %}">
+                    </div>
+                    <div class="col-md-1 d-grid">
+                      <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="text-center text-muted">No schools found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,51 @@
+﻿{% extends "base.html" %}
+{% block title %}Role Detail{% endblock %}
+{% block page_heading %}Role Detail{% endblock %}
+{% block page_copy %}Module-level readiness for selected role.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  {% if role_row %}
+    <section class="platform-shell mb-16">
+      <span class="platform-shell__eyebrow">{{ role_row.role }}</span>
+      <h5 class="mb-2">{{ role_row.label }}</h5>
+      <p class="mb-0">Completion: <strong>{{ role_row.completion_pct }}%</strong> | Status: <strong>{{ role_row.status }}</strong></p>
+    </section>
+    <div class="platform-panel mb-16">
+      <div class="platform-panel__head">
+        <div><h6>Module Readiness</h6><p>Each tracked module status for this role.</p></div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>State</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in module_rows %}
+              <tr>
+                <td><strong>{{ row.module|title }}</strong></td>
+                <td>
+                  {% if row.state == "GREEN" %}<span class="status-pill status-pill--success">&#x1F7E2; GREEN</span>{% elif row.state == "YELLOW" %}<span class="status-pill status-pill--warning">&#x1F7E1; YELLOW</span>{% else %}<span class="status-pill status-pill--danger">&#x1F534; RED</span>{% endif %}
+                </td>
+                <td>
+                  {% if row.needs_work %}
+                    <span class="text-danger">Pending depth required</span>
+                  {% else %}
+                    <span class="text-success">Healthy</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-danger">Role not found: <code>{{ requested_role }}</code></div>
+  {% endif %}
+  <a class="btn btn-outline-secondary" href="{% url 'super-admin-role-sheet' %}">Back to Role Sheet</a>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Import Preview{% endblock %}
+{% block page_heading %}Import Preview{% endblock %}
+{% block page_copy %}Review validation results before importing.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell user-page">
+    <div class="platform-panel">
+      <div class="user-section">
+        <div class="user-toolbar">
+          <div class="sf-toolbar__title">
+            <h6>Preview</h6>
+            <p>Total rows: {{ total_rows }}. Invalid: {{ invalid_count }}.</p>
+          </div>
+          <div class="user-actions">
+            <a class="btn btn-outline-secondary" href="/users/import/">Upload new file</a>
+            <a class="btn btn-outline-secondary" href="/users/">Back to Users</a>
+          </div>
+        </div>
+
+        <div class="user-summary mb-3">
+          <div class="user-summary-card">
+            <span>Total Rows</span>
+            <strong>{{ total_rows }}</strong>
+            <small>Rows detected in file</small>
+          </div>
+          <div class="user-summary-card">
+            <span>Invalid Rows</span>
+            <strong>{{ invalid_count }}</strong>
+            <small>Need correction before import</small>
+          </div>
+          <div class="user-summary-card">
+            <span>Preview Scope</span>
+            <strong>50 Rows</strong>
+            <small>First rows shown only</small>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="user-note">Showing first 50 rows only.</div>
+          <div class="d-flex gap-10 flex-wrap">
+            <a class="btn btn-outline-secondary" href="/users/import/errors/">Download errors CSV (after import)</a>
+            <form method="post" action="/users/import/" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="stage" value="confirm">
+              <button type="submit" class="btn btn-primary-600" {% if total_rows == 0 %}disabled{% endif %}>Confirm Import</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-section user-table-wrap">
+        <div class="table-responsive">
+          <table class="table align-middle sf-table user-table mb-0">
+          <thead>
+            <tr>
+              <th class="sf-th-72">Row</th>
+              <th class="sf-th-220">Status</th>
+              {% for h in headers %}
+                <th>{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in preview_rows %}
+              <tr>
+                <td class="text-muted text-sm">#{{ row.row_index }}</td>
+                <td>
+                  {% if row.errors %}
+                    <span class="badge bg-danger">Invalid</span>
+                    <div class="text-muted text-sm mt-1">{{ row.errors|join:", " }}</div>
+                  {% else %}
+                    <span class="badge bg-success">OK</span>
+                  {% endif %}
+                </td>
+                {% for cell in row.cells %}
+                  <td class="text-muted text-sm">{{ cell|default:"" }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr><td colspan="{{ headers|length|add:2 }}" class="text-center text-muted">No rows found.</td></tr>
+            {% endfor %}
+          </tbody>
+          </table>
+        </div>
+        <div class="user-note mt-3">Confirm Import will import valid rows and skip invalid rows.</div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Document Reminders | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Document Reminders{% endblock %}
+{% block page_copy %}Find students with missing documents and send parent reminders safely.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <h6 class="mb-10">Send reminder</h6>
+        <p class="text-neutral-600 text-sm mb-16">This sends to parents of students missing required documents (Basic or All checklist).</p>
+
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          {% if request.user.role == "SUPER_ADMIN" %}
+            <div class="col-12"><label class="form-label">School<span class="text-danger ms-1">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for s in school_options %}<option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+          {% endif %}
+          <div class="col-12"><label class="form-label">Channel</label><select name="channel" class="form-control">{% for value,label in channel_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label">Template<span class="text-danger ms-1">*</span></label><select name="template_id" class="form-control" required><option value="">Select template</option>{% for t in templates %}<option value="{{ t.id }}">{{ t.name }} ({{ t.get_channel_display }})</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label">Title</label><input type="text" name="title" class="form-control" value="Document reminder"></div>
+          <div class="col-12"><label class="form-label">Subject (Email)</label><input type="text" name="subject" class="form-control" placeholder="Optional"></div>
+          <div class="col-12"><label class="form-label">Body override (optional)</label><textarea name="body" class="form-control" rows="5" placeholder="Leave empty to use template body"></textarea></div>
+          <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Send Reminders</button></div>
+        </form>
+
+        <div class="alert alert-warning mt-16 mb-0">
+          WhatsApp sends are queued as logs until provider integration is completed. Email uses school SMTP if configured.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-16">
+          <div>
+            <h6 class="mb-4">Missing documents list</h6>
+            <p class="text-neutral-600 text-sm mb-0">Top results (limited for performance).</p>
+          </div>
+          <a class="btn btn-outline-primary" href="/frontoffice/document-reminders/?required=basic">Basic</a>
+          <a class="btn btn-outline-primary" href="/frontoffice/document-reminders/?required=all">All</a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Class</th>
+                <th>Guardian</th>
+                <th>Missing</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in missing_rows %}
+                <tr>
+                  <td>{{ row.student }}</td>
+                  <td>{{ row.student.class_name }} - {{ row.student.section }}</td>
+                  <td>{{ row.student.guardian_name }}</td>
+                  <td>{{ row.missing }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" class="text-neutral-500 text-sm">No missing documents found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Print Sheet | School ERP{% endblock %}
+{% block page_eyebrow %}Student Print Support{% endblock %}
+{% block page_heading %}Student Photo And Print List{% endblock %}
+{% block page_copy %}Simple print-ready list for ID vendors with student photo access, admission details, and clear printable references.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="sheet-card">
+      <div class="sheet-card__head d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h6 class="mb-4">Student vendor sheet</h6>
+          <p class="text-neutral-600 text-sm mb-0">{{ selected_students|length }} selected student{{ selected_students|length|pluralize }}. This view is simplified for photo collection and external ID printing support.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-12">
+          <a href="/students/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back to Students</a>
+          <form method="post" action="/students/id-cards/pdf/">
+            {% csrf_token %}
+            {% for student_id in selected_ids %}
+              <input type="hidden" name="student_ids" value="{{ student_id }}">
+            {% endfor %}
+            <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Download Print Sheet PDF</button>
+          </form>
+        </div>
+      </div>
+      <div class="sheet-card__body">
+        <div class="helper-strip">
+          <span class="helper-pill">Photo link included</span>
+          <span class="helper-pill">Admission and class details included</span>
+          <span class="helper-pill">Best for external printing vendor</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="sheet-table">
+            <thead>
+              <tr>
+                <th class="sf-th-80">Photo</th>
+                <th>Student</th>
+                <th>Admission No</th>
+                <th>Class</th>
+                <th>Guardian</th>
+                <th>Contact</th>
+                <th>Photo Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in selected_students %}
+                <tr>
+                  <td>
+                    {% if student.photo %}
+                      <img src="{{ student.photo.url }}" alt="{{ student.first_name }}" class="student-thumb">
+                    {% elif student.passport_photo %}
+                      <img src="{{ student.passport_photo.url }}" alt="{{ student.first_name }}" class="student-thumb">
+                    {% else %}
+                      <div class="student-thumb-placeholder">{{ student.first_name|first|upper }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="student-meta">
+                      <strong>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</strong>
+                      <span>{{ student.school.name }}</span>
+                    </div>
+                  </td>
+                  <td>{{ student.admission_no }}</td>
+                  <td>{{ student.class_name }} - {{ student.section }}</td>
+                  <td>
+                    <div class="student-meta">
+                      <strong>{{ student.guardian_name|default:"-" }}</strong>
+                      <span>{{ student.relation_with_student|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td>{{ student.guardian_phone|default:"-" }}</td>
+                  <td>
+                    <div class="sheet-links">
+                      {% if student.photo %}
+                        <a href="{{ student.photo.url }}" target="_blank" class="btn btn-outline-primary btn-sm radius-8">Open Photo</a>
+                      {% elif student.passport_photo %}
+                        <a href="{{ student.passport_photo.url }}" target="_blank" class="btn btn-outline-primary btn-sm radius-8">Open Photo</a>
+                      {% else %}
+                        <span class="text-neutral-500 text-sm">No photo</span>
+                      {% endif %}
+                      <a href="/students/{{ student.slug }}/" class="btn btn-outline-secondary btn-sm radius-8">Profile</a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

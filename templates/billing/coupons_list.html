@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Coupons{% endblock %}
+{% block page_heading %}Coupons{% endblock %}
+{% block page_copy %}Discount codes for subscription invoicing (manual invoice creation).{% endblock %}
+{% block page_eyebrow %}Billing{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Coupons</h6>
+          <p>Create fixed or percent discounts.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/billing/invoices/">Back</a>
+          <a class="btn btn-primary" href="/billing/coupons/create/">Create</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Type</th>
+              <th>Value</th>
+              <th>Window</th>
+              <th>Uses</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in coupons %}
+              <tr>
+                <td class="fw-semibold">{{ c.code }}</td>
+                <td class="text-muted text-sm">{{ c.get_discount_type_display }}</td>
+                <td class="text-muted text-sm">{{ c.value }}</td>
+                <td class="text-muted text-sm">
+                  {% if c.starts_on %}{{ c.starts_on }}{% else %}—{% endif %} → {% if c.ends_on %}{{ c.ends_on }}{% else %}—{% endif %}
+                </td>
+                <td class="text-muted text-sm">
+                  {{ c.used_count }} / {% if c.max_uses %}{{ c.max_uses }}{% else %}∞{% endif %}
+                </td>
+                <td>{% if c.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Paused</span>{% endif %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-muted">No coupons yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

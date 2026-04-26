@@ -1,0 +1,13 @@
+Hello {{ user.first_name|default:user.username }},
+
+An account has been created for you on the School ERP.
+
+Username: {{ user.username }}
+Role: {{ user.get_role_display }}
+School: {% if user.school %}{{ user.school.name }}{% else %}Platform Access{% endif %}
+
+Activate your account by setting a password using this link (valid for 7 days):
+{{ activation_url }}
+
+If you were not expecting this, you can ignore this email.
+

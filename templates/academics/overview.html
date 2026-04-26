@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+
+{% block title %}Academics | School ERP{% endblock %}
+{% block page_eyebrow %}Academic Structure{% endblock %}
+{% block page_heading %}Classes, Subjects, And Teacher Allocation{% endblock %}
+{% block page_copy %}Build the academic structure that powers attendance, exams, and class operations in a controlled school-ready workflow.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .academic-card,
+  .metric-card {
+    border: 1px solid #dbe4ee;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff, #fbfdff);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+
+  .academic-card__head {
+    padding: 20px 22px;
+    border-bottom: 1px solid #dbe4ee;
+    background: linear-gradient(135deg, #f8fbff, #eef4fb);
+  }
+
+  .academic-card__body,
+  .metric-card .card-body {
+    padding: 22px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .data-table th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    font-weight: 800;
+  }
+
+  .tag {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    {% if can_manage_academics %}
+      <div class="d-flex flex-wrap gap-10 justify-content-end mb-12">
+        <a class="btn btn-outline-primary" href="/academics/years/"><i class="ri-calendar-2-line me-6"></i>Academic Years</a>
+      </div>
+    {% endif %}
+    <div class="row gy-4">
+      <div class="col-xl-3 col-sm-6">
+        <div class="metric-card h-100">
+          <div class="card-body">
+            <span class="text-xs text-uppercase fw-bold text-primary-600">Classes</span>
+            <h4 class="mt-10 mb-6">{{ academics_stats.classes }}</h4>
+            <p class="text-neutral-600 text-sm mb-0">Structured class-section records.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6">
+        <div class="metric-card h-100">
+          <div class="card-body">
+            <span class="text-xs text-uppercase fw-bold text-info-600">Subjects</span>
+            <h4 class="mt-10 mb-6">{{ academics_stats.subjects }}</h4>
+            <p class="text-neutral-600 text-sm mb-0">Subjects mapped to actual classes.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6">
+        <div class="metric-card h-100">
+          <div class="card-body">
+            <span class="text-xs text-uppercase fw-bold text-success-600">Teacher Allocations</span>
+            <h4 class="mt-10 mb-6">{{ academics_stats.allocations }}</h4>
+            <p class="text-neutral-600 text-sm mb-0">Teaching responsibility already assigned.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6">
+        <div class="metric-card h-100">
+          <div class="card-body">
+            <span class="text-xs text-uppercase fw-bold text-warning-600">Teachers</span>
+            <h4 class="mt-10 mb-6">{{ academics_stats.teachers }}</h4>
+            <p class="text-neutral-600 text-sm mb-0">Available teachers in the current school scope.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="academic-card">
+      <div class="academic-card__head">
+        <h6 class="mb-4">Scope</h6>
+        <p class="text-neutral-600 text-sm mb-0">Choose the school first. All classes, subjects, and allocations stay inside that school boundary.</p>
+      </div>
+      <div class="academic-card__body">
+        <form method="get" class="row gy-3 align-items-end">
+          {% if request.user.role == "SUPER_ADMIN" %}
+            <div class="col-lg-4">
+              <label class="form-label">School</label>
+              <select name="school" class="form-control">
+                <option value="">Select school</option>
+                {% for school in school_options %}
+                  <option value="{{ school.id }}" {% if selected_school and selected_school.id == school.id %}selected{% endif %}>{{ school.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          {% else %}
+            <div class="col-lg-4">
+              <label class="form-label">School</label>
+              <input type="text" class="form-control" value="{{ selected_school.name|default:request.user.school.name }}" disabled>
+            </div>
+          {% endif %}
+          <div class="col-lg-2">
+            <button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Apply</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if can_manage_academics %}
+    <div class="col-xl-4">
+      <div class="academic-card h-100">
+        <div class="academic-card__head">
+          <h6 class="mb-4">Create Class</h6>
+          <p class="text-neutral-600 text-sm mb-0">Start with class-section records and optional homeroom ownership.</p>
+        </div>
+        <div class="academic-card__body">
+          <div class="d-flex flex-wrap gap-10 mb-12">
+            <a class="btn btn-sm btn-outline-primary" href="/academics/masters/classes/">Class Master</a>
+            <a class="btn btn-sm btn-outline-primary" href="/academics/masters/sections/">Section Master</a>
+            <a class="btn btn-sm btn-outline-primary" href="/academics/masters/subjects/">Subject Master</a>
+          </div>
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_class">
+            {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+            <div class="col-12">
+              <label class="form-label">Class Name</label>
+              <input type="text" name="name" class="form-control" placeholder="Class 6" list="class_master_list">
+              <datalist id="class_master_list">{% for c in class_masters %}<option value="{{ c.name }}">{% endfor %}</datalist>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Section</label>
+              <input type="text" name="section" class="form-control" placeholder="A" list="section_master_list">
+              <datalist id="section_master_list">{% for s in section_masters %}<option value="{{ s.name }}">{% endfor %}</datalist>
+            </div>
+            <div class="col-12"><label class="form-label">Class Teacher</label><select name="class_teacher" class="form-control"><option value="">Select teacher</option>{% for teacher in teacher_options %}<option value="{{ teacher.id }}">{{ teacher.get_full_name|default:teacher.username }}</option>{% endfor %}</select></div>
+            <div class="col-6"><label class="form-label">Room</label><input type="text" name="room_name" class="form-control" placeholder="Room 12"></div>
+            <div class="col-6"><label class="form-label">Capacity</label><input type="number" name="capacity" class="form-control" value="40" min="1"></div>
+            <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Create Class</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="academic-card h-100">
+        <div class="academic-card__head">
+          <h6 class="mb-4">Add Subject</h6>
+          <p class="text-neutral-600 text-sm mb-0">Map subjects directly to a class-section structure.</p>
+        </div>
+        <div class="academic-card__body">
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_subject">
+            {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+            <div class="col-12"><label class="form-label">Class</label><select name="academic_class" class="form-control"><option value="">Select class</option>{% for academic_class in academic_classes %}<option value="{{ academic_class.id }}">{{ academic_class.name }} - {{ academic_class.section }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label">Subject Name</label><input type="text" name="name" class="form-control" placeholder="Mathematics"></div>
+            <div class="col-12"><label class="form-label">Subject Code</label><input type="text" name="code" class="form-control" placeholder="MATH-6A"></div>
+            <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_optional" id="is_optional"><label class="form-check-label" for="is_optional">Optional subject</label></div></div>
+            <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Add Subject</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="academic-card h-100">
+        <div class="academic-card__head">
+          <h6 class="mb-4">Allocate Teacher</h6>
+          <p class="text-neutral-600 text-sm mb-0">Assign who teaches which subject in which class.</p>
+        </div>
+        <div class="academic-card__body">
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_allocation">
+            {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+            <div class="col-12"><label class="form-label">Teacher</label><select name="teacher" class="form-control"><option value="">Select teacher</option>{% for teacher in teacher_options %}<option value="{{ teacher.id }}">{{ teacher.get_full_name|default:teacher.username }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label">Class</label><select name="academic_class" class="form-control"><option value="">Select class</option>{% for academic_class in academic_classes %}<option value="{{ academic_class.id }}">{{ academic_class.name }} - {{ academic_class.section }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label">Subject</label><select name="subject" class="form-control"><option value="">Select subject</option>{% for subject in academic_subjects %}<option value="{{ subject.id }}">{{ subject.name }} - {{ subject.academic_class.name }} {{ subject.academic_class.section }}</option>{% endfor %}</select></div>
+            <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_class_lead" id="is_class_lead"><label class="form-check-label" for="is_class_lead">Also mark as class lead</label></div></div>
+            <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Save Allocation</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="col-xl-4">
+    <div class="academic-card h-100">
+      <div class="academic-card__head">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h6 class="mb-4">Classes</h6>
+            <p class="text-neutral-600 text-sm mb-0">Structured class records that students can depend on next.</p>
+          </div>
+          {% if selected_school or request.user.role != "SUPER_ADMIN" %}
+            <div class="d-flex gap-10">
+              <a class="btn btn-outline-secondary btn-sm" href="/academics/export/csv/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}dataset=classes">Export CSV</a>
+              <a class="btn btn-outline-secondary btn-sm" href="/academics/export/excel/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}dataset=classes">Export Excel</a>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="exportSelectedClassesCsvBtn" disabled>Export Selected</button>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="academic-card__body">
+        {% if academic_classes %}
+          <table class="data-table">
+            <thead><tr><th class="sf-th-icon"></th><th>Class</th><th>Teacher</th><th>Room</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
+            <tbody>
+              {% for academic_class in academic_classes %}
+                <tr>
+                  <td><input type="checkbox" class="form-check-input class-select" value="{{ academic_class.id }}" aria-label="Select class {{ academic_class.id }}"></td>
+                  <td><strong>{{ academic_class.name }} - {{ academic_class.section }}</strong><br><span class="text-neutral-500 text-sm">Capacity {{ academic_class.capacity }}</span></td>
+                  <td>{% if academic_class.class_teacher %}{{ academic_class.class_teacher.get_full_name|default:academic_class.class_teacher.username }}{% else %}Not assigned{% endif %}</td>
+                  <td>{{ academic_class.room_name|default:"-" }}</td>
+                  {% if can_manage_academics %}
+                    <td>
+                      <div class="d-inline-flex gap-8">
+                        <a class="btn btn-sm btn-outline-primary" href="/academics/classes/{{ academic_class.id }}/edit/">Edit</a>
+                        <form method="post" action="/academics/classes/{{ academic_class.id }}/delete/" onsubmit="return confirm('Delete this class?');">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="text-neutral-500 text-sm">No academic classes created yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="academic-card h-100">
+      <div class="academic-card__head">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h6 class="mb-4">Subjects</h6>
+            <p class="text-neutral-600 text-sm mb-0">Subject catalog tied to real class-sections.</p>
+          </div>
+          {% if selected_school or request.user.role != "SUPER_ADMIN" %}
+            <div class="d-flex gap-10">
+              <a class="btn btn-outline-secondary btn-sm" href="/academics/export/csv/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}dataset=subjects">Export CSV</a>
+              <a class="btn btn-outline-secondary btn-sm" href="/academics/export/excel/?{% if selected_school %}school={{ selected_school.id }}&{% endif %}dataset=subjects">Export Excel</a>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="exportSelectedSubjectsCsvBtn" disabled>Export Selected</button>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="academic-card__body">
+        {% if academic_subjects %}
+          <table class="data-table">
+            <thead><tr><th class="sf-th-icon"></th><th>Subject</th><th>Class</th><th>Type</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
+            <tbody>
+              {% for subject in academic_subjects %}
+                <tr>
+                  <td><input type="checkbox" class="form-check-input subject-select" value="{{ subject.id }}" aria-label="Select subject {{ subject.id }}"></td>
+                  <td><strong>{{ subject.name }}</strong><br><span class="text-neutral-500 text-sm">{{ subject.code|default:"No code" }}</span></td>
+                  <td>{{ subject.academic_class.name }} - {{ subject.academic_class.section }}</td>
+                  <td><span class="tag">{% if subject.is_optional %}Optional{% else %}Core{% endif %}</span></td>
+                  {% if can_manage_academics %}
+                    <td>
+                      <div class="d-inline-flex gap-8">
+                        <a class="btn btn-sm btn-outline-primary" href="/academics/subjects/{{ subject.id }}/edit/">Edit</a>
+                        <form method="post" action="/academics/subjects/{{ subject.id }}/delete/" onsubmit="return confirm('Delete this subject?');">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="text-neutral-500 text-sm">No subjects created yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="academic-card h-100">
+      <div class="academic-card__head">
+        <h6 class="mb-4">Teacher Allocation</h6>
+        <p class="text-neutral-600 text-sm mb-0">This is the bridge to attendance, timetable, and exams.</p>
+      </div>
+      <div class="academic-card__body">
+        {% if teacher_allocations %}
+          <table class="data-table">
+            <thead><tr><th>Teacher</th><th>Class</th><th>Subject</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
+            <tbody>
+              {% for allocation in teacher_allocations %}
+                <tr>
+                  <td><strong>{{ allocation.teacher.get_full_name|default:allocation.teacher.username }}</strong>{% if allocation.is_class_lead %}<br><span class="tag mt-1">Class Lead</span>{% endif %}</td>
+                  <td>{{ allocation.academic_class.name }} - {{ allocation.academic_class.section }}</td>
+                  <td>{{ allocation.subject.name }}</td>
+                  {% if can_manage_academics %}
+                    <td>
+                      <form method="post" action="/academics/allocations/{{ allocation.id }}/delete/" onsubmit="return confirm('Remove this allocation?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                      </form>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="text-neutral-500 text-sm">No teacher allocations created yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const classBoxes = Array.from(document.querySelectorAll(".class-select"));
+    const subjectBoxes = Array.from(document.querySelectorAll(".subject-select"));
+    const exportClassesBtn = document.getElementById("exportSelectedClassesCsvBtn");
+    const exportSubjectsBtn = document.getElementById("exportSelectedSubjectsCsvBtn");
+
+    function ids(boxes) {
+      return boxes.filter((b) => b.checked).map((b) => b.value).filter(Boolean);
+    }
+
+    function update() {
+      if (exportClassesBtn) exportClassesBtn.disabled = ids(classBoxes).length === 0;
+      if (exportSubjectsBtn) exportSubjectsBtn.disabled = ids(subjectBoxes).length === 0;
+    }
+
+    function exportSelected(dataset, paramName, selectedIds) {
+      const params = new URLSearchParams({
+        {% if selected_school %}school: "{{ selected_school.id }}",{% endif %}
+        dataset: dataset,
+      });
+      params.set(paramName, selectedIds.join(","));
+      window.location.href = "/academics/export/csv/?" + params.toString();
+    }
+
+    classBoxes.forEach((b) => b.addEventListener("change", update));
+    subjectBoxes.forEach((b) => b.addEventListener("change", update));
+
+    exportClassesBtn && exportClassesBtn.addEventListener("click", () => exportSelected("classes", "class_ids", ids(classBoxes)));
+    exportSubjectsBtn && exportSubjectsBtn.addEventListener("click", () => exportSelected("subjects", "subject_ids", ids(subjectBoxes)));
+    update();
+  });
+</script>
+{% endblock %}

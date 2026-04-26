@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admission Workflow | School ERP{% endblock %}
+{% block page_eyebrow %}Students{% endblock %}
+{% block page_heading %}Admission Workflow{% endblock %}
+{% block page_copy %}Track and update admission stages for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+<div class="row gy-4">
+  <div class="col-12">
+    {% include "students/_student_nav.html" with student_nav_active="workflow" %}
+  </div>
+  <div class="col-xl-5">
+    <div class="platform-panel">
+      <div class="platform-panel__body">
+        <h6 class="mb-14">Add Workflow Step</h6>
+        {% if can_manage_students %}
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          <div class="col-12">
+            <label class="form-label">Stage</label>
+            <select name="stage" class="form-control" required>
+              <option value="">Select stage</option>
+              {% for value, label in stage_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control" required>
+              {% for value, label in status_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Note</label>
+            <textarea name="note" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Save Step</button>
+          </div>
+        </form>
+        {% else %}
+        <div class="text-neutral-600 text-sm">You have view-only access.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    <div class="platform-panel">
+      <div class="platform-panel__body">
+        <h6 class="mb-14">Workflow Timeline</h6>
+        {% if workflow_events %}
+          <div class="d-flex flex-column gap-12">
+            {% for event in workflow_events %}
+              <div class="timeline-entry">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-8">
+                  <strong>{{ event.get_stage_display }} - {{ event.get_status_display }}</strong>
+                  <small class="text-neutral-500">{{ event.created_at|date:"d M Y, h:i A" }}</small>
+                </div>
+                {% if event.note %}<div class="text-neutral-600 text-sm mt-1">{{ event.note }}</div>{% endif %}
+                <div class="text-neutral-500 text-sm mt-1">{% if event.actor %}By {{ event.actor.get_full_name|default:event.actor.username }}{% else %}System{% endif %}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-neutral-600 text-sm">No workflow events yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Create Ticket{% endblock %}
+{% block page_heading %}Create Ticket{% endblock %}
+{% block page_copy %}Log an issue reported by a school or internal ops.{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row gy-3 gx-3">
+          <div class="col-lg-8">
+            <label class="form-label">Title</label>
+            <input class="form-control" name="title" required>
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label">Status</label>
+            <select class="form-control" name="status">
+              {% for value,label in status_choices %}
+                <option value="{{ value }}" {% if value == "OPEN" %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label">Priority</label>
+            <select class="form-control" name="priority">
+              {% for value,label in priority_choices %}
+                <option value="{{ value }}" {% if value == "NORMAL" %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-6">
+            <label class="form-label">School (optional)</label>
+            <select class="form-control" name="school_id">
+              <option value="">—</option>
+              {% for s in schools %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label">Assign to (optional)</label>
+            <select class="form-control" name="assigned_to_id">
+              <option value="">—</option>
+              {% for u in agents %}
+                <option value="{{ u.id }}">{{ u.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-6">
+            <label class="form-label">Requester Email (optional)</label>
+            <input class="form-control" name="requester_email" placeholder="principal@school.com">
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label">Requester Phone (optional)</label>
+            <input class="form-control" name="requester_phone" placeholder="+91...">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description" rows="6"></textarea>
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Create</button>
+            <a class="btn btn-outline-secondary" href="/platform/support/">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

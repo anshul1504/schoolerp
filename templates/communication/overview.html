@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Communication | School ERP{% endblock %}
+{% block page_eyebrow %}Communication Desk{% endblock %}
+{% block page_heading %}Notices And School Communication{% endblock %}
+{% block page_copy %}Publish targeted notices for staff, students, and parents while keeping school communication in one controlled place.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .comm-card,
+  .metric-card {
+    border: 1px solid #dbe4ee;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff, #fbfdff);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+
+  .comm-card__head {
+    padding: 20px 22px;
+    border-bottom: 1px solid #dbe4ee;
+    background: linear-gradient(135deg, #f8fbff, #eef4fb);
+  }
+
+  .comm-card__body,
+  .metric-card .card-body {
+    padding: 22px;
+  }
+
+  .notice-item {
+    display: block;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+    background: #ffffff;
+  }
+
+  .notice-item + .notice-item {
+    margin-top: 12px;
+  }
+
+  .notice-pill {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  .notice-pill.normal { background: #eff6ff; color: #1d4ed8; }
+  .notice-pill.important { background: #fef3c7; color: #92400e; }
+  .notice-pill.urgent { background: #fee2e2; color: #b91c1c; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="row gy-4">
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-primary-600">Published</span><h4 class="mt-10 mb-6">{{ communication_stats.published }}</h4><p class="text-neutral-600 text-sm mb-0">Visible notices in your current scope.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-danger-600">Urgent</span><h4 class="mt-10 mb-6">{{ communication_stats.urgent }}</h4><p class="text-neutral-600 text-sm mb-0">Urgent notices needing immediate attention.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-warning-600">Important</span><h4 class="mt-10 mb-6">{{ communication_stats.important }}</h4><p class="text-neutral-600 text-sm mb-0">Important notices in the feed.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-info-600">Audience Scope</span><h4 class="mt-10 mb-6">{{ communication_stats.audience }}</h4><p class="text-neutral-600 text-sm mb-0">Audience categories visible for this role.</p></div></div></div>
+    </div>
+  </div>
+
+  {% if can_manage_notices %}
+    <div class="col-xl-4">
+      <div class="comm-card h-100">
+        <div class="comm-card__head"><h6 class="mb-4">Publish Notice</h6><p class="text-neutral-600 text-sm mb-0">Create targeted school notices for the selected audience.</p></div>
+        <div class="comm-card__body">
+          <form method="post" class="row gy-3">
+            {% csrf_token %}
+            {% if request.user.role == "SUPER_ADMIN" %}
+              <div class="col-12"><label class="form-label">School</label><select name="school" class="form-control"><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and selected_school.id == school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+            {% endif %}
+            <div class="col-12"><label class="form-label">Title</label><input type="text" name="title" class="form-control" placeholder="Tomorrow holiday notice"></div>
+            <div class="col-12"><label class="form-label">Audience</label><select name="audience" class="form-control">{% for audience in notice_audience_choices %}<option value="{{ audience }}">{{ audience|title }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label">Priority</label><select name="priority" class="form-control">{% for priority in notice_priority_choices %}<option value="{{ priority }}">{{ priority|title }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label">Message</label><textarea name="body" class="form-control" rows="5" placeholder="Write the full notice here"></textarea></div>
+            <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_published" id="is_published" checked><label class="form-check-label" for="is_published">Publish immediately</label></div></div>
+            <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Publish Notice</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="col-xl-{% if can_manage_notices %}8{% else %}12{% endif %}">
+    <div class="comm-card h-100">
+      <div class="comm-card__head"><h6 class="mb-4">Notice Feed</h6><p class="text-neutral-600 text-sm mb-0">Role-aware communication feed for the current school scope.</p></div>
+      <div class="comm-card__body">
+        {% if notices %}
+          {% for notice in notices %}
+            <div class="notice-item">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-8">
+                <strong class="text-neutral-900">{{ notice.title }}</strong>
+                <span class="notice-pill {{ notice.priority|lower }}">{{ notice.priority|title }}</span>
+              </div>
+              <div class="text-neutral-600 text-sm mb-8">{{ notice.body|truncatechars:180 }}</div>
+              <div class="text-neutral-500 text-xs">{{ notice.school.name }} | {{ notice.audience|title }} | {{ notice.created_at|date:"d M Y, h:i A" }}</div>
+              <div class="mt-12 d-flex flex-wrap gap-10">
+                <a class="btn btn-sm btn-outline-primary" href="/communication/{{ notice.id }}/">Open</a>
+                {% if can_send_as_campaign %}
+                  <a class="btn btn-sm btn-primary-600" href="/frontoffice/messages/campaigns/create/?school={{ notice.school_id }}&notice_id={{ notice.id }}">Send</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No notices available in your current scope.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

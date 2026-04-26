@@ -1,0 +1,541 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description"
+    content="Modern Education Admin Dashboard for schools, colleges, universities, and eLearning platforms. Includes student and course management, attendance, exams, payments, analytics, and a fully responsive clean UI ideal for LMS, coaching centers, and academic admin systems.">
+  <meta name="keywords"
+    content="Education Admin Dashboard, School Admin Panel, College Dashboard, University Dashboard, LMS Dashboard, eLearning Admin Template, Student Management System, Course Management, Education Template, Study Dashboard, Online Learning Dashboard, Academic Admin Panel, Bootstrap Dashboard, React Education Dashboard, Next.js Education Template">
+  <meta name="robots" content="INDEX,FOLLOW">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | School ERP</title>
+  <link rel="icon" type="image/png" href="/static/demo/assets/images/favicon.png" sizes="16x16">
+  <link rel="stylesheet" href="/static/demo/assets/css/remixicon.css">
+  <link rel="stylesheet" href="/static/demo/assets/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/demo/assets/css/lib/apexcharts.css">
+  <link rel="stylesheet" href="/static/demo/assets/css/lib/dataTables.min.css">
+  <link rel="stylesheet" href="/static/demo/assets/css/lib/flatpickr.min.css">
+  <link rel="stylesheet" href="/static/demo/assets/css/lib/full-calendar.css">
+  <link rel="stylesheet" href="/static/demo/assets/css/lib/calendar.css">
+  <link rel="stylesheet" href="/static/css/demo-style.css?v=20260424-1">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(37, 161, 148, 0.24), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.2), transparent 28%),
+        linear-gradient(135deg, #f4fbfa 0%, #edf4ff 55%, #f7f9fc 100%);
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-shell {
+      width: min(1320px, 100%);
+      min-height: 760px;
+      border-radius: 32px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+    }
+
+    .auth-hero {
+      position: relative;
+      min-height: 760px;
+      background:
+        linear-gradient(155deg, rgba(6, 24, 38, 0.8), rgba(18, 78, 99, 0.55)),
+        url("/static/demo/assets/images/thumbs/login-img.png") center center / cover no-repeat;
+      color: #fff;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .auth-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, rgba(4, 14, 28, 0.08), rgba(4, 14, 28, 0.54));
+      pointer-events: none;
+    }
+
+    .auth-hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 13px;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-title {
+      font-size: clamp(36px, 4vw, 58px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin: 18px 0 16px;
+      max-width: 560px;
+    }
+
+    .hero-copy {
+      max-width: 560px;
+      font-size: 16px;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .hero-stat {
+      padding: 18px 18px 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .hero-roles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-role {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .auth-form-wrap {
+      padding: 56px 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top left, rgba(37, 161, 148, 0.08), transparent 20%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 520px;
+      padding: 38px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    .auth-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(37, 161, 148, 0.16), rgba(37, 99, 235, 0.14));
+      margin-bottom: 22px;
+    }
+
+    .auth-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #ebfaf8;
+      color: #148579;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .auth-heading {
+      margin: 18px 0 10px;
+      font-size: 34px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #0f172a;
+    }
+
+    .auth-subtitle {
+      margin-bottom: 28px;
+      color: #64748b;
+      line-height: 1.7;
+    }
+
+    .auth-alert {
+      border-radius: 16px;
+      border: 1px solid rgba(239, 68, 68, 0.16);
+      background: rgba(254, 242, 242, 0.9);
+      color: #b91c1c;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+
+    .auth-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: #334155;
+      margin-bottom: 10px;
+    }
+
+    .auth-input-group {
+      position: relative;
+    }
+
+    .auth-input-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 18px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .auth-input {
+      height: 58px;
+      border-radius: 18px;
+      border: 1px solid #dbe3ef;
+      padding-left: 52px;
+      padding-right: 52px;
+      background: #f8fafc;
+      transition: all 0.25s ease;
+    }
+
+    .auth-input:focus {
+      border-color: #25a194;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(37, 161, 148, 0.12);
+    }
+
+    .auth-toggle {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    .auth-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .auth-submit {
+      height: 58px;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #25a194, #2563eb);
+      box-shadow: 0 18px 28px rgba(37, 99, 235, 0.2);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .auth-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 20px 32px rgba(37, 99, 235, 0.24);
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .role-card {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.25s ease;
+    }
+
+    .role-card:hover {
+      border-color: rgba(37, 161, 148, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .role-card__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(37, 161, 148, 0.14), rgba(37, 99, 235, 0.12));
+      flex-shrink: 0;
+    }
+
+    .role-card__icon img {
+      max-width: 20px;
+    }
+
+    .role-card strong {
+      display: block;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .role-card span {
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .auth-footer {
+      margin-top: 26px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    @media (max-width: 1199px) {
+      .auth-shell {
+        min-height: auto;
+      }
+
+      .auth-hero,
+      .auth-form-wrap {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .auth-page {
+        padding: 18px;
+      }
+
+      .auth-form-wrap {
+        padding: 28px 20px;
+      }
+
+      .auth-card {
+        padding: 28px 22px;
+      }
+
+      .role-grid,
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-shell">
+      <div class="row g-0 h-100">
+        <div class="col-lg-7 d-none d-lg-block">
+          <section class="auth-hero h-100">
+            <div>
+              <span class="auth-badge">
+                <i class="ri-shield-star-line"></i>
+                Smart School ERP Platform
+              </span>
+              <h1 class="hero-title">Run your entire institution from one elegant control center.</h1>
+              <p class="hero-copy">
+                Admissions, academics, fees, attendance, communication, and role-based access all come together in one polished school operations experience.
+              </p>
+              <div class="hero-stats">
+                <div class="hero-stat">
+                  <strong>8+</strong>
+                  <span>Role-based workspaces for every department.</span>
+                </div>
+                <div class="hero-stat">
+                  <strong>1</strong>
+                  <span>Centralized dashboard for each school workflow.</span>
+                </div>
+                <div class="hero-stat">
+                  <strong>24/7</strong>
+                  <span>Operational visibility with clean, modern UI.</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-16 text-white-75">Designed for real school teams</p>
+              <div class="hero-roles">
+                <span class="hero-role">Super Admin</span>
+                <span class="hero-role">School Owner</span>
+                <span class="hero-role">Principal</span>
+                <span class="hero-role">Teacher</span>
+                <span class="hero-role">Student</span>
+                <span class="hero-role">Parent</span>
+                <span class="hero-role">Accountant</span>
+                <span class="hero-role">Receptionist</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-lg-5">
+          <section class="auth-form-wrap h-100">
+            <div class="auth-card">
+              <a href="{% url 'login' %}" class="text-decoration-none">
+                <div class="auth-logo">
+                  <img src="/static/demo/assets/images/logo-icon.png" alt="Logo Icon">
+                </div>
+              </a>
+
+              <span class="auth-kicker">
+                <i class="ri-lock-password-line"></i>
+                Secure Sign In
+              </span>
+
+              <h1 class="auth-heading">Welcome back</h1>
+              <p class="auth-subtitle">
+                Sign in to access your personalized dashboard and continue managing your school operations with the same frontend theme you selected.
+              </p>
+
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="auth-alert">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+
+              <form method="post" action="{% url 'login' %}" class="d-flex flex-column gap-20">
+                {% csrf_token %}
+
+                <div>
+                  <label for="username" class="auth-label">Username</label>
+                  <div class="auth-input-group">
+                    <span class="auth-input-icon"><i class="ri-user-3-line"></i></span>
+                    <input type="text" id="username" name="username" class="form-control auth-input" placeholder="Enter your username" required>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="password" class="auth-label">Password</label>
+                  <div class="auth-input-group">
+                    <span class="auth-input-icon"><i class="ri-lock-2-line"></i></span>
+                    <input type="password" id="password" name="password" class="form-control auth-input" placeholder="Enter your password" required>
+                    <button type="button"
+                      class="toggle-password auth-toggle btn p-0 border-0 bg-transparent position-absolute"
+                      data-toggle="#password" aria-label="Toggle password visibility">
+                      <i class="ri-eye-line"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="auth-meta">
+                  <div class="form-check style-check d-flex align-items-center">
+                    <input class="form-check-input border border-neutral-400" type="checkbox" value="" id="remember-me">
+                    <label class="form-check-label text-secondary-light" for="remember-me">Remember me</label>
+                  </div>
+                  <a href="javascript:void(0)" class="text-primary-600 fw-semibold text-decoration-underline">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="auth-submit btn btn-primary-600 w-100">
+                  Log In To Dashboard
+                </button>
+              </form>
+
+              <div class="mt-28">
+                <p class="text-center text-sm text-secondary-light mb-16">Access preview by role</p>
+                <div class="role-grid">
+                  <div class="role-card">
+                    <div class="role-card__icon">
+                      <img src="/static/demo/assets/images/icons/sheild-icon.png" alt="Super Admin">
+                    </div>
+                    <div>
+                      <strong>Super Admin</strong>
+                      <span>Platform-wide visibility</span>
+                    </div>
+                  </div>
+                  <div class="role-card">
+                    <div class="role-card__icon">
+                      <img src="/static/demo/assets/images/icons/dashboard-icon.png" alt="School Owner">
+                    </div>
+                    <div>
+                      <strong>School Owner</strong>
+                      <span>School command center</span>
+                    </div>
+                  </div>
+                  <div class="role-card">
+                    <div class="role-card__icon">
+                      <img src="/static/demo/assets/images/icons/teacher-icon.png" alt="Teacher">
+                    </div>
+                    <div>
+                      <strong>Teacher</strong>
+                      <span>Classes, attendance, exams</span>
+                    </div>
+                  </div>
+                  <div class="role-card">
+                    <div class="role-card__icon">
+                      <img src="/static/demo/assets/images/icons/student-icon.png" alt="Student">
+                    </div>
+                    <div>
+                      <strong>Student</strong>
+                      <span>Personal learning dashboard</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="auth-footer text-sm">
+                Need a new account?
+                <a href="/demo/register.html" class="text-primary-600 fw-semibold text-decoration-underline">
+                  Create an account
+                </a>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/demo/assets/js/lib/jquery-3.7.1.min.js"></script>
+  <script src="/static/demo/assets/js/lib/bootstrap.bundle.min.js"></script>
+  <script src="/static/demo/assets/js/lib/apexcharts.min.js"></script>
+  <script src="/static/demo/assets/js/lib/iconify-icon.min.js"></script>
+  <script src="/static/demo/assets/js/lib/dataTables.min.js"></script>
+  <script src="/static/demo/assets/js/lib/jquery-ui.min.js"></script>
+  <script src="/static/demo/assets/js/app.js"></script>
+</body>
+</html>

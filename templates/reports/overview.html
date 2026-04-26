@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports | School ERP{% endblock %}
+{% block page_eyebrow %}Leadership Reporting{% endblock %}
+{% block page_heading %}Operational Reports Overview{% endblock %}
+{% block page_copy %}High-level reporting across students, academics, attendance, fees, and exams for the current visibility scope.{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  {% if request.user.role == "REPORT_VIEWER" %}
+    <div class="col-12">
+      <div class="card border-primary-100">
+        <div class="card-body p-24">
+          <h6 class="mb-8">Report Viewer Home</h6>
+          <p class="text-neutral-600 mb-0">This workspace is read-only and focused on leadership reporting, trends, and operational visibility.</p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% for metric in report_metrics %}
+    <div class="col-xl-4 col-sm-6">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <span class="text-xs text-uppercase fw-bold text-primary-600">{{ metric.label }}</span>
+          <h4 class="mt-10 mb-6">{{ metric.value }}</h4>
+          <p class="text-neutral-600 text-sm mb-0">{{ metric.copy }}</p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body p-24">
+        <div class="d-flex align-items-center justify-content-between mb-20">
+          <div>
+            <h6 class="mb-4">Leadership Summary</h6>
+            <p class="text-neutral-600 text-sm mb-0">A quick reporting layer on top of the ERP modules already available.</p>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            {% if request.user.role == "SUPER_ADMIN" %}
+              <a class="btn btn-sm btn-outline-secondary" href="/reports/builder/">Report Builder</a>
+              <a class="btn btn-sm btn-outline-secondary" href="/reports/scheduled/">Scheduled Reports</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row gy-4">
+          {% for panel in report_panels %}
+            <div class="col-md-6">
+              <div class="border border-neutral-200 radius-12 p-20 h-100">
+                <h6 class="mb-8">{{ panel.title }}</h6>
+                <p class="text-neutral-600 mb-0">{{ panel.body }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Notices | School ERP{% endblock %}
+{% block page_eyebrow %}Communication Desk{% endblock %}
+{% block page_heading %}Manage Notices{% endblock %}
+{% block page_copy %}Create, edit, publish, and delete notices safely.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+      <div>
+        <h6 class="mb-4">Notices</h6>
+        <p class="text-neutral-600 text-sm mb-0">This list includes published and unpublished notices in your scope.</p>
+      </div>
+      <div class="d-flex gap-10 flex-wrap">
+        <a href="/communication/export/csv/?school={{ selected_school.id|default:'' }}" class="btn btn-outline-secondary">Export CSV</a>
+        <a href="/communication/export/excel/?school={{ selected_school.id|default:'' }}" class="btn btn-outline-secondary">Export Excel</a>
+        <button type="button" class="btn btn-outline-secondary" id="exportSelectedNoticesCsvBtn" disabled>Export Selected (CSV)</button>
+        <button type="button" class="btn btn-outline-secondary" id="exportSelectedNoticesExcelBtn" disabled>Export Selected (Excel)</button>
+        <a href="/communication/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Publish Notice</a>
+      </div>
+    </div>
+
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-8"><label class="form-label">School</label><select name="school" class="form-control"><option value="">Select school</option>{% for s in school_options %}<option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-4 d-grid"><button type="submit" class="btn btn-outline-primary">Apply</button></div>
+      {% endif %}
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th class="sf-th-52">
+              <input type="checkbox" class="form-check-input" id="selectAllNotices" aria-label="Select all notices">
+            </th>
+            <th>Title</th>
+            <th>Audience</th>
+            <th>Priority</th>
+            <th>Published</th>
+            <th>Created</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for n in notices %}
+            <tr>
+              <td><input type="checkbox" class="form-check-input notice-select" value="{{ n.id }}" aria-label="Select notice {{ n.id }}"></td>
+              <td><a href="/communication/{{ n.id }}/">{{ n.title }}</a></td>
+              <td>{{ n.audience }}</td>
+              <td>{{ n.priority }}</td>
+              <td>{% if n.is_published %}Yes{% else %}No{% endif %}</td>
+              <td>{{ n.created_at|date:"d M Y, h:i A" }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-2">
+                  <a class="btn btn-sm btn-outline-primary" href="/communication/{{ n.id }}/edit/">Edit</a>
+                  <form method="post" action="/communication/{{ n.id }}/delete/">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this notice?');">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-neutral-500 text-sm">No notices found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectAll = document.getElementById("selectAllNotices");
+    const boxes = Array.from(document.querySelectorAll(".notice-select"));
+    const csvBtn = document.getElementById("exportSelectedNoticesCsvBtn");
+    const xlsBtn = document.getElementById("exportSelectedNoticesExcelBtn");
+
+    function selectedIds() {
+      return boxes.filter((b) => b.checked).map((b) => b.value).filter(Boolean);
+    }
+
+    function update() {
+      const enabled = selectedIds().length > 0;
+      if (csvBtn) csvBtn.disabled = !enabled;
+      if (xlsBtn) xlsBtn.disabled = !enabled;
+    }
+
+    function buildUrl(base, fmt) {
+      const ids = selectedIds().join(",");
+      const params = new URLSearchParams({
+        school: "{{ selected_school.id|default:'' }}",
+        notice_ids: ids,
+      });
+      return base + "?" + params.toString();
+    }
+
+    if (selectAll && boxes.length) {
+      selectAll.addEventListener("change", function () {
+        boxes.forEach((b) => { b.checked = selectAll.checked; });
+        update();
+      });
+      boxes.forEach((b) => b.addEventListener("change", update));
+    }
+
+    csvBtn && csvBtn.addEventListener("click", function () {
+      window.location.href = buildUrl("/communication/export/csv/", "csv");
+    });
+    xlsBtn && xlsBtn.addEventListener("click", function () {
+      window.location.href = buildUrl("/communication/export/excel/", "excel");
+    });
+    update();
+  });
+</script>
+{% endblock %}

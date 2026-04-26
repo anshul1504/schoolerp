@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Branding{% endblock %}
+{% block page_heading %}Branding & Base Setup{% endblock %}
+{% block page_copy %}Update product name, meta text, support email and logo from the frontend.{% endblock %}
+{% block page_eyebrow %}Settings{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Branding</span>
+    <h5 class="mb-2">Product identity and visual tokens</h5>
+    <p class="mb-0">Update product name, meta text, support email and logo from the frontend.</p>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Branding & Base Setup</h6><p>Central branding controls for the ERP shell.</p></div>
+    </div>
+    <div class="platform-shell">
+      <form method="post" enctype="multipart/form-data" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-md-6">
+          <label class="form-label">Product name</label>
+          <input type="text" name="product_name" class="form-control" value="{{ branding.product_name }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Sidebar meta</label>
+          <input type="text" name="product_meta" class="form-control" value="{{ branding.product_meta }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Support email</label>
+          <input type="email" name="support_email" class="form-control" value="{{ branding.support_email }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Logo</label>
+          <input type="file" name="logo" class="form-control" accept="image/*">
+          {% if branding.logo %}
+            <div class="d-flex align-items-center gap-12 mt-2">
+              <img src="{{ branding.logo.url }}" alt="Logo" class="sf-img-thumb">
+              <div class="text-muted text-sm">Current: {{ branding.logo.name }}</div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Favicon</label>
+          <input type="file" name="favicon" class="form-control" accept="image/*">
+          {% if branding.favicon %}
+            <div class="d-flex align-items-center gap-12 mt-2">
+              <img src="{{ branding.favicon.url }}" alt="Favicon" class="sf-img-thumb sf-img-thumb--square">
+              <div class="text-muted text-sm">Current: {{ branding.favicon.name }}</div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Theme primary (hex)</label>
+          <input type="text" name="theme_primary" class="form-control" value="{{ branding.theme_primary }}" placeholder="#1677ff">
+          <div class="text-muted text-sm mt-1">Used for primary buttons, links and accents.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Theme secondary (hex)</label>
+          <input type="text" name="theme_secondary" class="form-control" value="{{ branding.theme_secondary }}" placeholder="#44b8ff">
+          <div class="text-muted text-sm mt-1">Optional secondary accent color.</div>
+        </div>
+        <div class="col-12 d-flex gap-10">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <a href="/settings/" class="btn btn-outline-secondary">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

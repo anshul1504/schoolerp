@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Messages | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Messaging{% endblock %}
+{% block page_copy %}Send parent/student updates via Email or WhatsApp (provider integration pending).{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-16">
+          <div>
+            <h6 class="mb-4">Templates</h6>
+            <p class="text-neutral-600 text-sm mb-0">Reusable message blocks for reception workflows.</p>
+          </div>
+          <div class="d-flex gap-10">
+            <a class="btn btn-outline-primary" href="/frontoffice/messages/templates/">View</a>
+            {% if can_manage %}<a class="btn btn-primary-600" href="/frontoffice/messages/templates/create/">Create</a>{% endif %}
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-10 mb-12">
+          <a class="btn btn-sm btn-outline-primary" href="/frontoffice/messages/campaigns/create/">New Campaign</a>
+          <a class="btn btn-sm btn-outline-primary" href="/frontoffice/document-reminders/">Document Reminders</a>
+        </div>
+        {% for t in templates %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <strong class="d-block mb-4">{{ t.name }}</strong>
+            <div class="text-neutral-600 text-sm">{{ t.get_channel_display }} | {{ t.get_target_display }}</div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No templates yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-16">
+          <div>
+            <h6 class="mb-4">Campaigns</h6>
+            <p class="text-neutral-600 text-sm mb-0">Create, review recipients, and send.</p>
+          </div>
+          <div class="d-flex gap-10">
+            <a class="btn btn-outline-primary" href="/frontoffice/messages/campaigns/">View</a>
+            {% if can_manage %}<a class="btn btn-primary-600" href="/frontoffice/messages/campaigns/create/">New</a>{% endif %}
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-10 mb-12">
+          <a class="btn btn-sm btn-outline-primary" href="/communication/">Pick Notice To Send</a>
+          <a class="btn btn-sm btn-outline-primary" href="/frontoffice/messages/templates/">Pick Template</a>
+        </div>
+        {% for c in campaigns %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <strong>{{ c.title }}</strong>
+              <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ c.get_status_display }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm mt-6">{{ c.get_channel_display }} | {{ c.get_target_display }}</div>
+            <div class="mt-10"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/messages/campaigns/{{ c.id }}/">Open</a></div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No campaigns yet.</div>
+        {% endfor %}
+        <div class="alert alert-warning mt-16 mb-0">
+          WhatsApp sending is currently a placeholder: we log deliveries as queued until a provider (Twilio/Cloud API) is configured.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

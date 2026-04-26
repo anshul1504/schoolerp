@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Lab Operations{% endblock %}
+{% block page_heading %}Lab Operations{% endblock %}
+{% block page_copy %}Lab booking, equipment, and session readiness across schools.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Lab Operations</span>
+    <h5 class="mb-2">Lab booking, equipment, and session readiness</h5>
+    <p class="mb-0">Lab booking, equipment, and session readiness across schools.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-user-line"></i></div><div><span>Students</span><strong>{{ lab_summary.students }}</strong><small>Eligible learners</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Ready</span><strong>{{ lab_summary.ready }}</strong><small>Ready schools</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-error-warning-line"></i></div><div><span>Needs Setup</span><strong>{{ lab_summary.needs_setup }}</strong><small>Pending setup</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-flask-line"></i></div><div><span>Sessions</span><strong>0</strong><small>Workflow pending</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head"><div><h6>Lab Coverage</h6><p>School readiness for lab workflows.</p></div></div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Students</th>
+            <th>Bookings</th>
+            <th>Equipment</th>
+            <th>Sessions</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in lab_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted small">{{ row.school.code }}</span></td>
+              <td>{{ row.students }}</td>
+              <td>{{ row.lab_booking_count }}</td>
+              <td>{{ row.equipment_count }}</td>
+              <td>{{ row.session_count }}</td>
+              <td><span class="status-pill status-pill--warning">Needs setup</span></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="text-muted small mt-3">Lab workflow will expand after a dedicated lab model is added.</div>
+    </div>
+  </div>
+{% endblock %}

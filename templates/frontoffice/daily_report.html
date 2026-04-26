@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Report | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Daily Front Office Report{% endblock %}
+{% block page_copy %}Today snapshot for enquiries, follow-ups, calls, and visitors.{% endblock %}
+
+{% block extra_css %}
+<style>
+  @media print {
+    .sidebar,
+    .navbar-header,
+    .body-overlay,
+    .btn,
+    form,
+    .topbar-dropdown,
+    .sidebar-close-btn {
+      display: none !important;
+    }
+    .dashboard-main {
+      margin-left: 0 !important;
+    }
+    .card {
+      box-shadow: none !important;
+      border: 1px solid #e5e7eb !important;
+    }
+    a {
+      text-decoration: none !important;
+      color: #111827 !important;
+    }
+    .badge {
+      border: 1px solid #d1d5db !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <h6 class="mb-2">Date: {{ today }}</h6>
+        <div class="text-neutral-600 text-sm">Use this page to close the day at reception and plan tomorrow.</div>
+      </div>
+      <div class="d-flex flex-wrap gap-10">
+        <a class="btn btn-outline-primary" href="/frontoffice/enquiries/">Enquiries</a>
+        <a class="btn btn-outline-primary" href="/frontoffice/calls/">Calls</a>
+        <a class="btn btn-outline-primary" href="/frontoffice/visitors/">Visitors</a>
+        <a class="btn btn-outline-primary" href="/frontoffice/meetings/">Meetings</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print();">Print</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row gy-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="text-xs text-uppercase fw-bold text-primary-600">Enquiries Today</div>
+        <h4 class="mt-10 mb-0">{{ kpis.enquiries_today }}</h4>
+        <div class="text-neutral-600 text-sm mt-8">New open: {{ kpis.new_enquiries_open }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="text-xs text-uppercase fw-bold text-primary-600">Follow-ups</div>
+        <h4 class="mt-10 mb-0">{{ kpis.follow_ups_due_today }}</h4>
+        <div class="text-neutral-600 text-sm mt-8">Overdue: {{ kpis.follow_ups_overdue }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="text-xs text-uppercase fw-bold text-primary-600">Calls</div>
+        <h4 class="mt-10 mb-0">{{ kpis.calls_due_today }}</h4>
+        <div class="text-neutral-600 text-sm mt-8">Overdue: {{ kpis.calls_overdue }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <div class="text-xs text-uppercase fw-bold text-primary-600">Visitors</div>
+        <h4 class="mt-10 mb-0">{{ kpis.visitors_today }}</h4>
+        <div class="text-neutral-600 text-sm mt-8">Open inside: {{ kpis.open_visitors }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row gy-4 mt-1">
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Follow-ups Due Today</h6>
+        {% for e in follow_ups_due_today_list %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <strong>{{ e.student_name }}</strong>
+              <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ e.get_status_display }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm mt-6">{{ e.guardian_name }} | {{ e.phone }}</div>
+            <div class="mt-10 d-flex flex-wrap gap-10">
+              <a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ e.id }}/">Open</a>
+              <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ e.school_id }}&enquiry_id={{ e.id }}&phone={{ e.phone }}&caller_name={{ e.guardian_name|urlencode }}">Log Call</a>
+            </div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No follow-ups due today.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Overdue Follow-ups</h6>
+        {% for e in follow_ups_overdue_list %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <strong>{{ e.student_name }}</strong>
+              <span class="badge bg-warning text-dark px-14 py-6 radius-8">Overdue: {{ e.follow_up_date }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm mt-6">{{ e.guardian_name }} | {{ e.phone }}</div>
+            <div class="mt-10 d-flex flex-wrap gap-10">
+              <a class="btn btn-sm btn-outline-primary" href="/frontoffice/enquiries/{{ e.id }}/">Open</a>
+              <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/create/?school={{ e.school_id }}&enquiry_id={{ e.id }}&phone={{ e.phone }}&caller_name={{ e.guardian_name|urlencode }}">Log Call</a>
+            </div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No overdue follow-ups.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row gy-4 mt-1">
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Calls Due Today</h6>
+        {% for c in calls_due_today %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <strong>{{ c.phone }}</strong>
+              <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ c.get_call_type_display }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm mt-6">{{ c.caller_name|default:"-" }}{% if c.purpose %} | {{ c.purpose }}{% endif %}</div>
+            <div class="mt-10"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/{{ c.id }}/">Open</a></div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No calls due today.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-body p-24">
+        <h6 class="mb-14">Visitors Today (Latest)</h6>
+        {% for v in visitors_today %}
+          <div class="border border-neutral-200 radius-12 p-16 mb-12">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <strong>{{ v.visitor_name }}</strong>
+              <span class="badge bg-primary-50 text-primary-600 px-14 py-6 radius-8">{{ v.get_purpose_display }}</span>
+            </div>
+            <div class="text-neutral-600 text-sm mt-6">{{ v.entry_time|date:"h:i A" }}{% if v.exit_time %} | Out: {{ v.exit_time|date:"h:i A" }}{% endif %}</div>
+            <div class="mt-10"><a class="btn btn-sm btn-outline-primary" href="/frontoffice/visitors/{{ v.id }}/">Open</a></div>
+          </div>
+        {% empty %}
+          <div class="text-neutral-500 text-sm">No visitors logged today.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Details | School ERP{% endblock %}
+{% block page_eyebrow %}Student Profile{% endblock %}
+{% block page_heading %}{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}{% endblock %}
+{% block page_copy %}Student profile with workflow, operations, documents, and school-facing quick actions in one place.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">
+      <div class="profile-hero">
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-4">
+          <div class="d-flex flex-wrap align-items-center gap-4">
+            {% if student.photo %}
+              <img src="{{ student.photo.url }}" alt="{{ student.first_name }}" class="profile-avatar">
+            {% else %}
+              <div class="profile-avatar">{{ student.first_name|first|upper }}</div>
+            {% endif %}
+            <div>
+              <h4 class="mb-2 text-white">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</h4>
+              <p class="mb-3 text-white-50">Admission No: {{ student.admission_no }}</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="metric-chip">{{ student.class_name }} - {{ student.section }}</span>
+                <span class="metric-chip">{{ student.school.name }}</span>
+                <span class="metric-chip">{% if student.is_active %}Active{% else %}Inactive{% endif %}</span>
+                <span class="metric-chip">{{ student_workflow.label }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-12">
+            <a class="btn btn-warning radius-8 px-20 py-11" href="/students/{{ student.slug }}/pdf/">Download PDF</a>
+            {% if can_manage_students %}
+              <a class="btn btn-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/edit/">Edit Student</a>
+              <a class="btn btn-outline-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/documents/">Documents</a>
+            {% endif %}
+            {% if can_promote_students %}
+              <a class="btn btn-outline-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/promotion/">Promote</a>
+              <a class="btn btn-outline-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/tc/">Transfer Certificate</a>
+            {% endif %}
+            {% if can_delete_students %}
+              <form method="post" action="/students/{{ student.slug }}/delete/" onsubmit="return confirm('Delete {{ student.first_name }} {{ student.last_name }}? This cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger radius-8 px-20 py-11">Delete Student</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+        {% include "students/_student_nav.html" with student_nav_active="overview" %}
+      </div>
+    </div>
+
+    <div class="col-xxl-8">
+      <div class="row gy-4">
+        <div class="col-12">
+          <div class="info-card">
+            <div class="card-body">
+              <h6 class="section-title">Snapshot</h6>
+              <div class="student-snapshot-grid">
+                <div class="student-snapshot-card">
+                  <strong>Attendance</strong>
+                  <div class="value"><h5>{{ student_erp_summary.attendance_rate }}%</h5><span>{{ student_erp_summary.attendance_entries }} entries</span></div>
+                  <p>Presence rate based on recorded sessions.</p>
+                </div>
+                <div class="student-snapshot-card">
+                  <strong>Fees</strong>
+                  <div class="value"><h5>Rs {{ student_erp_summary.outstanding_due|floatformat:0 }}</h5><span>{{ student_erp_summary.paid_ledgers }} paid</span></div>
+                  <p>Outstanding due across fee ledgers.</p>
+                </div>
+                <div class="student-snapshot-card">
+                  <strong>Exams</strong>
+                  <div class="value"><h5>{{ student_erp_summary.average_marks }}</h5><span>{{ student_erp_summary.exam_marks_count }} marks</span></div>
+                  <p>Average marks in recorded subjects.</p>
+                </div>
+                <div class="student-snapshot-card">
+                  <strong>Notices</strong>
+                  <div class="value"><h5>{{ student_erp_summary.notice_count }}</h5><span>School-wide</span></div>
+                  <p>{% if student_erp_summary.latest_notice %}Latest: {{ student_erp_summary.latest_notice.title|truncatechars:36 }}{% else %}No notices published.{% endif %}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="info-card">
+            <div class="card-body">
+              <h6 class="section-title">Workflow</h6>
+              <div class="workflow-grid mb-24">
+                {% for step in workflow_steps %}
+                  <div class="workflow-item {% if step.complete %}is-complete{% endif %}">
+                    <div class="student-workflow__top mb-10">
+                      <strong class="mb-0">{{ step.label }}</strong>
+                      <span class="workflow-status {% if step.complete %}is-complete{% else %}is-pending{% endif %}">{{ step.status }}</span>
+                    </div>
+                    <p class="text-neutral-600 text-sm mb-12">{{ step.description }}</p>
+                    <a href="{{ step.url }}" class="btn btn-outline-primary btn-sm radius-8">{{ step.action }}</a>
+                  </div>
+                {% endfor %}
+              </div>
+
+              <h6 class="section-title">Quick Actions</h6>
+              <div class="quick-action-grid">
+                {% if can_manage_students %}
+                  <a href="/students/{{ student.slug }}/edit/" class="quick-action-link"><strong class="d-block mb-4">Update Record</strong><span class="text-neutral-600 text-sm">Edit profile, class, family details, and uploads.</span></a>
+                  <a href="/students/{{ student.slug }}/documents/" class="quick-action-link"><strong class="d-block mb-4">Manage Documents</strong><span class="text-neutral-600 text-sm">Upload supporting files and keep the record complete.</span></a>
+                  <a href="/frontoffice/document-reminders/?required=basic" class="quick-action-link"><strong class="d-block mb-4">Send Reminder</strong><span class="text-neutral-600 text-sm">Open reminders for missing documents.</span></a>
+                {% endif %}
+                <a href="/students/id-cards/designer/?student_ids={{ student.id }}" class="quick-action-link"><strong class="d-block mb-4">Open Print Sheet</strong><span class="text-neutral-600 text-sm">Create an ID-card print set.</span></a>
+                {% if can_promote_students %}
+                  <a href="/students/{{ student.slug }}/promotion/" class="quick-action-link"><strong class="d-block mb-4">Promote Student</strong><span class="text-neutral-600 text-sm">Move to the next class with history intact.</span></a>
+                  <a href="/students/{{ student.slug }}/workflow/" class="quick-action-link"><strong class="d-block mb-4">Admission Workflow</strong><span class="text-neutral-600 text-sm">Track approvals and verification.</span></a>
+                  <a href="/students/{{ student.slug }}/history/" class="quick-action-link"><strong class="d-block mb-4">Profile History</strong><span class="text-neutral-600 text-sm">Review edits and class changes.</span></a>
+                {% endif %}
+                <a href="/students/{{ student.slug }}/pdf/" class="quick-action-link"><strong class="d-block mb-4">Export Summary</strong><span class="text-neutral-600 text-sm">Share a clean PDF profile.</span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="info-card">
+            <div class="card-body">
+              <h6 class="section-title">Operations Control</h6>
+              <div class="detail-grid">
+                <div class="detail-item"><strong>Workflow Progress</strong><span>{{ student_workflow.completed }}/{{ student_workflow.total }} steps complete</span></div>
+                <div class="detail-item"><strong>Next Best Action</strong><span>{{ student_workflow.next_step }}</span></div>
+                <div class="detail-item"><strong>Admission File</strong><span>{{ documents_score_basic.present }}/{{ documents_score_basic.total }} required documents ({{ documents_score_basic.percent }}%)</span></div>
+                <div class="detail-item"><strong>Missing</strong><span>{% if missing_basic_documents %}{{ missing_basic_documents|join:", " }}{% else %}None{% endif %}</span></div>
+                <div class="detail-item"><strong>Digital Access</strong><span>{% if student_operations.account_ready %}Usernames ready{% else %}Account usernames pending{% endif %}</span></div>
+                <div class="detail-item"><strong>Transport</strong><span>{% if student_operations.transport_enabled %}Enabled{% else %}Not assigned{% endif %}</span></div>
+                <div class="detail-item"><strong>Hostel</strong><span>{% if student_operations.hostel_enabled %}Enabled{% else %}Not assigned{% endif %}</span></div>
+                <div class="detail-item"><strong>Medical</strong><span>{% if student_operations.medical_flag %}Support note present{% else %}No flagged medical support{% endif %}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-4">
+      <div class="info-card h-100">
+        <div class="card-body">
+          <h6 class="section-title">Core Profile</h6>
+          <div class="detail-grid">
+            <div class="detail-item"><strong>Academic Year</strong><span>{{ student.academic_year|default:"-" }}</span></div>
+            <div class="detail-item"><strong>Admission Status</strong><span>{{ student.admission_status|default:"-" }}</span></div>
+            <div class="detail-item"><strong>Roll Number</strong><span>{{ student.roll_number|default:"-" }}</span></div>
+            <div class="detail-item"><strong>Gender</strong><span>{{ student.get_gender_display }}</span></div>
+            <div class="detail-item"><strong>Date of Birth</strong><span>{{ student.date_of_birth|default:"-" }}</span></div>
+            <div class="detail-item"><strong>Blood Group</strong><span>{{ student.blood_group|default:"-" }}</span></div>
+            <div class="detail-item"><strong>Category</strong><span>{{ student.category|default:"-" }}</span></div>
+            <div class="detail-item"><strong>Religion</strong><span>{{ student.religion|default:"-" }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

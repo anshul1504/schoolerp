@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}RBAC Audit{% endblock %}
+{% block page_heading %}RBAC Audit{% endblock %}
+{% block page_copy %}History of role override changes (who changed what).{% endblock %}
+{% block page_eyebrow %}Settings{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">RBAC Audit</span>
+    <h5 class="mb-2">Role override change history</h5>
+    <p class="mb-0">History of role override changes (who changed what).</p>
+  </section>
+
+  <div class="platform-panel mb-16">
+    <div class="platform-panel__head">
+      <div><h6>Filters</h6><p>Filter audit events by role and kind.</p></div>
+    </div>
+    <div class="platform-shell">
+      <form method="get" class="row gy-3 gx-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Role</label>
+          <input type="text" name="role" class="form-control" value="{{ filters.role }}" placeholder="e.g. TEACHER">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Kind</label>
+          <select name="kind" class="form-select">
+            <option value="">All</option>
+            {% for value,label in kind_choices %}
+              <option value="{{ value }}" {% if filters.kind == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex gap-10">
+          <button type="submit" class="btn btn-outline-secondary">Filter</button>
+          <a href="/settings/rbac-audit/" class="btn btn-outline-secondary">Reset</a>
+          <a href="/settings/" class="btn btn-outline-secondary">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Audit Events</h6><p>Latest role override events.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Actor</th>
+            <th>Role</th>
+            <th>Kind</th>
+            <th>Before</th>
+            <th>After</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in events %}
+            <tr>
+              <td class="text-muted text-sm">{{ e.created_at }}</td>
+              <td>{% if e.actor %}{{ e.actor.username }}{% else %}—{% endif %}</td>
+              <td><span class="status-pill status-pill--warning">{{ e.role }}</span></td>
+              <td class="text-muted text-sm">{{ e.get_kind_display }}</td>
+              <td><code class="text-muted text-sm">{{ e.before }}</code></td>
+              <td><code class="text-muted text-sm">{{ e.after }}</code></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No RBAC audit events yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="text-muted text-sm mt-2">Showing latest 200 events.</div>
+  </div>
+{% endblock %}

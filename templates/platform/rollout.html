@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Platform Rollout{% endblock %}
+{% block page_heading %}Platform Rollout{% endblock %}
+{% block page_copy %}School implementation status across the platform.{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Platform Rollout</span>
+    <h5 class="mb-2">School implementation status</h5>
+    <p class="mb-0">School implementation status across the platform.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-road-map-line"></i></div><div><span>Projects</span><strong>{{ project_counts.total }}</strong><small>Tracked rollouts</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-play-list-check-line"></i></div><div><span>Not started</span><strong>{{ project_counts.not_started }}</strong><small>Waiting on setup</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-loader-4-line"></i></div><div><span>In progress</span><strong>{{ project_counts.in_progress }}</strong><small>Active rollout work</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Done</span><strong>{{ project_counts.done }}</strong><small>Completed rollouts</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Rollout Board</h6><p>School progress and implementation status.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Status</th>
+            <th>Tasks</th>
+            <th>Done</th>
+            <th>Progress</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in projects %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted text-sm">{{ row.school.code }}</span></td>
+              <td><span class="status-pill {% if row.project.status == 'DONE' %}status-pill--success{% elif row.project.status == 'BLOCKED' %}status-pill--danger{% elif row.project.status == 'IN_PROGRESS' %}status-pill--warning{% endif %}">{{ row.project.get_status_display }}</span></td>
+              <td>{{ row.total }}</td>
+              <td>{{ row.done }}</td>
+              <td>{{ row.done_pct }}%</td>
+              <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/schools/{{ row.school.id }}/implementation/">Open</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No rollout projects yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

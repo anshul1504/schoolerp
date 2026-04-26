@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Change Logs{% endblock %}
+{% block page_heading %}Change Logs{% endblock %}
+{% block page_copy %}Field-level change history for key entities.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Entity Change Logs</h6>
+          <p>Filter by entity and object id (e.g. `schools.School` + `12`).</p>
+        </div>
+        <div class="sf-actions">
+          <a href="/activity/" class="btn btn-outline-secondary">Back to Activity</a>
+        </div>
+      </div>
+
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Entity</label>
+            <input type="text" name="entity" class="form-control" value="{{ filters.entity }}" placeholder="schools.School">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Object ID</label>
+            <input type="text" name="object_id" class="form-control" value="{{ filters.object_id }}" placeholder="e.g. 1">
+          </div>
+          <div class="col-md-3 d-flex gap-10">
+            <button type="submit" class="btn btn-outline-secondary">Apply</button>
+            <a href="/activity/changes/" class="btn btn-outline-secondary">Reset</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Actor</th>
+              <th>Entity</th>
+              <th>Object</th>
+              <th>Action</th>
+              <th>Changes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+              <tr>
+                <td class="text-muted text-sm">{{ log.created_at }}</td>
+                <td>{% if log.actor %}{{ log.actor.username }}{% else %}—{% endif %}</td>
+                <td><code>{{ log.entity }}</code></td>
+                <td class="text-muted text-sm">{{ log.object_id }}</td>
+                <td><span class="badge bg-secondary">{{ log.action }}</span></td>
+                <td><code class="text-muted text-sm">{{ log.changes }}</code></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-muted">No change logs yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-muted text-sm mt-2">Showing latest 200 records.</div>
+    </div>
+  </div>
+{% endblock %}
+

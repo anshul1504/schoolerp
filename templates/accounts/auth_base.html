@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SchoolFlow{% endblock %}</title>
+  {% if tenant_school and tenant_school.logo %}
+    <link rel="icon" type="image/png" href="{{ tenant_school.logo.url }}">
+  {% elif platform_settings.logo %}
+    <link rel="icon" type="image/png" href="{{ platform_settings.logo.url }}">
+  {% else %}
+    <link rel="icon" type="image/png" href="{% static 'demo/assets/images/favicon.png' %}" sizes="16x16">
+  {% endif %}
+  <link rel="stylesheet" href="{% static 'demo/assets/css/remixicon.css' %}">
+  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/demo-style.css' %}?v=20260424-2">
+  <style>
+    :root {
+      --auth-brand-900: #1677ff;
+      --auth-brand-700: #2096ff;
+      --auth-brand-600: #2aa7ff;
+      --auth-brand-500: #44b8ff;
+      --auth-surface: #ffffff;
+      --auth-ink: #0b1220;
+      --auth-muted: #64748b;
+      --auth-border: rgba(2, 6, 23, 0.10);
+      --auth-shadow: 0 30px 70px rgba(2, 6, 23, 0.18);
+      --auth-radius: 22px;
+    }
+
+    html, body { min-height: 100%; margin: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(900px 360px at 10% 5%, rgba(42, 167, 255, 0.20), transparent 65%),
+        radial-gradient(900px 420px at 90% 10%, rgba(22, 119, 255, 0.18), transparent 60%),
+        linear-gradient(180deg, #f7fbff, #f4f7fb);
+      color: var(--auth-ink);
+    }
+
+    .auth-shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .auth-card {
+      width: min(1100px, 100%);
+      border-radius: var(--auth-radius);
+      background: var(--auth-surface);
+      box-shadow: var(--auth-shadow);
+      border: 1px solid var(--auth-border);
+      overflow: hidden;
+    }
+
+    .auth-split {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      min-height: 560px;
+    }
+
+    .auth-visual {
+      position: relative;
+      padding: 34px 34px 28px;
+      background: linear-gradient(135deg, rgba(22,119,255,0.15), rgba(68,184,255,0.10));
+      border-right: 1px solid var(--auth-border);
+      overflow: hidden;
+    }
+
+    .auth-visual::before {
+      content: "";
+      position: absolute;
+      inset: -120px -120px auto auto;
+      width: 360px;
+      height: 360px;
+      background: radial-gradient(circle, rgba(42,167,255,0.38), transparent 62%);
+      transform: rotate(12deg);
+      pointer-events: none;
+    }
+
+    .auth-visual::after {
+      content: "";
+      position: absolute;
+      inset: auto auto -140px -140px;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(22,119,255,0.26), transparent 64%);
+      transform: rotate(-18deg);
+      pointer-events: none;
+    }
+
+    .auth-visual__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.68);
+      backdrop-filter: blur(10px);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: rgba(11,18,32,0.92);
+    }
+
+    .auth-visual__badge i {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(42, 167, 255, 0.16);
+      color: rgba(22, 119, 255, 0.92);
+      font-size: 18px;
+    }
+
+    .auth-visual__title {
+      margin-top: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      font-size: 2rem;
+      line-height: 1.1;
+      color: rgba(11, 18, 32, 0.96);
+    }
+
+    .auth-visual__subtitle {
+      margin-top: 10px;
+      color: rgba(51, 65, 85, 0.92);
+      max-width: 44ch;
+      font-size: 0.98rem;
+    }
+
+    .auth-visual__image {
+      margin-top: 26px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow: 0 22px 48px rgba(2, 6, 23, 0.18);
+      background: rgba(255, 255, 255, 0.55);
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-visual__image img {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      display: block;
+      opacity: 0.92;
+    }
+
+    .auth-panel {
+      padding: 36px 36px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--auth-surface);
+    }
+
+    .brand-row { display:flex; align-items:center; justify-content:flex-start; gap: 12px; }
+    .brand-row img { height: 44px; width: auto; display:block; max-width: 240px; object-fit: contain; }
+
+    .brand-fallback {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: rgba(42, 167, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--auth-ink);
+      flex-shrink: 0;
+    }
+
+    .brand-text { display:flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+    .brand-name { font-weight: 900; letter-spacing: -0.03em; color: var(--auth-ink); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+    .brand-meta { font-size: 0.82rem; color: var(--auth-muted); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+
+    .auth-title { font-weight: 900; letter-spacing: -0.03em; }
+    .auth-subtitle { color: var(--auth-muted); }
+
+    .form-label { font-weight: 800; color: rgba(15, 23, 42, 0.92); }
+
+    .form-control, .form-select {
+      border-radius: 14px;
+      border: 1px solid rgba(2, 6, 23, 0.16);
+      padding-block: 12px;
+      background: #ffffff;
+    }
+
+    .auth-panel input:not([type="checkbox"]):not([type="radio"]),
+    .auth-panel textarea,
+    .auth-panel select {
+      border: 1px solid rgba(2, 6, 23, 0.16);
+    }
+
+    .form-control::placeholder { color: rgba(100, 116, 139, 0.85); }
+
+    .form-control:focus, .form-select:focus {
+      border-color: rgba(42, 167, 255, 0.85);
+      box-shadow: 0 0 0 0.22rem rgba(42, 167, 255, 0.14);
+    }
+
+    .btn {
+      border-radius: 14px;
+      padding-block: 12px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--auth-brand-900), var(--auth-brand-600));
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(90deg, var(--auth-brand-900), var(--auth-brand-700));
+      border-color: transparent;
+    }
+
+    .help-note {
+      border: 1px dashed rgba(42, 167, 255, 0.35);
+      background: rgba(42, 167, 255, 0.06);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: #334155;
+      font-size: 0.92rem;
+    }
+
+    .auth-footer-note {
+      margin-top: 18px;
+      color: rgba(100, 116, 139, 0.92);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 991.98px) {
+      .auth-split { grid-template-columns: 1fr; min-height: unset; }
+      .auth-visual { display: none; }
+      .auth-panel { padding: 28px 20px 22px; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-split">
+        <aside class="auth-visual" aria-hidden="true">
+          <div class="auth-visual__badge">
+            {% block auth_visual_badge_icon %}<i class="ri-shield-check-line"></i>{% endblock %}
+            <span>{% block auth_visual_badge_text %}Secure access{% endblock %}</span>
+          </div>
+          <div class="auth-visual__title">
+            {% block auth_visual_title %}Run your school on one dashboard.{% endblock %}
+          </div>
+          <div class="auth-visual__subtitle">
+            {% block auth_visual_subtitle %}
+              Admissions, Academics, Attendance, Fees, Exams, Reports — aligned with your workflow and roles.
+            {% endblock %}
+          </div>
+          <div class="auth-visual__image">
+            {% block auth_visual_image %}
+              <img src="{% static 'demo/assets/images/thumbs/login-img.png' %}" alt="">
+            {% endblock %}
+          </div>
+        </aside>
+
+        <main class="auth-panel">
+          <div class="brand-row mb-3">
+            {% if platform_settings.logo %}
+              <img src="{{ platform_settings.logo.url }}" alt="{{ platform_settings.product_name|default:'SchoolFlow' }}">
+            {% else %}
+              <span class="brand-fallback">{{ platform_settings.product_name|default:"S"|slice:":1"|upper }}</span>
+            {% endif %}
+            <div class="brand-text">
+              <div class="brand-name">{{ platform_settings.product_name|default:"SchoolFlow" }}</div>
+              <div class="brand-meta">{{ platform_settings.product_meta|default:"A product by The Webfix" }}</div>
+            </div>
+          </div>
+
+          {% if messages %}
+            <div class="mb-3">
+              {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'info' %}alert-info{% elif message.tags == 'warning' %}alert-warning{% else %}alert-danger{% endif %} mb-2">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% block content %}{% endblock %}
+
+          <div class="auth-footer-note text-center">
+            &copy; 2026 {{ platform_settings.product_name|default:"SchoolFlow" }}
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'demo/assets/js/lib/bootstrap.bundle.min.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

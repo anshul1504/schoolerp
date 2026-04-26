@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}ERP Decision Dashboard{% endblock %}
+{% block page_heading %}ERP Decision Dashboard{% endblock %}
+{% block page_copy %}Schools ranked by setup and operations readiness.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Decision Dashboard</span>
+    <h5 class="mb-2">Schools ranked by readiness</h5>
+    <p class="mb-0">Schools ranked by setup and operations readiness.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-alert-line"></i></div><div><span>Critical</span><strong>{{ decision_summary.critical }}</strong><small>Immediate attention</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-time-line"></i></div><div><span>Watch</span><strong>{{ decision_summary.watch }}</strong><small>Needs follow-up</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Healthy</span><strong>{{ decision_summary.healthy }}</strong><small>Ready schools</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>School Ranking</h6><p>Readiness score, issues, and operations entry point.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Key Issues</th>
+            <th>Ops</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in decision_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted text-sm">{{ row.school.code }}</span></td>
+              <td>{{ row.score }}</td>
+              <td>
+                {% if row.score < 50 %}
+                  <span class="status-pill status-pill--danger">Critical</span>
+                {% elif row.score < 80 %}
+                  <span class="status-pill status-pill--warning">Watch</span>
+                {% else %}
+                  <span class="status-pill status-pill--success">Healthy</span>
+                {% endif %}
+              </td>
+              <td>{% if row.issues %}{{ row.issues|join:", " }}{% else %}No major issues{% endif %}</td>
+              <td><a class="btn btn-sm btn-outline-primary" href="/schools/{{ row.school.id }}/">Open</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

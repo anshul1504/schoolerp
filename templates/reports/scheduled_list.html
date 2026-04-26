@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Scheduled Reports{% endblock %}
+{% block page_heading %}Scheduled Reports{% endblock %}
+{% block page_copy %}Email scheduled exports to stakeholders (platform ops).{% endblock %}
+{% block page_eyebrow %}Reports{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Scheduled Reports</h6>
+          <p>Create scheduled CSV exports (invoices/activity/students).</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/reports/">Back</a>
+          <a class="btn btn-primary" href="/reports/scheduled/create/">Create</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Frequency</th>
+              <th>Recipients</th>
+              <th>Status</th>
+              <th>Last Run</th>
+              <th>Next Run</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in scheduled_reports %}
+              <tr>
+                <td class="fw-semibold">{{ r.name }}</td>
+                <td class="text-muted text-sm">{{ r.get_report_type_display }}</td>
+                <td class="text-muted text-sm">{{ r.get_frequency_display }}</td>
+                <td class="text-muted text-sm">{{ r.recipients }}</td>
+                <td>{% if r.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Paused</span>{% endif %}</td>
+                <td class="text-muted text-sm">{{ r.last_run_at|default:"—" }}</td>
+                <td class="text-muted text-sm">{{ r.next_run_at|default:"—" }}</td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-2">
+                    <form method="post" action="/reports/scheduled/{{ r.id }}/run/" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-secondary">Run</button>
+                    </form>
+                    <a class="btn btn-sm btn-outline-primary" href="/reports/scheduled/{{ r.id }}/edit/">Edit</a>
+                    <form method="post" action="/reports/scheduled/{{ r.id }}/delete/" class="d-inline" onsubmit="return confirm('Delete this scheduled report?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="8" class="text-center text-muted">No scheduled reports yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-muted text-sm mt-16">
+    Tip: automate delivery by scheduling `python school_erp\\manage.py run_scheduled_reports --settings=config.settings.prod` (Windows Task Scheduler / cron).
+  </div>
+{% endblock %}

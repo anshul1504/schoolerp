@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitor | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Visitor Detail{% endblock %}
+{% block page_copy %}Entry, remarks, and checkout.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-16">
+      <div>
+        <h6 class="mb-2">{{ visitor.visitor_name }}</h6>
+        <div class="text-neutral-600 text-sm">{{ visitor.get_purpose_display }} | {{ visitor.person_to_meet|default:"-" }}</div>
+      </div>
+      <span class="badge bg-primary-50 text-primary-600 px-16 py-8 radius-8">{% if visitor.exit_time %}Checked Out{% else %}Inside Campus{% endif %}</span>
+    </div>
+
+    <div class="row gy-3 mb-18">
+      <div class="col-md-4"><div class="border border-neutral-200 radius-12 p-16"><strong class="d-block mb-4">Entry</strong><span class="text-neutral-600 text-sm">{{ visitor.entry_time|date:"d M Y, h:i A" }}</span></div></div>
+      <div class="col-md-4"><div class="border border-neutral-200 radius-12 p-16"><strong class="d-block mb-4">Exit</strong><span class="text-neutral-600 text-sm">{% if visitor.exit_time %}{{ visitor.exit_time|date:"d M Y, h:i A" }}{% else %}-{% endif %}</span></div></div>
+      <div class="col-md-4"><div class="border border-neutral-200 radius-12 p-16"><strong class="d-block mb-4">Phone</strong><span class="text-neutral-600 text-sm">{{ visitor.phone|default:"-" }}</span></div></div>
+    </div>
+
+    {% if visitor.remarks %}
+      <div class="border border-neutral-200 radius-12 p-16 mb-18">
+        <strong class="d-block mb-6">Remarks</strong>
+        <div class="text-neutral-600 text-sm">{{ visitor.remarks }}</div>
+      </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-10">
+      <a href="/frontoffice/visitors/" class="btn btn-outline-secondary">Back</a>
+      {% if can_manage %}
+        <a href="/frontoffice/visitors/{{ visitor.id }}/edit/" class="btn btn-outline-primary">Edit</a>
+        <form method="post" action="/frontoffice/visitors/{{ visitor.id }}/delete/" onsubmit="return confirm('Delete this visitor entry?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger">Delete</button>
+        </form>
+        {% if not visitor.exit_time %}
+          <form method="post" action="/frontoffice/visitors/{{ visitor.id }}/checkout/">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary-600">Mark Checkout</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

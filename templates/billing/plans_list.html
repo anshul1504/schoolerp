@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Billing Plans{% endblock %}
+{% block page_heading %}Billing Plans{% endblock %}
+{% block page_copy %}Manage subscription plans for SchoolFlow.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <div class="card mb-24">
+    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
+      <div>
+        <h6 class="mb-4">Subscription Plans</h6>
+        <p class="text-neutral-600 text-sm mb-0">Create plans and assign them to schools.</p>
+      </div>
+      <div class="d-flex gap-10">
+        <a href="/billing/schools/" class="btn btn-outline-secondary">School Subscriptions</a>
+        <a href="/billing/features/" class="btn btn-outline-secondary">Features</a>
+        <a href="/billing/invoices/" class="btn btn-outline-secondary">Invoices</a>
+        <form method="post" action="/billing/plans/seed-defaults/" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary">Seed Default Plans</button>
+        </form>
+        <a href="/billing/plans/create/" class="btn btn-primary">Create Plan</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-24">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Monthly</th>
+              <th>Limits</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for plan in plans %}
+              <tr>
+                <td><strong>{{ plan.name }}</strong></td>
+                <td class="text-muted">{{ plan.code }}</td>
+                <td>Rs {{ plan.price_monthly }}</td>
+                <td class="text-muted text-sm">{{ plan.max_students }} students • {{ plan.max_campuses }} campuses</td>
+                <td>
+                  {% if plan.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-2">
+                    <a href="/billing/plans/{{ plan.id }}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <form method="post" action="/billing/plans/{{ plan.id }}/delete/" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-muted">No plans yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

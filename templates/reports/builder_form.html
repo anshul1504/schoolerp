@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Report Template{% else %}Create Report Template{% endif %}{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Report Template{% else %}Create Report Template{% endif %}{% endblock %}
+{% block page_copy %}Store dataset + JSON filters/columns. Then export CSV from templates list.{% endblock %}
+{% block page_eyebrow %}Reports{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row gy-3 gx-3">
+          <div class="col-lg-8">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="name" value="{% if template %}{{ template.name }}{% endif %}" required>
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label">Dataset</label>
+            <select class="form-control" name="dataset" required>
+              {% for value,label in dataset_choices %}
+                <option value="{{ value }}" {% if template and template.dataset == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Filters (JSON object)</label>
+            <textarea class="form-control" name="filters" rows="6">{% if filters_json %}{{ filters_json }}{% else %}{}{% endif %}</textarea>
+            <div class="text-muted text-sm mt-1">Example: {"school_id": 1, "status": "active"}</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Columns (JSON list, optional)</label>
+            <textarea class="form-control" name="columns" rows="4">{% if columns_json %}{{ columns_json }}{% else %}[]{% endif %}</textarea>
+            <div class="text-muted text-sm mt-1">Leave empty to use defaults per dataset.</div>
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="activeCheck" name="is_active" {% if template %}{% if template.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+              <label class="form-check-label" for="activeCheck">Active</label>
+            </div>
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-outline-secondary" href="/reports/builder/">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

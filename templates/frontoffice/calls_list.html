@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Calls | Front Office{% endblock %}
+{% block page_eyebrow %}Front Office{% endblock %}
+{% block page_heading %}Call Logs{% endblock %}
+{% block page_copy %}Track incoming/outgoing/missed calls with follow-up reminders.{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body p-24">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+      <div>
+        <h6 class="mb-4">Call logs</h6>
+        <p class="text-neutral-600 text-sm mb-0">Use filters to find due callbacks quickly.</p>
+      </div>
+      <a href="/frontoffice/calls/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Add Call</a>
+    </div>
+
+    <form method="get" class="row gy-3 align-items-end mb-20">
+      {% if request.user.role == "SUPER_ADMIN" %}
+        <div class="col-md-3"><label class="form-label">School</label><select name="school" class="form-control"><option value="">All</option>{% for s in school_options %}<option value="{{ s.id }}" {% if selected_school and s.id == selected_school.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-md-3"><label class="form-label">Type</label><select name="type" class="form-control"><option value="">All</option>{% for v,l in call_type_choices %}<option value="{{ v }}" {% if call_type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-control"><option value="">All</option>{% for v,l in call_status_choices %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><label class="form-label">Due</label><select name="due" class="form-control"><option value="">All</option><option value="today" {% if due == "today" %}selected{% endif %}>Today</option><option value="overdue" {% if due == "overdue" %}selected{% endif %}>Overdue</option></select></div>
+      <div class="col-md-1 d-grid"><button type="submit" class="btn btn-outline-primary">Go</button></div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Phone</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Purpose</th>
+            <th>Follow-up</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in calls %}
+            <tr>
+              <td>{{ c.phone }}</td>
+              <td>{{ c.caller_name|default:"-" }}</td>
+              <td>{{ c.get_call_type_display }}</td>
+              <td>{{ c.purpose|default:"-" }}</td>
+              <td>{{ c.follow_up_date|default:"-" }}</td>
+              <td>{{ c.get_status_display }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-8">
+                  <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/{{ c.id }}/">View</a>
+                  {% if can_manage %}
+                    <a class="btn btn-sm btn-outline-primary" href="/frontoffice/calls/{{ c.id }}/edit/">Edit</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-neutral-500 text-sm">No calls found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

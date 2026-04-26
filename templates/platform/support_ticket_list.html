@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Support Inbox{% endblock %}
+{% block page_heading %}Support Inbox{% endblock %}
+{% block page_copy %}Track issues reported by schools and internal ops notes.{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card mb-24">
+    <div class="sf-card__body">
+      <div class="sf-toolbar">
+        <div class="sf-toolbar__title">
+          <h6>Tickets</h6>
+          <p>Use as an internal helpdesk for school onboarding and incidents.</p>
+        </div>
+        <div class="sf-actions">
+          <a class="btn btn-outline-secondary" href="/platform/">Back</a>
+          <a class="btn btn-primary" href="/platform/support/create/">Create Ticket</a>
+        </div>
+      </div>
+
+      <form method="get" class="sf-filters mt-3">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label">Search</label>
+            <input class="form-control" name="q" value="{{ filters.q }}" placeholder="title, description, requester email">
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label">Status</label>
+            <select class="form-control" name="status">
+              <option value="">Any</option>
+              {% for value,label in status_choices %}
+                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label">Priority</label>
+            <select class="form-control" name="priority">
+              <option value="">Any</option>
+              {% for value,label in priority_choices %}
+                <option value="{{ value }}" {% if filters.priority == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label">School</label>
+            <select class="form-control" name="school_id">
+              <option value="">Any</option>
+              {% for s in schools %}
+                <option value="{{ s.id }}" {% if filters.school_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-1 d-grid">
+            <button class="btn btn-outline-secondary" type="submit">Go</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <div class="table-responsive">
+        <table class="table align-middle sf-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>School</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Assigned</th>
+              <th>Updated</th>
+              <th class="text-end">Open</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tickets %}
+              <tr>
+                <td class="fw-semibold">{{ t.title }}</td>
+                <td class="text-muted text-sm">{% if t.school %}{{ t.school.name }}{% else %}—{% endif %}</td>
+                <td class="text-muted text-sm">{{ t.get_status_display }}</td>
+                <td class="text-muted text-sm">{{ t.get_priority_display }}</td>
+                <td class="text-muted text-sm">{% if t.assigned_to %}{{ t.assigned_to.username }}{% else %}—{% endif %}</td>
+                <td class="text-muted text-sm">{{ t.updated_at }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="/platform/support/{{ t.id }}/">Open</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7" class="text-center text-muted">No tickets yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

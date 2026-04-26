@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}School Setup Wizard{% endblock %}
+{% block page_heading %}School Setup Wizard{% endblock %}
+{% block page_copy %}End-to-end onboarding progress for each school.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">School Setup Wizard</span>
+    <h5 class="mb-2">End-to-end onboarding progress</h5>
+    <p class="mb-0">End-to-end onboarding progress for each school.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-school-line"></i></div><div><span>Schools</span><strong>{{ wizard_summary.schools }}</strong><small>Total onboarding records</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-checkbox-circle-line"></i></div><div><span>Complete</span><strong>{{ wizard_summary.complete }}</strong><small>Fully ready schools</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-time-line"></i></div><div><span>In Progress</span><strong>{{ wizard_summary.in_progress }}</strong><small>Active onboarding</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-error-warning-line"></i></div><div><span>Not Started</span><strong>{{ wizard_summary.not_started }}</strong><small>Awaiting setup</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Onboarding Progress</h6><p>Progress, status, and checklist coverage by school.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Progress</th>
+            <th>Status</th>
+            <th>Checks</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in wizard_rows %}
+            <tr>
+              <td><strong>{{ row.school.name }}</strong><br><span class="text-muted small">{{ row.school.code }}</span></td>
+              <td><div class="fw-bold">{{ row.completed }}/{{ row.total }}</div><div class="text-muted small">{{ row.score }}%</div></td>
+              <td>
+                {% if row.score == 100 %}
+                  <span class="status-pill status-pill--success">Ready</span>
+                {% elif row.score >= 50 %}
+                  <span class="status-pill status-pill--warning">Partial</span>
+                {% else %}
+                  <span class="status-pill status-pill--danger">Needs setup</span>
+                {% endif %}
+              </td>
+              <td class="small">
+                {% for step in row.steps %}
+                  <div class="mb-1">{% if step.done %}done{% else %}gap{% endif %} {{ step.label }}</div>
+                {% endfor %}
+              </td>
+              <td>
+                <a class="btn btn-sm btn-outline-primary" href="/schools/{{ row.school.id }}/setup/">Open checklist</a>
+                <a class="btn btn-sm btn-outline-secondary ms-1" href="/schools/{{ row.school.id }}/">Open school</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center text-muted">No schools found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

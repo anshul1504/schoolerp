@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Promotion | School ERP{% endblock %}
+{% block page_eyebrow %}Student Promotion{% endblock %}
+{% block page_heading %}Promote {{ student.first_name }} {{ student.last_name }}{% endblock %}
+{% block page_copy %}Move the student to the next class and section while preserving a polished promotion timeline.{% endblock %}
+
+{% block content %}
+<div class="student-page">
+  <div class="row gy-4">
+    <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="promotion" %}</div>
+    <div class="col-xxl-6">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
+            <div>
+              <h6 class="mb-4">Promotion form</h6>
+              <p class="text-neutral-600 text-sm mb-0">Review current placement and assign the next class and section.</p>
+            </div>
+          </div>
+          <div class="student-pill success mb-20">Suggested next class: {{ suggested_next_class }}</div>
+          <form method="post">
+            {% csrf_token %}
+            <div class="row gy-4">
+              <div class="col-md-6"><label class="form-label">Current class</label><input type="text" class="form-control" value="{{ student.class_name }}" disabled></div>
+              <div class="col-md-6"><label class="form-label">Current section</label><input type="text" class="form-control" value="{{ student.section }}" disabled></div>
+              <div class="col-md-6">
+                <label class="form-label">New class</label>
+                <select name="to_class" id="promotion_to_class" class="form-control" required>
+                  {% for class_option in class_options %}
+                    <option value="{{ class_option }}" {% if class_option == suggested_next_class %}selected{% endif %}>{{ class_option }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">New section</label>
+                <select name="to_section" class="form-control" required>
+                  {% for section in section_options %}
+                    <option value="{{ section }}" {% if section == student.section %}selected{% endif %}>{{ section }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6"><label class="form-label">Promotion date</label><input type="date" name="promoted_on" class="form-control" value="{{ today|date:'Y-m-d' }}" required></div>
+              <div class="col-12"><label class="form-label">Note</label><textarea name="note" class="form-control" rows="4"></textarea></div>
+            </div>
+            <div class="d-flex flex-wrap gap-12 mt-24">
+              <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Promote Student</button>
+              <a class="btn btn-outline-secondary radius-8 px-20 py-11" href="/students/{{ student.slug }}/">Back to profile</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-xxl-6">
+      <div class="platform-panel">
+        <div class="platform-panel__body">
+          <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
+            <div>
+              <h6 class="mb-4">Promotion history</h6>
+              <p class="text-neutral-600 text-sm mb-0">Track every class movement in a clear historical record.</p>
+            </div>
+          </div>
+          {% if student.promotions.all %}
+            <div class="d-flex flex-column gap-12">
+              {% for promotion in student.promotions.all %}
+                <div class="timeline-entry">
+                  <strong class="d-block mb-1">{{ promotion.from_class }}-{{ promotion.from_section }} to {{ promotion.to_class }}-{{ promotion.to_section }}</strong>
+                  <span class="text-neutral-500 text-sm d-block">{{ promotion.promoted_on }}</span>
+                  {% if promotion.note %}<span class="text-neutral-600 text-sm d-block mt-2">{{ promotion.note }}</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-40 text-neutral-500">No promotion history available.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

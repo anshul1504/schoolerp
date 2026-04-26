@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Super Admin Hub{% endblock %}
+{% block page_heading %}Super Admin Hub{% endblock %}
+{% block page_copy %}One place for platform and settings administration.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Super Admin Hub</span>
+    <h5 class="mb-2">Platform control, RBAC, and rollout surfaces</h5>
+    <p class="mb-0">A single operational entry point for platform governance, settings, and oversight.</p>
+    <div class="platform-shell__actions mt-16">
+      <a href="/super-admin/roles/" class="btn btn-primary-600"><i class="ri-checkbox-circle-line"></i>Role Sheet</a>
+      <a href="/super-admin/gaps/" class="btn btn-outline-danger"><i class="ri-error-warning-line"></i>Gap Sheet</a>
+      <a href="/platform/" class="btn btn-outline-primary"><i class="ri-dashboard-2-line"></i>Command Center</a>
+      <a href="/platform/rollout/" class="btn btn-outline-secondary"><i class="ri-road-map-line"></i>Rollout Board</a>
+    </div>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi">
+      <div class="platform-kpi__icon"><i class="ri-database-2-line"></i></div>
+      <div><span>Activity Logs</span><strong>{{ counts.activity }}</strong><small>Recent platform actions</small></div>
+    </article>
+    <article class="platform-kpi">
+      <div class="platform-kpi__icon"><i class="ri-shield-keyhole-line"></i></div>
+      <div><span>RBAC Changes</span><strong>{{ counts.rbac }}</strong><small>Role and permission updates</small></div>
+    </article>
+    <article class="platform-kpi">
+      <div class="platform-kpi__icon"><i class="ri-shield-flash-line"></i></div>
+      <div><span>Security Events</span><strong>{{ counts.security }}</strong><small>Authentication signals</small></div>
+    </article>
+    <article class="platform-kpi">
+      <div class="platform-kpi__icon"><i class="ri-line-chart-line"></i></div>
+      <div>
+        <span>Billing SLA</span>
+        <strong>
+          {% if billing_sla.state == "GREEN" %}🟢{% elif billing_sla.state == "YELLOW" %}🟡{% else %}🔴{% endif %}
+          {{ billing_sla.label }}
+        </strong>
+        <small>7-day collection + webhook reliability</small>
+      </div>
+    </article>
+  </section>
+
+  <section class="platform-panel mb-16">
+    <div class="platform-panel__head">
+      <div><h6>Billing SLA Dashboard</h6><p>Operational billing health and automation signals.</p></div>
+      <div>
+        {% if billing_sla.state == "GREEN" %}
+          <span class="status-pill status-pill--success">🟢 Healthy</span>
+        {% elif billing_sla.state == "YELLOW" %}
+          <span class="status-pill status-pill--warning">🟡 Watch</span>
+        {% else %}
+          <span class="status-pill status-pill--danger">🔴 Critical</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Overdue invoices</td>
+            <td>{{ billing_sla.overdue_invoices }}</td>
+            <td>{% if billing_sla.overdue_invoices == 0 %}✅{% elif billing_sla.overdue_invoices <= 10 %}⚠️{% else %}❌{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Past-due subscriptions</td>
+            <td>{{ billing_sla.past_due_subscriptions }}</td>
+            <td>{% if billing_sla.past_due_subscriptions == 0 %}✅{% elif billing_sla.past_due_subscriptions <= 10 %}⚠️{% else %}❌{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Collection rate (7 days)</td>
+            <td>{{ billing_sla.collection_rate_7d }}%</td>
+            <td>{% if billing_sla.collection_rate_7d >= 85 %}✅{% elif billing_sla.collection_rate_7d >= 70 %}⚠️{% else %}❌{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Webhook success rate (24h)</td>
+            <td>{{ billing_sla.webhook_success_rate_24h }}%</td>
+            <td>{% if billing_sla.webhook_success_rate_24h >= 99 %}✅{% elif billing_sla.webhook_success_rate_24h >= 95 %}⚠️{% else %}❌{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Webhook failures (24h)</td>
+            <td>{{ billing_sla.webhook_failed_24h }}</td>
+            <td>{% if billing_sla.webhook_failed_24h == 0 %}✅{% elif billing_sla.webhook_failed_24h <= 5 %}⚠️{% else %}❌{% endif %}</td>
+          </tr>
+          <tr>
+            <td>Urgent open support tickets</td>
+            <td>{{ billing_sla.urgent_open_support }}</td>
+            <td>{% if billing_sla.urgent_open_support == 0 %}✅{% elif billing_sla.urgent_open_support <= 3 %}⚠️{% else %}❌{% endif %}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="text-muted small mt-3">
+      Automation command: <code>python manage.py run_billing_automation</code> (use <code>--dry-run</code> for safe preview).
+    </div>
+  </section>
+
+  <section class="platform-grid">
+    <article class="platform-panel">
+      <div class="platform-panel__head">
+        <div><h6>Platform</h6><p>Core operating surfaces.</p></div>
+      </div>
+      <div class="platform-list">
+        <a href="/platform/" class="platform-row"><span class="platform-row__icon"><i class="ri-dashboard-2-line"></i></span><span><strong>Command Center</strong><small>Platform dashboard and analytics</small></span></a>
+        <a href="/platform/rollout/" class="platform-row"><span class="platform-row__icon"><i class="ri-road-map-line"></i></span><span><strong>Rollout Board</strong><small>Implementation and rollout view</small></span></a>
+        <a href="/super-admin/academics/" class="platform-row"><span class="platform-row__icon"><i class="ri-book-open-line"></i></span><span><strong>Academic Control Center</strong><small>Classes, subjects, allocations</small></span></a>
+        <a href="/super-admin/decision/" class="platform-row"><span class="platform-row__icon"><i class="ri-focus-3-line"></i></span><span><strong>ERP Decision Dashboard</strong><small>Readiness and issues ranking</small></span></a>
+        <a href="/super-admin/setup/" class="platform-row"><span class="platform-row__icon"><i class="ri-magic-line"></i></span><span><strong>School Setup Wizard</strong><small>Onboarding and configuration flow</small></span></a>
+      </div>
+    </article>
+    <article class="platform-panel">
+      <div class="platform-panel__head">
+        <div><h6>Settings</h6><p>RBAC and platform configuration.</p></div>
+      </div>
+      <div class="platform-list">
+        <a href="/settings/" class="platform-row"><span class="platform-row__icon"><i class="ri-settings-3-line"></i></span><span><strong>Settings Home</strong><small>Central settings area</small></span></a>
+        <a href="/settings/branding/" class="platform-row"><span class="platform-row__icon"><i class="ri-palette-line"></i></span><span><strong>Branding</strong><small>Product identity and theme</small></span></a>
+        <a href="/settings/role-matrix/" class="platform-row"><span class="platform-row__icon"><i class="ri-grid-line"></i></span><span><strong>Role Matrix</strong><small>Role definitions and coverage</small></span></a>
+        <a href="/settings/permissions/" class="platform-row"><span class="platform-row__icon"><i class="ri-shield-keyhole-line"></i></span><span><strong>Permissions Matrix</strong><small>Permission mapping and grants</small></span></a>
+        <a href="/settings/rbac-audit/" class="platform-row"><span class="platform-row__icon"><i class="ri-clipboard-line"></i></span><span><strong>RBAC Audit</strong><small>Change comparison and review</small></span></a>
+      </div>
+    </article>
+    <article class="platform-panel">
+      <div class="platform-panel__head">
+        <div><h6>Operations</h6><p>Support and security.</p></div>
+      </div>
+      <div class="platform-list">
+        <a href="/platform/support/" class="platform-row"><span class="platform-row__icon"><i class="ri-customer-service-2-line"></i></span><span><strong>Support</strong><small>Ticket queue and handling</small></span></a>
+        <a href="/platform/security/" class="platform-row"><span class="platform-row__icon"><i class="ri-shield-flash-line"></i></span><span><strong>Security</strong><small>Auth events and checks</small></span></a>
+        <a href="/platform/announcements/" class="platform-row"><span class="platform-row__icon"><i class="ri-notification-3-line"></i></span><span><strong>Announcements</strong><small>Platform notices</small></span></a>
+        <a href="/platform/domains/" class="platform-row"><span class="platform-row__icon"><i class="ri-global-line"></i></span><span><strong>Domains</strong><small>Custom domain management</small></span></a>
+        <a href="/platform/tokens/" class="platform-row"><span class="platform-row__icon"><i class="ri-key-2-line"></i></span><span><strong>Tokens</strong><small>Integration token lifecycle</small></span></a>
+      </div>
+    </article>
+  </section>
+
+  <section class="platform-grid platform-grid--bottom">
+    <article class="platform-panel platform-panel--span-2">
+      <div class="platform-panel__head">
+        <div><h6>Recent RBAC</h6><p>Role and permission change history.</p></div>
+      </div>
+      <div class="platform-list">
+        {% for item in recent_rbac %}
+          <div class="platform-row">
+            <span class="platform-row__icon"><i class="ri-shield-keyhole-line"></i></span>
+            <span><strong>{{ item.role }}</strong><small>{{ item.get_kind_display }}</small></span>
+          </div>
+        {% empty %}
+          <div class="platform-empty">No RBAC changes yet.</div>
+        {% endfor %}
+      </div>
+    </article>
+    <article class="platform-panel">
+      <div class="platform-panel__head">
+        <div><h6>Recent Security</h6><p>Authentication signal stream.</p></div>
+      </div>
+      <div class="platform-list">
+        {% for item in recent_security %}
+          <div class="platform-row">
+            <span class="platform-row__icon"><i class="ri-shield-flash-line"></i></span>
+            <span><strong>{{ item.get_event_display }}</strong><small>{{ item.username|default:"Unknown" }}</small></span>
+          </div>
+        {% empty %}
+          <div class="platform-empty">No security events yet.</div>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <section class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Recent Activity</h6><p>Latest platform audit entries.</p></div>
+    </div>
+    <div class="platform-timeline">
+      {% for item in recent_activity %}
+        <div class="platform-timeline__item">
+          <span></span>
+          <div>
+            <strong>{% if item.actor %}{{ item.actor.username }}{% else %}System{% endif %}</strong>
+            <p>{{ item.action|default:"-" }} · {{ item.method|default:"-" }} {{ item.path|default:"-" }}</p>
+            <small>{{ item.created_at }}</small>
+          </div>
+        </div>
+      {% empty %}
+        <div class="platform-empty">No activity yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

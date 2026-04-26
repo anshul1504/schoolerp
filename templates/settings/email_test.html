@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}SMTP Email Test{% endblock %}
+{% block page_heading %}SMTP Email Test{% endblock %}
+{% block page_copy %}Send a test email using configured SMTP settings.{% endblock %}
+{% block page_eyebrow %}Settings{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body p-24">
+      <form method="post" class="row gy-3">
+        {% csrf_token %}
+        <div class="col-md-8">
+          <label class="form-label">Send test email to</label>
+          <input type="email" name="to_email" class="form-control" placeholder="name@example.com" required>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">Send</button>
+        </div>
+      </form>
+
+      <div class="mt-4 text-muted text-sm">
+        Uses `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, and `EMAIL_HOST_PASSWORD` from environment variables.
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

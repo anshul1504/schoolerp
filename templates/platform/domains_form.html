@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Domain{% else %}Create Domain{% endif %}{% endblock %}
+{% block page_heading %}{% if mode == "edit" %}Edit Domain{% else %}Create Domain{% endif %}{% endblock %}
+{% block page_copy %}Bind a hostname to a school. Used for login branding and tenant hints.{% endblock %}
+{% block page_eyebrow %}Platform{% endblock %}
+
+{% block content %}
+  <div class="sf-card">
+    <div class="sf-card__body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row gy-3 gx-3">
+          <div class="col-lg-6">
+            <label class="form-label">School</label>
+            <select class="form-control" name="school_id" required>
+              <option value="">Select school</option>
+              {% for s in schools %}
+                <option value="{{ s.id }}" {% if domain_obj and domain_obj.school.id == s.id %}selected{% endif %}>{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label">Domain</label>
+            <input class="form-control" name="domain" placeholder="erp.yourschool.com" value="{% if domain_obj %}{{ domain_obj.domain }}{% endif %}" required>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" id="primaryCheck" name="is_primary" {% if domain_obj %}{% if domain_obj.is_primary %}checked{% endif %}{% else %}checked{% endif %}>
+              <label class="form-check-label" for="primaryCheck">Primary domain</label>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" id="activeCheck" name="is_active" {% if domain_obj %}{% if domain_obj.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+              <label class="form-check-label" for="activeCheck">Active</label>
+            </div>
+          </div>
+
+          <div class="col-12 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-outline-secondary" href="/platform/domains/">Cancel</a>
+          </div>
+        </div>
+      </form>
+      <div class="text-muted text-sm mt-3">
+        DNS note: point your domain to this server, and ensure your reverse proxy passes the correct <code>Host</code> header.
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

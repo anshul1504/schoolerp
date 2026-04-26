@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Users & Roles{% endblock %}
+{% block page_heading %}Users & Roles{% endblock %}
+{% block page_copy %}Create, update, and manage access across schools.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell user-page">
+    <div class="platform-panel mb-4">
+      <div>
+        <h1 class="mb-2">User directory</h1>
+        <p class="mb-0 text-neutral-600">Filter by role, school, or search by name, email, or username. Bulk actions stay visible and consistent.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-10">
+        <a href="/users/invite/" class="btn btn-primary-600"><i class="ri-mail-send-line"></i>Invite</a>
+        <a href="/users/create/" class="btn btn-outline-secondary">Create</a>
+        <a href="/users/import/" class="btn btn-outline-secondary">Import</a>
+        <a href="/users/invitations/" class="btn btn-outline-secondary">Invitations</a>
+      </div>
+    </div>
+
+    <div class="platform-panel user-panel">
+      <div class="user-section">
+        <div class="user-toolbar">
+          <div class="sf-toolbar__title">
+            <h6>User Directory</h6>
+            <p>Filter by role, school, or search by name, email, or username.</p>
+          </div>
+          <div class="user-actions">
+            <a href="/users/invite/" class="btn btn-primary-600"><i class="ri-mail-send-line"></i>Invite</a>
+            <a href="/users/create/" class="btn btn-outline-secondary">Create</a>
+            <a href="/users/import/" class="btn btn-outline-secondary">Import</a>
+            <a href="/users/invitations/" class="btn btn-outline-secondary">Invitations</a>
+          </div>
+        </div>
+
+        <div class="user-chip-row mb-3">
+          <a class="user-chip {% if not filters.status %}is-active{% endif %}" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status=&page_size={{ page_size }}">All</a>
+          <a class="user-chip {% if filters.status == 'active' %}is-active{% endif %}" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status=active&page_size={{ page_size }}">Active</a>
+          <a class="user-chip {% if filters.status == 'inactive' %}is-active{% endif %}" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status=inactive&page_size={{ page_size }}">Inactive</a>
+        </div>
+
+        <form method="get" class="sf-filters">
+          <input type="hidden" name="status" value="{{ filters.status }}">
+          <input type="hidden" name="page_size" value="{{ page_size }}">
+          <div class="row gy-3 gx-3 align-items-end">
+            <div class="col-lg-5">
+              <label class="form-label">Search</label>
+              <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="username, email, name">
+            </div>
+            <div class="col-lg-3">
+              <label class="form-label">Role</label>
+              <select name="role" class="form-select">
+                <option value="">All roles</option>
+                {% for group_label, options in grouped_role_choices %}
+                  <optgroup label="{{ group_label }}">
+                    {% for value,label in options %}
+                      <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </optgroup>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-lg-3">
+              <label class="form-label">School</label>
+              <select name="school_id" class="form-select">
+                <option value="">All schools</option>
+                {% for school in schools %}
+                  <option value="{{ school.id }}" {% if filters.school_id|stringformat:"s" == school.id|stringformat:"s" %}selected{% endif %}>{{ school.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-lg-1 d-grid">
+              <button type="submit" class="btn btn-outline-secondary">Go</button>
+            </div>
+            <div class="col-12">
+              <a href="/users/" class="btn btn-outline-secondary">Reset</a>
+            </div>
+          </div>
+        </form>
+
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
+          <div class="user-note">Use the row checkboxes to run bulk actions on selected users.</div>
+          <div class="user-secondary-actions">
+            <button type="button" class="btn btn-outline-secondary" id="exportSelectedCsvBtn" disabled>Export Selected (CSV)</button>
+            <button type="button" class="btn btn-outline-secondary" id="exportSelectedExcelBtn" disabled>Export Selected (Excel)</button>
+            <button type="button" class="btn btn-outline-primary" id="bulkActionBtn" disabled data-bs-toggle="modal" data-bs-target="#bulkActionModal">Bulk Actions</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-section user-table-wrap">
+        <div class="table-responsive">
+          <table class="table align-middle sf-table user-table mb-0">
+            <thead>
+              <tr>
+                <th class="sf-th-48"><input type="checkbox" class="form-check-input" id="selectAllUsers"></th>
+                <th>User</th>
+                <th>Role</th>
+                <th>School</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+                <tr>
+                  <td><input type="checkbox" class="form-check-input user-select" value="{{ user.id }}"></td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <strong>{{ user.get_full_name|default:user.username }}</strong>
+                      <span class="text-muted text-sm">{{ user.email|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td>{{ user.get_role_display }}</td>
+                  <td>{% if user.school %}{{ user.school.name }}{% else %}-{% endif %}</td>
+                  <td>
+                    {% if user.is_active %}
+                      <span class="badge bg-success">Active</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
+                      {% if user.id != request.user.id %}
+                        <form method="post" action="/users/{{ user.id }}/impersonate/" class="d-inline" onsubmit="return confirm('Impersonate {{ user.username }}? You can stop anytime.');">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-sm btn-outline-secondary">Login as</button>
+                        </form>
+                      {% endif %}
+                      <a href="/users/{{ user.id }}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
+                      <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-reset-url="/users/{{ user.id }}/reset-password/" {% if user.id == request.user.id %}data-self="1"{% endif %}>Reset password</button>
+                      {% if user.is_active %}
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateUserModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-deactivate-url="/users/{{ user.id }}/deactivate/" {% if user.id == request.user.id %}data-self="1"{% endif %}>Deactivate</button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="user-section">
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+          <div class="user-note">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
+          <div class="d-flex gap-2 flex-wrap">
+            {% if page_obj.has_previous %}
+              <a class="btn btn-sm btn-outline-secondary" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status={{ filters.status }}&page_size={{ page_size }}&page={{ page_obj.previous_page_number }}">Prev</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+              <a class="btn btn-sm btn-outline-secondary" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status={{ filters.status }}&page_size={{ page_size }}&page={{ page_obj.next_page_number }}">Next</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="bulkActionModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Bulk Actions</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="post" action="/users/bulk-action/" id="bulkActionForm">
+            <div class="modal-body">
+              {% csrf_token %}
+              <input type="hidden" name="user_ids" id="bulkUserIds">
+              <div class="user-section user-panel mb-0">
+                <div class="user-section">
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <div>
+                      <div class="fw-semibold">Selected users: <span id="bulkSelectedCount">0</span></div>
+                      <div class="text-muted text-sm">Note: your own account is excluded from bulk changes.</div>
+                    </div>
+                  </div>
+                  <div class="row gy-3 gx-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Action</label>
+                      <select class="form-select" name="action" id="bulkActionSelect" required>
+                        <option value="">Select action</option>
+                        <option value="activate">Activate users</option>
+                        <option value="deactivate">Deactivate users</option>
+                        <option value="change_role">Change role</option>
+                        <option value="assign_school">Assign school</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 d-none" id="bulkRoleWrap">
+                      <label class="form-label">New role</label>
+                      <select class="form-select" name="role" id="bulkRoleSelect">
+                        <option value="">Select role</option>
+                        {% for group_label, options in grouped_role_choices %}
+                          <optgroup label="{{ group_label }}">
+                            {% for value,label in options %}
+                              <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                          </optgroup>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-6 d-none" id="bulkSchoolWrap">
+                      <label class="form-label">School</label>
+                      <select class="form-select" name="school_id" id="bulkSchoolSelect">
+                        <option value="">Select school</option>
+                        {% for school in schools %}
+                          <option value="{{ school.id }}">{{ school.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Apply</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const selectAll = document.getElementById("selectAllUsers");
+      const boxes = Array.from(document.querySelectorAll(".user-select"));
+      const exportCsvBtn = document.getElementById("exportSelectedCsvBtn");
+      const exportExcelBtn = document.getElementById("exportSelectedExcelBtn");
+      const bulkActionBtn = document.getElementById("bulkActionBtn");
+      const bulkUserIds = document.getElementById("bulkUserIds");
+      const bulkSelectedCount = document.getElementById("bulkSelectedCount");
+      const bulkActionSelect = document.getElementById("bulkActionSelect");
+      const bulkRoleWrap = document.getElementById("bulkRoleWrap");
+      const bulkSchoolWrap = document.getElementById("bulkSchoolWrap");
+      const bulkRoleSelect = document.getElementById("bulkRoleSelect");
+      const bulkSchoolSelect = document.getElementById("bulkSchoolSelect");
+
+      function selectedIds() {
+        return boxes.filter((box) => box.checked).map((box) => box.value).filter(Boolean);
+      }
+
+      function syncMasterCheckbox() {
+        if (!selectAll) return;
+        const selected = selectedIds().length;
+        selectAll.checked = boxes.length > 0 && selected === boxes.length;
+        selectAll.indeterminate = selected > 0 && selected < boxes.length;
+      }
+
+      function syncActions() {
+        const ids = selectedIds();
+        const enabled = ids.length > 0;
+        if (exportCsvBtn) exportCsvBtn.disabled = !enabled;
+        if (exportExcelBtn) exportExcelBtn.disabled = !enabled;
+        if (bulkActionBtn) bulkActionBtn.disabled = !enabled;
+        if (bulkUserIds) bulkUserIds.value = ids.join(",");
+        if (bulkSelectedCount) bulkSelectedCount.textContent = String(ids.length);
+        syncMasterCheckbox();
+      }
+
+      function buildExportUrl(format) {
+        const params = new URLSearchParams({
+          q: "{{ filters.q|default:'' }}",
+          role: "{{ filters.role|default:'' }}",
+          school_id: "{{ filters.school_id|default:'' }}",
+          status: "{{ filters.status|default:'' }}",
+          page_size: "{{ page_size }}",
+          export: format,
+          user_ids: selectedIds().join(","),
+        });
+        return "/users/?" + params.toString();
+      }
+
+      if (selectAll) {
+        selectAll.addEventListener("change", function () {
+          boxes.forEach((box) => {
+            box.checked = selectAll.checked;
+          });
+          syncActions();
+        });
+      }
+
+      boxes.forEach((box) => box.addEventListener("change", syncActions));
+
+      exportCsvBtn && exportCsvBtn.addEventListener("click", function () {
+        window.location.href = buildExportUrl("csv");
+      });
+
+      exportExcelBtn && exportExcelBtn.addEventListener("click", function () {
+        window.location.href = buildExportUrl("excel");
+      });
+
+      if (bulkActionSelect) {
+        bulkActionSelect.addEventListener("change", function () {
+          const action = bulkActionSelect.value;
+          const needsRole = action === "change_role";
+          const needsSchool = action === "assign_school";
+          if (bulkRoleWrap) bulkRoleWrap.classList.toggle("d-none", !needsRole);
+          if (bulkSchoolWrap) bulkSchoolWrap.classList.toggle("d-none", !needsSchool);
+          if (!needsRole && bulkRoleSelect) bulkRoleSelect.value = "";
+          if (!needsSchool && bulkSchoolSelect) bulkSchoolSelect.value = "";
+        });
+      }
+
+      syncActions();
+    });
+  </script>
+{% endblock %}

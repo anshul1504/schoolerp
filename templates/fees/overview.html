@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}Fees | School ERP{% endblock %}
+{% block page_eyebrow %}Finance Desk{% endblock %}
+{% block page_heading %}Fee Structures, Dues, And Collections{% endblock %}
+{% block page_copy %}Manage fee setup, monthly dues, and collections from one finance-ready workflow for the selected school.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .fee-card,
+  .metric-card {
+    border: 1px solid var(--sf-border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+
+  .fee-card__head {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--sf-border);
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+  }
+
+  .fee-card__body,
+  .metric-card .card-body {
+    padding: 20px;
+  }
+
+  .fee-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .fee-table th,
+  .fee-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .fee-table th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    font-weight: 800;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  .status-chip.due { background: #fee2e2; color: #b91c1c; }
+  .status-chip.partial { background: #fef3c7; color: #92400e; }
+  .status-chip.paid { background: #dcfce7; color: #166534; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="platform-panel mb-4">
+  <div>
+    <h1 class="mb-2">Fee Workspace</h1>
+    <p class="mb-0 text-neutral-600">Manage fee setup, monthly dues, and collections from one finance-ready workflow for the selected school.</p>
+  </div>
+  {% if request.user.role != "SCHOOL_OWNER" %}
+    <div class="d-flex flex-wrap gap-10">
+      {% if selected_school %}
+        <a class="btn btn-outline-secondary" href="/fees/?school={{ selected_school.id }}&dataset=ledgers&export=csv">Export Dues (CSV)</a>
+        <a class="btn btn-outline-secondary" href="/fees/?school={{ selected_school.id }}&dataset=payments&export=csv">Export Payments (CSV)</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="row gy-4">
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-primary-600">Structures</span><h4 class="mt-10 mb-6">{{ fees_stats.structures }}</h4><p class="text-neutral-600 text-sm mb-0">Configured fee plans.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-danger-600">Dues</span><h4 class="mt-10 mb-6">{{ fees_stats.dues }}</h4><p class="text-neutral-600 text-sm mb-0">Generated student fee ledger rows.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-success-600">Paid</span><h4 class="mt-10 mb-6">{{ fees_stats.paid }}</h4><p class="text-neutral-600 text-sm mb-0">Ledgers fully settled.</p></div></div></div>
+      <div class="col-xl-3 col-sm-6"><div class="metric-card h-100"><div class="card-body"><span class="text-xs text-uppercase fw-bold text-warning-600">Outstanding</span><h4 class="mt-10 mb-6">Rs {{ fees_stats.outstanding }}</h4><p class="text-neutral-600 text-sm mb-0">Open amount still pending collection.</p></div></div></div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="fee-card">
+      <div class="fee-card__head">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h6 class="mb-4">Scope</h6>
+            <p class="text-neutral-600 text-sm mb-0">Pick the school first. Fee structures and collections remain scoped to that school.</p>
+          </div>
+          <div class="d-flex gap-10">
+            {% if selected_school and request.user.role != "SCHOOL_OWNER" %}
+              <a class="btn btn-outline-secondary" href="/fees/?school={{ selected_school.id }}&dataset=ledgers&export=csv">Export Dues (CSV)</a>
+              <a class="btn btn-outline-secondary" href="/fees/?school={{ selected_school.id }}&dataset=ledgers&export=excel">Export Dues (Excel)</a>
+              <a class="btn btn-outline-secondary" href="/fees/?school={{ selected_school.id }}&dataset=payments&export=csv">Export Payments (CSV)</a>
+              <a class="btn btn-outline-secondary" href="/fees/?school={{ selected_school.id }}&dataset=payments&export=excel">Export Payments (Excel)</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="fee-card__body">
+        <form method="get" class="row gy-3 align-items-end">
+          {% if request.user.role == "SUPER_ADMIN" %}
+            <div class="col-lg-4"><label class="form-label">School</label><select name="school" class="form-control"><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}" {% if selected_school and selected_school.id == school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+          {% else %}
+            <div class="col-lg-4"><label class="form-label">School</label><input type="text" class="form-control" value="{{ selected_school.name|default:request.user.school.name }}" disabled></div>
+          {% endif %}
+          <div class="col-lg-2"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Apply</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="fee-card h-100">
+      <div class="fee-card__head"><h6 class="mb-4">Create Fee Structure</h6><p class="text-neutral-600 text-sm mb-0">Define the fee type and amount per class.</p></div>
+      <div class="fee-card__body">
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_structure">
+          {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+          <div class="col-12"><label class="form-label">Fee Name</label><input type="text" name="name" class="form-control" placeholder="Tuition Fee"></div>
+          <div class="col-12"><label class="form-label">Class Name</label><input type="text" name="class_name" class="form-control" placeholder="Class 5"></div>
+          <div class="col-12"><label class="form-label">Amount</label><input type="number" step="0.01" name="amount" class="form-control" placeholder="2500"></div>
+          <div class="col-6"><label class="form-label">Frequency</label><select name="frequency" class="form-control">{% for frequency in frequency_options %}<option value="{{ frequency }}">{{ frequency|title }}</option>{% endfor %}</select></div>
+          <div class="col-6"><label class="form-label">Due Day</label><input type="number" min="1" max="31" name="due_day" class="form-control" value="10"></div>
+          <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Create Structure</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="fee-card h-100">
+      <div class="fee-card__head"><h6 class="mb-4">Generate Student Due</h6><p class="text-neutral-600 text-sm mb-0">Assign a monthly or term fee due to a student ledger.</p></div>
+      <div class="fee-card__body">
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_due">
+          {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+          <div class="col-12"><label class="form-label">Student</label><select name="student" class="form-control"><option value="">Select student</option>{% for student in student_options %}<option value="{{ student.id }}">{{ student.first_name }} {{ student.last_name }} - {{ student.admission_no }}</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label">Fee Structure</label><select name="fee_structure" class="form-control"><option value="">Select structure</option>{% for structure in fee_structures %}<option value="{{ structure.id }}">{{ structure.name }} - {{ structure.class_name }}</option>{% endfor %}</select></div>
+          <div class="col-6"><label class="form-label">Billing Month</label><input type="text" name="billing_month" class="form-control" placeholder="Apr-2026"></div>
+          <div class="col-6"><label class="form-label">Due Date</label><input type="date" name="due_date" class="form-control" value="{{ today|date:'Y-m-d' }}"></div>
+          <div class="col-12"><label class="form-label">Amount Due</label><input type="number" step="0.01" name="amount_due" class="form-control" placeholder="2500"></div>
+          <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Create Due</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="fee-card h-100">
+      <div class="fee-card__head"><h6 class="mb-4">Collect Payment</h6><p class="text-neutral-600 text-sm mb-0">Record collection against an open fee ledger.</p></div>
+      <div class="fee-card__body">
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="collect_payment">
+          {% if selected_school %}<input type="hidden" name="school" value="{{ selected_school.id }}">{% endif %}
+          <div class="col-12"><label class="form-label">Student Due</label><select name="ledger" class="form-control"><option value="">Select ledger</option>{% for ledger in fee_ledgers %}<option value="{{ ledger.id }}">{{ ledger.student.first_name }} {{ ledger.student.last_name }} - {{ ledger.billing_month }} - Rs {{ ledger.amount_due }}</option>{% endfor %}</select></div>
+          <div class="col-6"><label class="form-label">Amount</label><input type="number" step="0.01" name="amount" class="form-control" placeholder="2500"></div>
+          <div class="col-6"><label class="form-label">Payment Date</label><input type="date" name="payment_date" class="form-control" value="{{ today|date:'Y-m-d' }}"></div>
+          <div class="col-6"><label class="form-label">Mode</label><select name="payment_mode" class="form-control">{% for mode in payment_mode_options %}<option value="{{ mode }}">{{ mode|title }}</option>{% endfor %}</select></div>
+          <div class="col-6"><label class="form-label">Reference No</label><input type="text" name="reference_no" class="form-control" placeholder="Optional"></div>
+          <div class="col-12"><button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Collect Payment</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="fee-card h-100">
+      <div class="fee-card__head"><h6 class="mb-4">Recent Dues</h6><p class="text-neutral-600 text-sm mb-0">Latest student ledger entries and their settlement status.</p></div>
+      <div class="fee-card__body">
+        {% if fee_ledgers %}
+          <table class="fee-table">
+            <thead><tr>{% if request.user.role != "SCHOOL_OWNER" %}<th class="sf-th-icon"></th>{% endif %}<th>Student</th><th>Month</th><th>Due</th><th>Paid</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for ledger in fee_ledgers %}
+                <tr>
+                  {% if request.user.role != "SCHOOL_OWNER" %}
+                    <td>
+                      <input type="checkbox" class="form-check-input fee-ledger-select" value="{{ ledger.id }}" aria-label="Select ledger {{ ledger.id }}">
+                    </td>
+                  {% endif %}
+                  <td><strong>{{ ledger.student.first_name }} {{ ledger.student.last_name }}</strong><br><span class="text-neutral-500 text-sm">{{ ledger.fee_structure.name }}</span></td>
+                  <td>{{ ledger.billing_month }}<br><span class="text-neutral-500 text-sm">{{ ledger.due_date }}</span></td>
+                  <td>Rs {{ ledger.amount_due }}</td>
+                  <td>Rs {{ ledger.amount_paid }}</td>
+                  <td><span class="status-chip {{ ledger.status|lower }}">{{ ledger.status|title }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% if request.user.role != "SCHOOL_OWNER" %}
+            <div class="d-flex gap-10 mt-3 flex-wrap">
+              <button type="button" class="btn btn-outline-secondary" id="exportSelectedLedgersCsvBtn" disabled>Export Selected Dues (CSV)</button>
+              <button type="button" class="btn btn-outline-secondary" id="exportSelectedLedgersExcelBtn" disabled>Export Selected Dues (Excel)</button>
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No student dues generated yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="fee-card h-100">
+      <div class="fee-card__head"><h6 class="mb-4">Recent Collections</h6><p class="text-neutral-600 text-sm mb-0">Latest payments collected and recorded.</p></div>
+      <div class="fee-card__body">
+        {% if fee_payments %}
+          <table class="fee-table">
+            <thead><tr>{% if request.user.role != "SCHOOL_OWNER" %}<th class="sf-th-icon"></th>{% endif %}<th>Student</th><th>Amount</th><th>Date</th><th>Mode</th><th>Collector</th></tr></thead>
+            <tbody>
+              {% for payment in fee_payments %}
+                <tr>
+                  {% if request.user.role != "SCHOOL_OWNER" %}
+                    <td>
+                      <input type="checkbox" class="form-check-input fee-payment-select" value="{{ payment.id }}" aria-label="Select payment {{ payment.id }}">
+                    </td>
+                  {% endif %}
+                  <td><strong>{{ payment.student.first_name }} {{ payment.student.last_name }}</strong><br><span class="text-neutral-500 text-sm">{{ payment.ledger.billing_month }}</span></td>
+                  <td>Rs {{ payment.amount }}</td>
+                  <td>{{ payment.payment_date }}</td>
+                  <td>{{ payment.payment_mode|title }}</td>
+                  <td>{{ payment.collected_by.get_full_name|default:payment.collected_by.username|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% if request.user.role != "SCHOOL_OWNER" %}
+            <div class="d-flex gap-10 mt-3 flex-wrap">
+              <button type="button" class="btn btn-outline-secondary" id="exportSelectedPaymentsCsvBtn" disabled>Export Selected Payments (CSV)</button>
+              <button type="button" class="btn btn-outline-secondary" id="exportSelectedPaymentsExcelBtn" disabled>Export Selected Payments (Excel)</button>
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="text-neutral-500 text-sm">No fee collections recorded yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const ledgerBoxes = Array.from(document.querySelectorAll(".fee-ledger-select"));
+    const paymentBoxes = Array.from(document.querySelectorAll(".fee-payment-select"));
+    const schoolId = "{{ selected_school.id|default:'' }}";
+
+    const ledCsv = document.getElementById("exportSelectedLedgersCsvBtn");
+    const ledXls = document.getElementById("exportSelectedLedgersExcelBtn");
+    const payCsv = document.getElementById("exportSelectedPaymentsCsvBtn");
+    const payXls = document.getElementById("exportSelectedPaymentsExcelBtn");
+
+    function selectedIds(boxes) {
+      return boxes.filter((b) => b.checked).map((b) => b.value).filter(Boolean);
+    }
+
+    function updateButtons() {
+      const ledEnabled = selectedIds(ledgerBoxes).length > 0;
+      const payEnabled = selectedIds(paymentBoxes).length > 0;
+      if (ledCsv) ledCsv.disabled = !ledEnabled;
+      if (ledXls) ledXls.disabled = !ledEnabled;
+      if (payCsv) payCsv.disabled = !payEnabled;
+      if (payXls) payXls.disabled = !payEnabled;
+    }
+
+    function go(url) { window.location.href = url; }
+
+    function exportLedgers(fmt) {
+      const ids = selectedIds(ledgerBoxes).join(",");
+      const params = new URLSearchParams({ school: schoolId, dataset: "ledgers", export: fmt, ledger_ids: ids });
+      go("/fees/?" + params.toString());
+    }
+
+    function exportPayments(fmt) {
+      const ids = selectedIds(paymentBoxes).join(",");
+      const params = new URLSearchParams({ school: schoolId, dataset: "payments", export: fmt, payment_ids: ids });
+      go("/fees/?" + params.toString());
+    }
+
+    ledgerBoxes.forEach((b) => b.addEventListener("change", updateButtons));
+    paymentBoxes.forEach((b) => b.addEventListener("change", updateButtons));
+
+    ledCsv && ledCsv.addEventListener("click", () => exportLedgers("csv"));
+    ledXls && ledXls.addEventListener("click", () => exportLedgers("excel"));
+    payCsv && payCsv.addEventListener("click", () => exportPayments("csv"));
+    payXls && payXls.addEventListener("click", () => exportPayments("excel"));
+
+    updateButtons();
+  });
+</script>
+{% endblock %}
