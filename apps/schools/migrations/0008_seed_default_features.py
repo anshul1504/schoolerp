@@ -2,7 +2,6 @@
 
 from django.db import migrations
 
-
 DEFAULT_FEATURES = [
     ("Students", "STUDENTS", "Student admission, profiles, documents, ID cards"),
     ("Academics", "ACADEMICS", "Classes, sections, subjects, syllabus"),
@@ -24,7 +23,6 @@ def seed_features(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("schools", "0007_plan_tier_and_pricing"),
     ]
@@ -32,4 +30,3 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(seed_features, migrations.RunPython.noop),
     ]
-

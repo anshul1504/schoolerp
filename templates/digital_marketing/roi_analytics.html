@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}ROI Analytics{% endblock %}
+{% block page_heading %}ROI Analytics{% endblock %}
+{% block breadcrumb_active %}ROI Analytics{% endblock %}
+{% block content %}
+<div class="card radius-12 border-0 shadow-sm mb-24">
+  <div class="card-body p-20">
+    <form method="get" class="row gy-3 gx-3 align-items-end">
+      <div class="col-md-4"><label class="form-label">Start Date</label><input type="date" name="start" value="{{ filters.start }}" class="form-control"></div>
+      <div class="col-md-4"><label class="form-label">End Date</label><input type="date" name="end" value="{{ filters.end }}" class="form-control"></div>
+      <div class="col-md-2"><button class="btn btn-primary-600 w-100">Apply</button></div>
+      <div class="col-md-2"><a class="btn btn-outline-danger-600 w-100" href="{% url 'digital_marketing:roi_analytics' %}">Reset</a></div>
+    </form>
+  </div>
+</div>
+<div class="row gy-3 mb-24">
+  <div class="col-xl-3 col-md-6"><div class="p-16 radius-8 bg-primary-50 border border-primary-100"><small class="text-primary-600">Total Spend</small><h5 class="mb-0 mt-6">{{ total_spend }}</h5></div></div>
+  <div class="col-xl-3 col-md-6"><div class="p-16 radius-8 bg-success-50 border border-success-100"><small class="text-success-600">Expected Revenue</small><h5 class="mb-0 mt-6">{{ expected_revenue }}</h5></div></div>
+  <div class="col-xl-3 col-md-6"><div class="p-16 radius-8 bg-warning-50 border border-warning-100"><small class="text-warning-600">CPL</small><h5 class="mb-0 mt-6">{{ cpl }}</h5></div></div>
+  <div class="col-xl-3 col-md-6"><div class="p-16 radius-8 bg-info-50 border border-info-100"><small class="text-info-600">ROAS</small><h5 class="mb-0 mt-6">{{ roas }}</h5></div></div>
+</div>
+
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0">Campaign ROI Breakdown</h6>
+    <div class="text-sm text-secondary-light">Leads: {{ total_leads }} | Converted: {{ converted }} | Conversion Rate: {{ conversion_rate }}%</div>
+  </div>
+  <div class="card-body p-24">
+    <div class="table-responsive">
+      <table class="table bordered-table mb-0">
+        <thead><tr><th>Campaign</th><th>Spend</th><th>Budget</th><th>Leads</th><th>Converted</th><th>Lead-to-Conversion %</th></tr></thead>
+        <tbody>
+          {% for r in campaign_rows %}
+          <tr>
+            <td>{{ r.name }}</td>
+            <td>{{ r.spend|default:0 }}</td>
+            <td>{{ r.budget|default:0 }}</td>
+            <td>{{ r.lead_count|default:0 }}</td>
+            <td>{{ r.converted_count|default:0 }}</td>
+            <td>{% if r.lead_count %}{% widthratio r.converted_count r.lead_count 100 %}%{% else %}0%{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center py-20">No campaign data available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card h-100 radius-12 border-0 shadow-sm mt-24">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+    <h6 class="mb-0">Attribution Breakdown (Source)</h6>
+  </div>
+  <div class="card-body p-24">
+    <div class="table-responsive">
+      <table class="table bordered-table mb-0">
+        <thead><tr><th>Source</th><th>Total Leads</th><th>Converted</th><th>Conversion %</th></tr></thead>
+        <tbody>
+          {% for a in attribution_rows %}
+          <tr>
+            <td>{{ a.source|default:"Unknown" }}</td>
+            <td>{{ a.total }}</td>
+            <td>{{ a.converted }}</td>
+            <td>{% if a.total %}{% widthratio a.converted a.total 100 %}%{% else %}0%{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center py-20">No attribution data.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

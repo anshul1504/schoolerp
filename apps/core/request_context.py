@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import threading
 
-
 _local = threading.local()
 
 
@@ -17,4 +16,3 @@ def get_current_request():
 def clear_current_request() -> None:
     if hasattr(_local, "request"):
         delattr(_local, "request")
-

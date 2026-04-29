@@ -27,7 +27,7 @@
           {% for row in gap_rows %}
             <tr>
               <td><strong>{{ row.name }}</strong></td>
-              <td><span class="status-pill {% if row.status == 'GREEN' %}status-pill--success{% elif row.status == 'YELLOW' %}status-pill--warning{% elif row.status == 'RED' %}status-pill--danger{% endif %}">{{ row.status }}</span></td>
+              <td><span class="badge {% if row.status == 'GREEN' %}status-pill--success{% elif row.status == 'YELLOW' %}status-pill--warning{% elif row.status == 'RED' %}status-pill--danger{% endif %}">{{ row.status }}</span></td>
               <td>{{ row.detail }}</td>
             </tr>
           {% endfor %}

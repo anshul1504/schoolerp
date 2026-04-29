@@ -32,7 +32,9 @@ class StudentFeeLedger(models.Model):
 
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="fee_ledgers")
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="fee_ledgers")
-    fee_structure = models.ForeignKey(FeeStructure, on_delete=models.CASCADE, related_name="student_ledgers")
+    fee_structure = models.ForeignKey(
+        FeeStructure, on_delete=models.CASCADE, related_name="student_ledgers"
+    )
     billing_month = models.CharField(max_length=20)
     amount_due = models.DecimalField(max_digits=10, decimal_places=2)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -51,8 +53,10 @@ class StudentFeeLedger(models.Model):
 class FeePayment(models.Model):
     PAYMENT_MODE_CHOICES = (
         ("CASH", "Cash"),
-        ("ONLINE", "Online"),
+        ("ONLINE", "Online (Payment Gateway)"),
+        ("UPI", "UPI / QR Code"),
         ("CHEQUE", "Cheque"),
+        ("BANK_TRANSFER", "Bank Transfer / NEFT"),
     )
 
     ledger = models.ForeignKey(StudentFeeLedger, on_delete=models.CASCADE, related_name="payments")
@@ -60,7 +64,7 @@ class FeePayment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="fee_payments")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateField()
-    payment_mode = models.CharField(max_length=10, choices=PAYMENT_MODE_CHOICES, default="CASH")
+    payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE_CHOICES, default="CASH")
     reference_no = models.CharField(max_length=80, blank=True)
     collected_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -76,3 +80,31 @@ class FeePayment(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.amount}"
+
+
+class FeeDiscount(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="fee_discounts")
+    name = models.CharField(max_length=120)
+    discount_type = models.CharField(
+        max_length=20,
+        choices=(("PERCENT", "Percentage"), ("FIXED", "Fixed Amount")),
+        default="FIXED",
+    )
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.value})"
+
+
+class FeeFine(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="fee_fines")
+    name = models.CharField(max_length=120)
+    fine_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    grace_period_days = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.fine_amount})"

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0004_userinvitation_email_meta"),
     ]
@@ -21,4 +20,3 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]
-

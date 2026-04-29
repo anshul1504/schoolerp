@@ -14,4 +14,3 @@ def throttle_hit(key: str, *, limit: int, window_seconds: int) -> bool:
     current += 1
     cache.set(key, current, timeout=window_seconds)
     return current > limit
-

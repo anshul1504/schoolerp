@@ -2,27 +2,44 @@
 
 {% block title %}SMTP Email Test{% endblock %}
 {% block page_heading %}SMTP Email Test{% endblock %}
-{% block page_copy %}Send a test email using configured SMTP settings.{% endblock %}
-{% block page_eyebrow %}Settings{% endblock %}
+{% block breadcrumb_active %}SMTP Email Test{% endblock %}
 
 {% block content %}
-  <div class="card">
-    <div class="card-body p-24">
-      <form method="post" class="row gy-3">
-        {% csrf_token %}
-        <div class="col-md-8">
-          <label class="form-label">Send test email to</label>
-          <input type="email" name="to_email" class="form-control" placeholder="name@example.com" required>
-        </div>
-        <div class="col-md-4 d-flex align-items-end">
-          <button type="submit" class="btn btn-primary w-100">Send</button>
-        </div>
-      </form>
+<div class="mt-24">
+    <div class="row gy-4">
+        {% include "settings/_sidebar.html" %}
 
-      <div class="mt-4 text-muted text-sm">
-        Uses `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, and `EMAIL_HOST_PASSWORD` from environment variables.
-      </div>
+        <div class="col-xxl-9 col-lg-8">
+            <form method="post" class="card h-100">
+                {% csrf_token %}
+                <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex align-items-center justify-content-between">
+                    <h6 class="text-lg fw-semibold mb-0">SMTP Test</h6>
+                    <small class="text-neutral-400">Sends an HTML + text email to validate SMTP credentials.</small>
+                </div>
+
+            <div class="card-body p-24">
+                <div class="row gy-4">
+                    <div class="col-12">
+                        <label class="form-label text-sm fw-semibold text-primary-light d-inline-block mb-8">Recipient email</label>
+                        <input type="email" name="to_email" class="form-control" placeholder="name@example.com" required>
+                    </div>
+                </div>
+
+                <div class="mt-24 p-16 bg-primary-50 border border-primary-100 radius-8">
+                    <p class="text-sm text-primary-600 mb-0">
+                        <i class="ri-information-line me-8"></i>
+                        Uses <code>EMAIL_HOST</code>, <code>EMAIL_PORT</code>, <code>EMAIL_HOST_USER</code>, and <code>EMAIL_HOST_PASSWORD</code> from environment configuration.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-footer border-top border-neutral-200 py-16 px-24 d-flex justify-content-end gap-12">
+                <button type="submit" class="btn btn-primary-600 px-24 py-12 radius-8 fw-semibold shadow-primary">
+                    <i class="ri-mail-send-line me-8"></i>Send Test Email
+                </button>
+            </div>
+        </form>
     </div>
-  </div>
+</div>
+</div>
 {% endblock %}
-

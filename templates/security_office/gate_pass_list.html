@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Gate Passes | School ERP{% endblock %}
+{% block page_heading %}Gate Passes{% endblock %}
+{% block breadcrumb_active %}Gate Passes{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Gate Passes</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Manage exits for students, visitors, and assets.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap" href="?status={{ filters.status }}&export=csv"><iconify-icon icon="ri:file-download-line" class="me-2 text-xl"></iconify-icon> Export CSV</a>
+        <a class="btn btn-primary-600 radius-8 px-20 py-11 d-inline-flex align-items-center text-nowrap" href="{% url 'security_office:gate_pass_create' %}"><iconify-icon icon="ri:pass-valid-line" class="me-2 text-xl"></iconify-icon> Issue Gate Pass</a>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-lg-4">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select form-control">
+              <option value="">All Statuses</option>
+              {% for c,l in status_choices %}
+                <option value="{{ c }}" {% if filters.status == c %}selected{% endif %}>{{ l }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-600">Apply</button>
+            <a class="btn btn-outline-secondary" href="{% url 'security_office:gate_pass_list' %}">Reset</a>
+          </div>
+        </div>
+      </form>
+
+      {% if rows %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable" data-page-length="10">
+            <thead>
+              <tr>
+                <th>Person / Entity</th>
+                <th>Type</th>
+                <th>Reason</th>
+                <th>Timing</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in rows %}
+                <tr>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium text-neutral-700">{{ p.person_name }}</span>
+                      <span class="text-sm text-neutral-500">Issued by: {{ p.issued_by|default:"System" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    {% if p.pass_type == 'STUDENT_EXIT' %}
+                      <span class="badge bg-primary-50 text-primary-600">Student Exit</span>
+                    {% elif p.pass_type == 'VISITOR_EXIT' %}
+                      <span class="badge bg-info-50 text-info-600">Visitor Exit</span>
+                    {% elif p.pass_type == 'ASSET_MOVEMENT' %}
+                      <span class="badge bg-warning-50 text-warning-600">Asset Movement</span>
+                    {% else %}
+                      <span class="badge bg-secondary-50 text-secondary-600">{{ p.get_pass_type_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td><span class="text-neutral-600">{{ p.reason|default:"-"|truncatechars:30 }}</span></td>
+                  <td>
+                    <div class="text-sm text-neutral-600">Issued: {{ p.issued_at|date:'d M Y, H:i' }}</div>
+                    {% if p.valid_till %}
+                    <div class="text-sm text-neutral-600">Valid Till: {{ p.valid_till|date:'d M Y, H:i' }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                     {% if p.status == 'ISSUED' %}
+                      <span class="badge bg-success-50 text-success-600">Issued</span>
+                     {% elif p.status == 'USED' %}
+                      <span class="badge bg-neutral-100 text-neutral-600">Used</span>
+                     {% elif p.status == 'EXPIRED' %}
+                      <span class="badge bg-danger-50 text-danger-600">Expired</span>
+                     {% else %}
+                      <span class="badge bg-secondary-100 text-secondary-600">{{ p.get_status_display }}</span>
+                     {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                      <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="{% url 'security_office:gate_pass_edit' p.id %}"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit</a>
+                      <form method="post" action="{% url 'security_office:gate_pass_delete' p.id %}" class="d-inline" onsubmit="return confirm('Delete this gate pass?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"><iconify-icon icon="ri:delete-bin-line" class="me-1"></iconify-icon> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:pass-valid-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No gate passes found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

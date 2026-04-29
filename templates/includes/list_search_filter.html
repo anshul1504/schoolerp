@@ -1,0 +1,18 @@
+<form method="get" class="{{ form_class|default:'sf-filters' }}">
+  <div class="row gy-3 gx-3 align-items-end">
+    <div class="{{ search_col_class|default:'col-lg-5' }}">
+      <label class="form-label">Search</label>
+      <input
+        type="text"
+        name="q"
+        value="{{ filters.q }}"
+        class="form-control"
+        placeholder="{{ search_placeholder|default:'Search...' }}"
+      >
+    </div>
+    <div class="{{ action_col_class|default:'col-lg-3 d-flex gap-2' }}">
+      <button type="submit" class="btn btn-primary-600 {{ apply_btn_class|default:'' }}">Apply</button>
+      <a class="btn {{ reset_btn_class|default:'btn-outline-secondary' }}" href="{{ reset_url }}">Reset</a>
+    </div>
+  </div>
+</form>

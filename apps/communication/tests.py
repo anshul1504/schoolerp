@@ -1,7 +1,7 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-
-from datetime import date
 
 from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 
@@ -47,15 +47,28 @@ class CommunicationModuleTests(TestCase):
             role="STUDENT",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
             SchoolSubscription.objects.update_or_create(
                 school=self.other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
     def test_principal_can_publish_notice(self):

@@ -6,45 +6,103 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('academics', '0001_initial'),
-        ('schools', '0003_school_student_capacity_school_allowed_campuses'),
-        ('students', '0006_student_aadhar_card_student_academic_year_and_more'),
+        ("academics", "0001_initial"),
+        ("schools", "0003_school_student_capacity_school_allowed_campuses"),
+        ("students", "0006_student_aadhar_card_student_academic_year_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AttendanceSession',
+            name="AttendanceSession",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('attendance_date', models.DateField()),
-                ('note', models.CharField(blank=True, max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('academic_class', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attendance_sessions', to='academics.academicclass')),
-                ('marked_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='marked_attendance_sessions', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attendance_sessions', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("attendance_date", models.DateField()),
+                ("note", models.CharField(blank=True, max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "academic_class",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attendance_sessions",
+                        to="academics.academicclass",
+                    ),
+                ),
+                (
+                    "marked_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="marked_attendance_sessions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attendance_sessions",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-attendance_date', 'academic_class__name', 'academic_class__section'],
-                'unique_together': {('academic_class', 'attendance_date')},
+                "ordering": ["-attendance_date", "academic_class__name", "academic_class__section"],
+                "unique_together": {("academic_class", "attendance_date")},
             },
         ),
         migrations.CreateModel(
-            name='StudentAttendance',
+            name="StudentAttendance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('PRESENT', 'Present'), ('ABSENT', 'Absent'), ('LATE', 'Late'), ('LEAVE', 'Leave')], default='PRESENT', max_length=10)),
-                ('remark', models.CharField(blank=True, max_length=255)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='student_attendance', to='attendance.attendancesession')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attendance_entries', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("PRESENT", "Present"),
+                            ("ABSENT", "Absent"),
+                            ("LATE", "Late"),
+                            ("LEAVE", "Leave"),
+                        ],
+                        default="PRESENT",
+                        max_length=10,
+                    ),
+                ),
+                ("remark", models.CharField(blank=True, max_length=255)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="student_attendance",
+                        to="attendance.attendancesession",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attendance_entries",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['student__first_name', 'student__last_name'],
-                'unique_together': {('session', 'student')},
+                "ordering": ["student__first_name", "student__last_name"],
+                "unique_together": {("session", "student")},
             },
         ),
     ]

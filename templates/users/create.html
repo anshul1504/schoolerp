@@ -1,124 +1,188 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Create User{% endblock %}
-{% block page_heading %}Create User{% endblock %}
-{% block page_copy %}Create a new account and assign role + school scope.{% endblock %}
-{% block page_eyebrow %}Users & Roles{% endblock %}
+{% block title %}Create User | School ERP{% endblock %}
+{% block page_heading %}User Provisioning{% endblock %}
+{% block breadcrumb_active %}Create Account{% endblock %}
+
+{% block heading_actions %}
+<a href="/users/" class="btn btn-primary-600 d-flex align-items-center gap-6">
+    <iconify-icon icon="ri:arrow-left-line"></iconify-icon>
+    Back to Directory
+</a>
+{% endblock %}
 
 {% block content %}
-  <section class="platform-shell user-page">
-    <div class="platform-panel">
-      <div class="user-section">
-        <div class="user-toolbar">
-          <div class="sf-toolbar__title">
-            <h6>Create user</h6>
-            <p>Fill the details and choose the correct role scope.</p>
-          </div>
-          <div class="user-actions">
-            <a href="/users/" class="btn btn-outline-secondary">Back</a>
-          </div>
-        </div>
-      </div>
 
-      <div class="user-section">
-        <form method="post" class="row gy-3" id="userCreateForm">
-          {% csrf_token %}
-          <div class="col-md-6">
-            <label class="form-label">Username *</label>
-            <input type="text" name="username" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">First name</label>
-            <input type="text" name="first_name" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Last name</label>
-            <input type="text" name="last_name" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Role *</label>
-            <select name="role" class="form-select" required>
-              <option value="" selected disabled>Select role</option>
-              {% for group_label, options in grouped_role_choices %}
-                <optgroup label="{{ group_label }}">
-                  {% for value,label in options %}
-                    <option value="{{ value }}">{{ label }}</option>
-                  {% endfor %}
-                </optgroup>
-              {% endfor %}
-            </select>
-            <div class="form-text">Non-Super Admin roles must be assigned to a school.</div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">School (required for non-Super Admin)</label>
-            <select name="school_id" class="form-select" id="userSchoolSelect">
-              <option value="">Platform access</option>
-              {% for school in schools %}
-                <option value="{{ school.id }}">{{ school.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Password *</label>
-            <div class="position-relative">
-              <input type="password" name="password" class="form-control pe-5" required autocomplete="new-password" id="userCreatePassword">
-              <button
-                type="button"
-                class="btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-3 text-secondary"
-                data-toggle-password="#userCreatePassword"
-                aria-label="Toggle password visibility"
-              >
-                <i class="ri-eye-line"></i>
-              </button>
+<form method="post" class="mt-24" id="userCreateForm">
+    {% csrf_token %}
+    <div class="row gy-4">
+        <!-- Section 1: Basic Identity -->
+        <div class="col-lg-12">
+            <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                    <h6 class="text-lg fw-semibold mb-0">1. Identity & Contact</h6>
+                </div>
+                <div class="card-body p-20">
+                    <div class="row gy-3">
+                        <div class="col-xxl-3 col-xl-4 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">System Username <span class="text-danger-600">*</span></label>
+                                <input type="text" name="username" class="form-control" required placeholder="e.g. john_doe">
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 col-xl-4 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Email Address</label>
+                                <input type="email" name="email" class="form-control" placeholder="e.g. john@example.com">
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 col-xl-4 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">First Name</label>
+                                <input type="text" name="first_name" class="form-control" placeholder="Enter first name">
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 col-xl-4 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Last Name</label>
+                                <input type="text" name="last_name" class="form-control" placeholder="Enter last name">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-md-6 d-flex align-items-end">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
-              <label class="form-check-label" for="is_active">Active</label>
+        </div>
+
+        <!-- Section 2: Permissions & Scope -->
+        <div class="col-lg-12">
+            <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                    <h6 class="text-lg fw-semibold mb-0">2. Permissions & Scope</h6>
+                </div>
+                <div class="card-body p-20">
+                    <div class="row gy-3">
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">System Role <span class="text-danger-600">*</span></label>
+                                <select name="role" class="form-control form-select" required>
+                                    <option value="" selected disabled>Select assigned role...</option>
+                                    {% for group_label, options in grouped_role_choices %}
+                                        <optgroup label="{{ group_label }}">
+                                            {% for value,label in options %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Institutional Scope</label>
+                                <select name="school_id" class="form-control form-select" id="userSchoolSelect">
+                                    <option value="">Global Platform Access</option>
+                                    {% for school in schools %}
+                                        <option value="{{ school.id }}">{{ school.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-neutral-400 mt-8 d-block" id="schoolHint">Required for non-Super Admin users.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-12 d-flex gap-10">
-            <button type="submit" class="btn btn-primary-600">Create</button>
-            <a href="/users/" class="btn btn-outline-secondary">Cancel</a>
-          </div>
-        </form>
-      </div>
+        </div>
+
+        <!-- Section 3: Security Configuration -->
+        <div class="col-lg-12">
+            <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                    <h6 class="text-lg fw-semibold mb-0">3. Security Configuration</h6>
+                </div>
+                <div class="card-body p-20">
+                    <div class="row gy-3 align-items-center">
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Initial Password <span class="text-danger-600">*</span></label>
+                                <div class="position-relative">
+                                    <input type="password" name="password" class="form-control pe-40" required autocomplete="new-password" id="userCreatePassword" placeholder="Minimum 8 characters">
+                                    <button type="button" class="btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-12 text-neutral-400 z-10" data-toggle-password="#userCreatePassword">
+                                        <iconify-icon icon="ri:eye-line" class="text-lg"></iconify-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="form-check form-switch p-0 d-flex align-items-center gap-12 ms-4">
+                                <input class="form-check-input ms-0" type="checkbox" name="is_active" id="is_active" checked role="switch">
+                                <label class="form-check-label text-sm fw-semibold text-secondary-light mb-0" for="is_active">Account Active on Creation</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12 d-flex gap-16 justify-content-end mb-24">
+            <a href="/users/" class="btn btn-neutral-100 text-neutral-600 px-32 py-12 radius-8 fw-semibold">Discard</a>
+            <button type="submit" class="btn btn-primary-600 px-32 py-12 radius-8 fw-semibold shadow-primary">Provision Account</button>
+        </div>
     </div>
-  </section>
+</form>
 {% endblock %}
 
 {% block extra_js %}
-  <script>
-    document.addEventListener("click", function (event) {
-      const button = event.target.closest("[data-toggle-password]");
-      if (!button) return;
-      const selector = button.getAttribute("data-toggle-password");
-      const input = selector ? document.querySelector(selector) : null;
-      if (!input) return;
-      input.type = input.type === "password" ? "text" : "password";
-      const icon = button.querySelector("i");
-      if (icon) icon.className = input.type === "password" ? "ri-eye-line" : "ri-eye-off-line";
-    });
-
+<script>
     document.addEventListener("DOMContentLoaded", function () {
-      const roleSelect = document.querySelector('select[name="role"]');
-      const schoolSelect = document.getElementById("userSchoolSelect");
-      if (!roleSelect || !schoolSelect) return;
+        // Toggle Password Visibility
+        document.querySelectorAll("[data-toggle-password]").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const selector = this.getAttribute("data-toggle-password");
+                const input = document.querySelector(selector);
+                const icon = this.querySelector("iconify-icon");
 
-      function syncSchoolDisabled() {
-        const role = roleSelect.value;
-        const isSuperAdmin = role === "SUPER_ADMIN";
-        schoolSelect.disabled = isSuperAdmin;
-        if (isSuperAdmin) schoolSelect.value = "";
-      }
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.setAttribute("icon", "ri:eye-off-line");
+                } else {
+                    input.type = "password";
+                    icon.setAttribute("icon", "ri:eye-line");
+                }
+            });
+        });
 
-      roleSelect.addEventListener("change", syncSchoolDisabled);
-      syncSchoolDisabled();
+        // Role & School Sync Logic
+        const roleSelect = document.querySelector('select[name="role"]');
+        const schoolSelect = document.getElementById("userSchoolSelect");
+        const schoolHint = document.getElementById("schoolHint");
+
+        function syncSchoolScope() {
+            const isSuperAdmin = roleSelect.value === "SUPER_ADMIN";
+
+            if (isSuperAdmin) {
+                schoolSelect.value = "";
+                schoolSelect.disabled = true;
+                schoolSelect.classList.add("bg-neutral-50");
+                schoolHint.textContent = "Super Admins have global access and cannot be restricted to a school.";
+                schoolHint.classList.add("text-primary-600");
+                schoolHint.classList.remove("text-neutral-400");
+            } else {
+                schoolSelect.disabled = false;
+                schoolSelect.classList.remove("bg-neutral-50");
+                schoolHint.textContent = "Required for non-Super Admin users.";
+                schoolHint.classList.remove("text-primary-600");
+                schoolHint.classList.add("text-neutral-400");
+            }
+        }
+
+        roleSelect.addEventListener("change", syncSchoolScope);
+        syncSchoolScope();
     });
-  </script>
+</script>
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .z-10 { z-index: 10; }
+</style>
 {% endblock %}

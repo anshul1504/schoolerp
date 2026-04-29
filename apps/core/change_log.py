@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from decimal import Decimal
 from datetime import date, datetime
+from decimal import Decimal
 
 from apps.core.models import EntityChangeLog
 from apps.core.request_context import get_current_request

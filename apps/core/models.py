@@ -7,8 +7,16 @@ from apps.students.models import Student
 
 
 class ActivityLog(models.Model):
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs")
-    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="activity_logs",
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs"
+    )
 
     view_name = models.CharField(max_length=200, blank=True)
     action = models.CharField(max_length=200, blank=True)
@@ -74,12 +82,20 @@ class RoleSectionsOverride(models.Model):
 
 
 class RolePermissionsOverride(models.Model):
-    role = models.CharField(max_length=40, unique=True)
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="role_overrides", null=True, blank=True
+    )
+    role = models.CharField(max_length=40)
     permissions = JSONField(default=list)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ("school", "role")
+
     def __str__(self):
-        return f"Permissions override {self.role}"
+        return (
+            f"Permissions override {self.role} for {self.school.name if self.school else 'Global'}"
+        )
 
 
 class ScheduledReport(models.Model):
@@ -174,9 +190,23 @@ class SupportTicket(models.Model):
         ("URGENT", "Urgent"),
     )
 
-    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets")
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets_created")
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets_assigned")
+    school = models.ForeignKey(
+        School, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_tickets_created",
+    )
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_tickets_assigned",
+    )
 
     title = models.CharField(max_length=160)
     description = models.TextField(blank=True)
@@ -200,7 +230,13 @@ class SupportTicket(models.Model):
 
 class SupportTicketMessage(models.Model):
     ticket = models.ForeignKey(SupportTicket, on_delete=models.CASCADE, related_name="messages")
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_messages")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_messages",
+    )
     body = models.TextField()
     is_internal = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -281,7 +317,13 @@ class RBACChangeEvent(models.Model):
         ("ROLE_PERMISSIONS_OVERRIDE", "Role permissions override"),
     )
 
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="rbac_change_events")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rbac_change_events",
+    )
     kind = models.CharField(max_length=40, choices=KIND_CHOICES)
     role = models.CharField(max_length=20)
 
@@ -308,7 +350,13 @@ class EntityChangeLog(models.Model):
     This is intentionally generic so we can attach it to multiple models without duplicating tables.
     """
 
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="entity_change_logs")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="entity_change_logs",
+    )
     entity = models.CharField(max_length=80)  # e.g. "schools.School"
     object_id = models.CharField(max_length=64)  # store as str to support int/uuid
     action = models.CharField(max_length=20)  # CREATED/UPDATED/DELETED
@@ -386,102 +434,6 @@ class IntegrationToken(models.Model):
         return self.name
 
 
-class TransportRoute(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="transport_routes")
-    route_code = models.CharField(max_length=40)
-    route_name = models.CharField(max_length=120, blank=True)
-    vehicle_number = models.CharField(max_length=40, blank=True)
-    driver_name = models.CharField(max_length=120, blank=True)
-    attendant_name = models.CharField(max_length=120, blank=True)
-    stops = JSONField(default=list, blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["school__name", "route_code", "-id"]
-        unique_together = ("school", "route_code")
-
-    def __str__(self):
-        return f"{self.school.code} {self.route_code}"
-
-
-class TransportAssignment(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="transport_assignments")
-    route = models.ForeignKey(TransportRoute, on_delete=models.CASCADE, related_name="assignments")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="transport_assignments")
-    pickup_stop = models.CharField(max_length=120, blank=True)
-    active = models.BooleanField(default=True)
-    assigned_on = models.DateField(auto_now_add=True)
-    released_on = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at", "-id"]
-        unique_together = ("route", "student", "active")
-
-    def __str__(self):
-        return f"{self.school.code} {self.route_id} {self.student_id}"
-
-
-class HostelRoom(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="hostel_rooms")
-    room_number = models.CharField(max_length=40)
-    block_name = models.CharField(max_length=80, blank=True)
-    bed_capacity = models.PositiveIntegerField(default=1)
-    occupied_beds = models.PositiveIntegerField(default=0)
-    warden_name = models.CharField(max_length=120, blank=True)
-    mess_plan = models.CharField(max_length=80, blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["school__name", "room_number", "-id"]
-        unique_together = ("school", "room_number")
-
-    def __str__(self):
-        return f"{self.school.code} Room {self.room_number}"
-
-
-class HostelAllocation(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="hostel_allocations")
-    room = models.ForeignKey(HostelRoom, on_delete=models.CASCADE, related_name="allocations")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="hostel_allocations")
-    bed_label = models.CharField(max_length=40, blank=True)
-    active = models.BooleanField(default=True)
-    allocated_on = models.DateField(auto_now_add=True)
-    released_on = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at", "-id"]
-        unique_together = ("room", "student", "active")
-
-    def __str__(self):
-        return f"{self.school.code} {self.room_id} {self.student_id}"
-
-
-class LibraryBook(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="library_books")
-    accession_no = models.CharField(max_length=40)
-    title = models.CharField(max_length=180)
-    author = models.CharField(max_length=140, blank=True)
-    category = models.CharField(max_length=80, blank=True)
-    total_copies = models.PositiveIntegerField(default=1)
-    available_copies = models.PositiveIntegerField(default=1)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["school__name", "title", "-id"]
-        unique_together = ("school", "accession_no")
-
-    def __str__(self):
-        return f"{self.school.code} {self.title}"
-
-
 class InventoryItem(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="inventory_items")
     sku = models.CharField(max_length=40)
@@ -529,9 +481,15 @@ class InventoryPurchaseOrder(models.Model):
         ("CANCELLED", "Cancelled"),
     )
 
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="inventory_purchase_orders")
-    vendor = models.ForeignKey(InventoryVendor, on_delete=models.CASCADE, related_name="purchase_orders")
-    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name="purchase_orders")
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="inventory_purchase_orders"
+    )
+    vendor = models.ForeignKey(
+        InventoryVendor, on_delete=models.CASCADE, related_name="purchase_orders"
+    )
+    item = models.ForeignKey(
+        InventoryItem, on_delete=models.CASCADE, related_name="purchase_orders"
+    )
     po_number = models.CharField(max_length=40)
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     unit_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -547,31 +505,6 @@ class InventoryPurchaseOrder(models.Model):
 
     def __str__(self):
         return f"{self.school.code} {self.po_number}"
-
-
-class LibraryIssue(models.Model):
-    STATUS_CHOICES = (
-        ("ISSUED", "Issued"),
-        ("RETURNED", "Returned"),
-        ("LOST", "Lost"),
-    )
-
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="library_issues")
-    book = models.ForeignKey(LibraryBook, on_delete=models.CASCADE, related_name="issues")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="library_issues")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ISSUED")
-    issued_on = models.DateField()
-    due_on = models.DateField(null=True, blank=True)
-    returned_on = models.DateField(null=True, blank=True)
-    fine_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    remarks = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at", "-id"]
-
-    def __str__(self):
-        return f"{self.school.code} {self.book_id} {self.student_id} {self.status}"
 
 
 class InventoryMovement(models.Model):
@@ -607,10 +540,20 @@ class ServiceRefundEvent(models.Model):
         ("SETTLED", "Settled"),
     )
 
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="service_refund_events")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="service_refund_events")
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="service_refund_events"
+    )
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="service_refund_events"
+    )
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES)
-    fee_ledger = models.ForeignKey("fees.StudentFeeLedger", on_delete=models.SET_NULL, null=True, blank=True, related_name="service_refund_events")
+    fee_ledger = models.ForeignKey(
+        "fees.StudentFeeLedger",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="service_refund_events",
+    )
     source = models.CharField(max_length=40, blank=True)
     source_ref = models.CharField(max_length=64, blank=True)
     billed_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -628,3 +571,106 @@ class ServiceRefundEvent(models.Model):
 
     def __str__(self):
         return f"{self.school.code} {self.student_id} {self.service_type} {self.recommended_refund}"
+
+
+class LabRoom(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="lab_rooms")
+    room_number = models.CharField(max_length=40)
+    name = models.CharField(max_length=120)
+    capacity = models.PositiveIntegerField(default=30)
+    in_charge_name = models.CharField(max_length=120, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["school__name", "name"]
+        unique_together = ("school", "room_number")
+
+    def __str__(self):
+        return f"{self.school.code} - {self.name} ({self.room_number})"
+
+
+class LabEquipment(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="lab_equipment")
+    lab = models.ForeignKey(LabRoom, on_delete=models.CASCADE, related_name="equipments")
+    name = models.CharField(max_length=180)
+    sku = models.CharField(max_length=80, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    condition = models.CharField(max_length=40, default="GOOD")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["lab__name", "name"]
+
+    def __str__(self):
+        return f"{self.lab.name} - {self.name}"
+
+
+class LabBooking(models.Model):
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+        ("REJECTED", "Rejected"),
+        ("COMPLETED", "Completed"),
+    )
+
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="lab_bookings")
+    lab = models.ForeignKey(LabRoom, on_delete=models.CASCADE, related_name="bookings")
+    booked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="lab_bookings"
+    )
+    booking_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    purpose = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-booking_date", "-start_time"]
+
+    def __str__(self):
+        return f"{self.lab.name} on {self.booking_date}"
+
+
+class SystemBackup(models.Model):
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("COMPLETED", "Completed"),
+        ("FAILED", "Failed"),
+    )
+
+    filename = models.CharField(max_length=255)
+    file = models.FileField(upload_to="backups/", null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+    size_bytes = models.BigIntegerField(default=0)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.filename} ({self.status})"
+
+
+class ServiceConfiguration(models.Model):
+    """
+    Platform-wide service configurations (Cloud Gateway).
+    """
+
+    key = models.CharField(max_length=100, unique=True)
+    value = models.TextField(blank=True)
+    description = models.CharField(max_length=255, blank=True)
+    is_secret = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["key"]
+
+    def __str__(self):
+        return self.key

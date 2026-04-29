@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Overview | School ERP{% endblock %}
+{% block page_heading %}Security Dashboard{% endblock %}
+{% block breadcrumb_active %}Security{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+    <h5 class="fw-semibold mb-0 text-primary-light">Security Command Center</h5>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'security_office:visitor_create' %}" class="btn btn-primary-600 radius-8 d-inline-flex align-items-center text-nowrap"><iconify-icon icon="ri:user-add-line" class="me-2 text-xl"></iconify-icon> Log Visitor</a>
+      <a href="{% url 'security_office:gate_pass_create' %}" class="btn btn-info-600 text-white radius-8 d-inline-flex align-items-center text-nowrap"><iconify-icon icon="ri:pass-valid-line" class="me-2 text-xl"></iconify-icon> Issue Gate Pass</a>
+      <a href="{% url 'security_office:incident_create' %}" class="btn btn-danger-600 text-white radius-8 d-inline-flex align-items-center text-nowrap"><iconify-icon icon="ri:alarm-warning-line" class="me-2 text-xl"></iconify-icon> Report Incident</a>
+    </div>
+  </div>
+
+  <div class="row gy-4 mb-24">
+    <!-- Stat Cards -->
+    <div class="col-xl-3 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-danger-200 text-danger-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:alarm-warning-line"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-danger-600 mb-2">Open / Investigating</p>
+          <h4 class="fw-bold text-danger-800 mb-0">{{ stats.open_incidents }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--warning-100) 0%, var(--warning-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-warning-200 text-warning-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:alert-fill"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-warning-600 mb-2">Critical Incidents</p>
+          <h4 class="fw-bold text-warning-800 mb-0">{{ stats.critical_incidents }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-primary-200 text-primary-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:user-location-line"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-primary-600 mb-2">Visitors Inside</p>
+          <h4 class="fw-bold text-primary-800 mb-0">{{ stats.visitors_inside }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-success-200 text-success-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:pass-valid-line"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-success-600 mb-2">Active Gate Passes</p>
+          <h4 class="fw-bold text-success-800 mb-0">{{ stats.active_gate_passes }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row gy-4 mb-24">
+    <div class="col-xl-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--info-100) 0%, var(--info-50) 100%);">
+        <div class="card-body p-24 d-flex align-items-center">
+            <span class="w-64-px h-64-px rounded-circle bg-info-200 text-info-700 d-flex align-items-center justify-content-center text-3xl me-4">
+              <iconify-icon icon="ri:shield-user-line"></iconify-icon>
+            </span>
+            <div>
+              <p class="text-sm fw-medium text-info-600 mb-1">Guards On Duty Today</p>
+              <h3 class="fw-bold text-info-800 mb-0">{{ stats.active_guards_today }}</h3>
+            </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%); border: 1px solid var(--danger-200);">
+        <div class="card-body p-24 d-flex align-items-center">
+            <span class="w-64-px h-64-px rounded-circle bg-danger-200 text-danger-700 d-flex align-items-center justify-content-center text-3xl me-4">
+              <iconify-icon icon="ri:error-warning-line"></iconify-icon>
+            </span>
+            <div>
+              <p class="text-sm fw-medium text-danger-600 mb-1">Patrol Alerts Today</p>
+              <h3 class="fw-bold text-danger-800 mb-0">{{ stats.patrol_alerts_today }}</h3>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="row gy-4 mb-24">
+    <div class="col-lg-7">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+          <h6 class="text-lg fw-semibold mb-0">Visitor Trends (Last 7 Days)</h6>
+        </div>
+        <div class="card-body p-24">
+          <div id="visitorTrendChart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+          <h6 class="text-lg fw-semibold mb-0">Incidents by Severity</h6>
+        </div>
+        <div class="card-body p-24 d-flex align-items-center justify-content-center">
+          <div id="incidentSeverityChart" class="w-100 d-flex justify-content-center"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity Tables -->
+  <div class="row gy-4">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+          <h6 class="text-lg fw-semibold mb-0">Recent Incidents</h6>
+          <a href="{% url 'security_office:incident_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0 table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-24">Title</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in recent_incidents %}
+                  <tr>
+                    <td class="ps-24 fw-medium text-neutral-700">{{ i.title }}</td>
+                    <td>
+                      {% if i.severity == 'CRITICAL' %}
+                        <span class="badge bg-danger-100 text-danger-700">Critical</span>
+                      {% elif i.severity == 'HIGH' %}
+                        <span class="badge bg-warning-100 text-warning-700">High</span>
+                      {% else %}
+                        <span class="badge bg-secondary-100 text-secondary-700">{{ i.get_severity_display }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ i.get_status_display }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center py-4 text-neutral-500">No recent incidents</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+          <h6 class="text-lg fw-semibold mb-0">Recent Visitors</h6>
+          <a href="{% url 'security_office:visitor_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0 table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-24">Name</th>
+                  <th>Purpose</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for v in recent_visitors %}
+                  <tr>
+                    <td class="ps-24 fw-medium text-neutral-700">{{ v.name }}</td>
+                    <td>{{ v.purpose|truncatechars:20 }}</td>
+                    <td>
+                      {% if not v.check_out_at %}
+                        <span class="badge bg-success-100 text-success-700">Inside</span>
+                      {% else %}
+                        <span class="badge bg-neutral-100 text-neutral-700">Checked Out</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center py-4 text-neutral-500">No recent visitors</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{{ chart_data|json_script:"securityChartData" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const chartDataEl = document.getElementById("securityChartData");
+    if(!chartDataEl) return;
+    const chartData = JSON.parse(chartDataEl.textContent);
+
+    // Visitor Trend Chart
+    const visitorOptions = {
+      series: [{ name: 'Visitors', data: chartData.visitor_counts }],
+      chart: { type: 'area', height: 320, toolbar: { show: false }, fontFamily: 'inherit' },
+      colors: ['#487FFF'],
+      fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
+      dataLabels: { enabled: false },
+      stroke: { curve: 'smooth', width: 3 },
+      xaxis: {
+        categories: chartData.visitor_dates,
+        axisBorder: { show: false }, axisTicks: { show: false }
+      },
+      yaxis: { labels: { formatter: (value) => { return Math.round(value) } } },
+      grid: { borderColor: '#E2E8F0', strokeDashArray: 4 }
+    };
+    new ApexCharts(document.querySelector("#visitorTrendChart"), visitorOptions).render();
+
+    // Incident Severity Chart
+    const severityColors = ['#94A3B8', '#F59E0B', '#F97316', '#EF4444']; // Low, Medium, High, Critical
+    const severityOptions = {
+      series: chartData.severity_counts,
+      labels: chartData.severity_labels,
+      chart: { type: 'donut', height: 320, fontFamily: 'inherit' },
+      colors: severityColors,
+      plotOptions: {
+        pie: { donut: { size: '70%', labels: { show: true, name: { show: true }, value: { show: true } } } }
+      },
+      dataLabels: { enabled: false },
+      legend: { position: 'bottom' },
+      stroke: { width: 0 }
+    };
+    new ApexCharts(document.querySelector("#incidentSeverityChart"), severityOptions).render();
+  });
+</script>
+{% endblock %}

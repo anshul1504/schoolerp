@@ -34,4 +34,3 @@ class AdmissionEventAdmin(admin.ModelAdmin):
     list_display = ("id", "application", "action", "actor", "created_at")
     list_filter = ("action",)
     search_fields = ("application__application_no", "message")
-

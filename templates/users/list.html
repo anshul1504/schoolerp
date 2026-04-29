@@ -1,316 +1,467 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Users & Roles{% endblock %}
-{% block page_heading %}Users & Roles{% endblock %}
-{% block page_copy %}Create, update, and manage access across schools.{% endblock %}
-{% block page_eyebrow %}Super Admin{% endblock %}
+{% block title %}User Directory | School ERP{% endblock %}
+{% block page_heading %}User Management{% endblock %}
+{% block breadcrumb_active %}Users & Roles{% endblock %}
+
+{% block heading_actions %}
+<div class="d-flex align-items-center gap-12">
+    <a href="/users/invite/" class="btn btn-outline-primary d-flex align-items-center gap-6">
+        <iconify-icon icon="ri:mail-send-line"></iconify-icon>
+        Invite User
+    </a>
+    <a href="/users/create/" class="btn btn-primary-600 d-flex align-items-center gap-6">
+        <iconify-icon icon="ri:user-add-line"></iconify-icon>
+        Create User
+    </a>
+</div>
+{% endblock %}
 
 {% block content %}
-  <section class="platform-shell user-page">
-    <div class="platform-panel mb-4">
-      <div>
-        <h1 class="mb-2">User directory</h1>
-        <p class="mb-0 text-neutral-600">Filter by role, school, or search by name, email, or username. Bulk actions stay visible and consistent.</p>
-      </div>
-      <div class="d-flex flex-wrap gap-10">
-        <a href="/users/invite/" class="btn btn-primary-600"><i class="ri-mail-send-line"></i>Invite</a>
-        <a href="/users/create/" class="btn btn-outline-secondary">Create</a>
-        <a href="/users/import/" class="btn btn-outline-secondary">Import</a>
-        <a href="/users/invitations/" class="btn btn-outline-secondary">Invitations</a>
-      </div>
-    </div>
 
-    <div class="platform-panel user-panel">
-      <div class="user-section">
-        <div class="user-toolbar">
-          <div class="sf-toolbar__title">
-            <h6>User Directory</h6>
-            <p>Filter by role, school, or search by name, email, or username.</p>
-          </div>
-          <div class="user-actions">
-            <a href="/users/invite/" class="btn btn-primary-600"><i class="ri-mail-send-line"></i>Invite</a>
-            <a href="/users/create/" class="btn btn-outline-secondary">Create</a>
-            <a href="/users/import/" class="btn btn-outline-secondary">Import</a>
-            <a href="/users/invitations/" class="btn btn-outline-secondary">Invitations</a>
-          </div>
-        </div>
-
-        <div class="user-chip-row mb-3">
-          <a class="user-chip {% if not filters.status %}is-active{% endif %}" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status=&page_size={{ page_size }}">All</a>
-          <a class="user-chip {% if filters.status == 'active' %}is-active{% endif %}" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status=active&page_size={{ page_size }}">Active</a>
-          <a class="user-chip {% if filters.status == 'inactive' %}is-active{% endif %}" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status=inactive&page_size={{ page_size }}">Inactive</a>
-        </div>
-
-        <form method="get" class="sf-filters">
-          <input type="hidden" name="status" value="{{ filters.status }}">
-          <input type="hidden" name="page_size" value="{{ page_size }}">
-          <div class="row gy-3 gx-3 align-items-end">
-            <div class="col-lg-5">
-              <label class="form-label">Search</label>
-              <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="username, email, name">
-            </div>
-            <div class="col-lg-3">
-              <label class="form-label">Role</label>
-              <select name="role" class="form-select">
-                <option value="">All roles</option>
-                {% for group_label, options in grouped_role_choices %}
-                  <optgroup label="{{ group_label }}">
-                    {% for value,label in options %}
-                      <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                  </optgroup>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-lg-3">
-              <label class="form-label">School</label>
-              <select name="school_id" class="form-select">
-                <option value="">All schools</option>
-                {% for school in schools %}
-                  <option value="{{ school.id }}" {% if filters.school_id|stringformat:"s" == school.id|stringformat:"s" %}selected{% endif %}>{{ school.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-lg-1 d-grid">
-              <button type="submit" class="btn btn-outline-secondary">Go</button>
-            </div>
-            <div class="col-12">
-              <a href="/users/" class="btn btn-outline-secondary">Reset</a>
-            </div>
-          </div>
-        </form>
-
-        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
-          <div class="user-note">Use the row checkboxes to run bulk actions on selected users.</div>
-          <div class="user-secondary-actions">
-            <button type="button" class="btn btn-outline-secondary" id="exportSelectedCsvBtn" disabled>Export Selected (CSV)</button>
-            <button type="button" class="btn btn-outline-secondary" id="exportSelectedExcelBtn" disabled>Export Selected (Excel)</button>
-            <button type="button" class="btn btn-outline-primary" id="bulkActionBtn" disabled data-bs-toggle="modal" data-bs-target="#bulkActionModal">Bulk Actions</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="user-section user-table-wrap">
-        <div class="table-responsive">
-          <table class="table align-middle sf-table user-table mb-0">
-            <thead>
-              <tr>
-                <th class="sf-th-48"><input type="checkbox" class="form-check-input" id="selectAllUsers"></th>
-                <th>User</th>
-                <th>Role</th>
-                <th>School</th>
-                <th>Status</th>
-                <th class="text-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for user in users %}
-                <tr>
-                  <td><input type="checkbox" class="form-check-input user-select" value="{{ user.id }}"></td>
-                  <td>
-                    <div class="d-flex flex-column">
-                      <strong>{{ user.get_full_name|default:user.username }}</strong>
-                      <span class="text-muted text-sm">{{ user.email|default:"-" }}</span>
+<div class="row gy-4">
+    <!-- User Stats Summary -->
+    <div class="col-12">
+        <div class="row gy-3">
+            <div class="col-xxl-4 col-xl-4 col-md-4">
+                <div class="shadow-1 radius-12 bg-primary-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-primary-600 fw-bold text-xs uppercase letter-spacing-1">Total Directory</span>
+                        <iconify-icon icon="ri:group-line" class="text-2xl text-primary-600"></iconify-icon>
                     </div>
-                  </td>
-                  <td>{{ user.get_role_display }}</td>
-                  <td>{% if user.school %}{{ user.school.name }}{% else %}-{% endif %}</td>
-                  <td>
-                    {% if user.is_active %}
-                      <span class="badge bg-success">Active</span>
-                    {% else %}
-                      <span class="badge bg-secondary">Inactive</span>
-                    {% endif %}
-                  </td>
-                  <td class="text-end">
-                    <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
-                      {% if user.id != request.user.id %}
-                        <form method="post" action="/users/{{ user.id }}/impersonate/" class="d-inline" onsubmit="return confirm('Impersonate {{ user.username }}? You can stop anytime.');">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-sm btn-outline-secondary">Login as</button>
-                        </form>
-                      {% endif %}
-                      <a href="/users/{{ user.id }}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
-                      <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-reset-url="/users/{{ user.id }}/reset-password/" {% if user.id == request.user.id %}data-self="1"{% endif %}>Reset password</button>
-                      {% if user.is_active %}
-                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateUserModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-deactivate-url="/users/{{ user.id }}/deactivate/" {% if user.id == request.user.id %}data-self="1"{% endif %}>Deactivate</button>
-                      {% endif %}
-                    </div>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="user-section">
-        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-          <div class="user-note">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
-          <div class="d-flex gap-2 flex-wrap">
-            {% if page_obj.has_previous %}
-              <a class="btn btn-sm btn-outline-secondary" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status={{ filters.status }}&page_size={{ page_size }}&page={{ page_obj.previous_page_number }}">Prev</a>
-            {% endif %}
-            {% if page_obj.has_next %}
-              <a class="btn btn-sm btn-outline-secondary" href="/users/?q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status={{ filters.status }}&page_size={{ page_size }}&page={{ page_obj.next_page_number }}">Next</a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="bulkActionModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Bulk Actions</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form method="post" action="/users/bulk-action/" id="bulkActionForm">
-            <div class="modal-body">
-              {% csrf_token %}
-              <input type="hidden" name="user_ids" id="bulkUserIds">
-              <div class="user-section user-panel mb-0">
-                <div class="user-section">
-                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                    <div>
-                      <div class="fw-semibold">Selected users: <span id="bulkSelectedCount">0</span></div>
-                      <div class="text-muted text-sm">Note: your own account is excluded from bulk changes.</div>
-                    </div>
-                  </div>
-                  <div class="row gy-3 gx-3">
-                    <div class="col-md-6">
-                      <label class="form-label">Action</label>
-                      <select class="form-select" name="action" id="bulkActionSelect" required>
-                        <option value="">Select action</option>
-                        <option value="activate">Activate users</option>
-                        <option value="deactivate">Deactivate users</option>
-                        <option value="change_role">Change role</option>
-                        <option value="assign_school">Assign school</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6 d-none" id="bulkRoleWrap">
-                      <label class="form-label">New role</label>
-                      <select class="form-select" name="role" id="bulkRoleSelect">
-                        <option value="">Select role</option>
-                        {% for group_label, options in grouped_role_choices %}
-                          <optgroup label="{{ group_label }}">
-                            {% for value,label in options %}
-                              <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                          </optgroup>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    <div class="col-md-6 d-none" id="bulkSchoolWrap">
-                      <label class="form-label">School</label>
-                      <select class="form-select" name="school_id" id="bulkSchoolSelect">
-                        <option value="">Select school</option>
-                        {% for school in schools %}
-                          <option value="{{ school.id }}">{{ school.name }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  </div>
+                    <h3 class="mb-4">{{ stats.total_users }}</h3>
+                    <p class="text-xs text-primary-light mb-0">Total registered platform users</p>
                 </div>
-              </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Apply</button>
+            <div class="col-xxl-4 col-xl-4 col-md-4">
+                <div class="shadow-1 radius-12 bg-success-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-success-600 fw-bold text-xs uppercase letter-spacing-1">Active Accounts</span>
+                        <iconify-icon icon="ri:user-follow-line" class="text-2xl text-success-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ stats.active_users }}</h3>
+                    <p class="text-xs text-success-light mb-0">Users with platform access</p>
+                </div>
             </div>
-          </form>
-        </div>
-      </div>
+            <div class="col-xxl-4 col-xl-4 col-md-4">
+                <div class="shadow-1 radius-12 bg-warning-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-warning-600 fw-bold text-xs uppercase letter-spacing-1">Inactive</span>
+                        <iconify-icon icon="ri:user-forbid-line" class="text-2xl text-warning-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ stats.inactive_users }}</h3>
+                    <p class="text-xs text-warning-light mb-0">Access currently restricted</p>
+                </div>
+            </div>
+            </div>
     </div>
-  </section>
+
+    <!-- Main Content Area -->
+    <div class="col-12">
+        <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+            <div class="card-header bg-base border-bottom py-16 px-24">
+                <form method="get" class="row gy-3 align-items-end">
+                    <input type="hidden" name="status" value="{{ filters.status }}">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Search Users</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-neutral-50 border-neutral-200 text-neutral-400"><iconify-icon icon="ri:search-line"></iconify-icon></span>
+                            <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="Search name, email...">
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Role Filter</label>
+                        <select name="role" class="form-control form-select">
+                            <option value="">All Roles</option>
+                            {% for group_label, options in grouped_role_choices %}
+                                <optgroup label="{{ group_label }}">
+                                    {% for value,label in options %}
+                                        <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Institution Filter</label>
+                        <select name="school_id" class="form-control form-select">
+                            <option value="">All Institutions</option>
+                            {% for school in schools %}
+                                <option value="{{ school.id }}" {% if filters.school_id|stringformat:"s" == school.id|stringformat:"s" %}selected{% endif %}>{{ school.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 d-flex gap-8">
+                        <button type="submit" class="btn btn-primary-600 px-16 fw-semibold d-flex align-items-center gap-2"><iconify-icon icon="ri:filter-3-line"></iconify-icon> Apply Filter</button>
+                        <a href="/users/" class="btn btn-neutral-100 text-neutral-600 px-16 fw-semibold">Reset</a>
+                    </div>
+                    <div class="col-lg-2 col-md-12 text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-neutral-200 dropdown-toggle text-sm fw-semibold px-16" type="button" data-bs-toggle="dropdown">
+                                Export Data
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border shadow-sm">
+                                <li><a class="dropdown-item text-sm" href="javascript:void(0)" id="exportSelectedCsvBtn">Export CSV</a></li>
+                                <li><a class="dropdown-item text-sm" href="javascript:void(0)" id="exportSelectedExcelBtn">Export Excel</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-sm" href="/users/import/">Import from File</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-body p-0">
+                <!-- Status Tab Row -->
+                <div class="px-24 py-12 bg-neutral-50 border-bottom border-neutral-200 d-flex align-items-center justify-content-between">
+                    <div class="d-flex gap-24">
+                        <a href="/users/?status=" class="text-xs fw-bold text-uppercase letter-spacing-1 {% if not filters.status %}text-primary-600 border-bottom border-primary-600 pb-4{% else %}text-neutral-400 hover-text-primary-600{% endif %}">All Users</a>
+                        <a href="/users/?status=active" class="text-xs fw-bold text-uppercase letter-spacing-1 {% if filters.status == 'active' %}text-primary-600 border-bottom border-primary-600 pb-4{% else %}text-neutral-400 hover-text-primary-600{% endif %}">Active</a>
+                        <a href="/users/?status=inactive" class="text-xs fw-bold text-uppercase letter-spacing-1 {% if filters.status == 'inactive' %}text-primary-600 border-bottom border-primary-600 pb-4{% else %}text-neutral-400 hover-text-primary-600{% endif %}">Inactive</a>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary d-none" id="bulkActionBtn" data-bs-toggle="modal" data-bs-target="#bulkActionModal">
+                        Bulk Actions (<span id="bulkSelectedCount">0</span>)
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table mb-0 table-hover align-middle">
+                        <thead class="bg-neutral-50">
+                            <tr>
+                                <th class="py-16 px-24 w-40-px">
+                                    <div class="form-check">
+                                        <input class="form-check-input radius-4" type="checkbox" id="selectAllUsers">
+                                    </div>
+                                </th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">User Profile</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Platform Role</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Institution</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Account Status</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                <td class="py-16 px-24">
+                                    <div class="form-check">
+                                        <input class="form-check-input user-select radius-4" type="checkbox" value="{{ user.id }}">
+                                    </div>
+                                </td>
+                                <td class="py-16 px-24">
+                                    <div class="d-flex align-items-center gap-12">
+                                        <div class="w-40-px h-40-px bg-primary-100 text-primary-600 rounded-circle d-flex justify-content-center align-items-center fw-bold text-md shadow-sm">
+                                            {% if user.avatar %}
+                                                <img src="{{ user.avatar.url }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                                            {% else %}
+                                                {{ user.username|first|upper }}
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <span class="text-sm fw-bold text-primary-light d-block mb-2">{{ user.get_full_name|default:user.username }}</span>
+                                            <span class="text-xs text-secondary-light">{{ user.email|default:user.username }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-16 px-24">
+                                    <span class="badge bg-primary-50 text-primary-600 radius-pill px-12 py-6 text-xs fw-medium border border-primary-100">
+                                        {{ user.get_role_display }}
+                                    </span>
+                                </td>
+                                <td class="py-16 px-24">
+                                    {% if user.school %}
+                                        <div class="d-flex align-items-center gap-8">
+                                            <iconify-icon icon="ri:building-line" class="text-neutral-400"></iconify-icon>
+                                            <span class="text-sm text-secondary-light">{{ user.school.name }}</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-xs text-neutral-400 italic">Global Platform</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-16 px-24">
+                                    {% if user.is_active %}
+                                        <div class="d-flex align-items-center gap-8">
+                                            <span class="w-8-px h-8-px bg-success-600 rounded-circle"></span>
+                                            <span class="text-xs fw-bold text-success-600">Active</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex align-items-center gap-8">
+                                            <span class="w-8-px h-8-px bg-neutral-300 rounded-circle"></span>
+                                            <span class="text-xs fw-bold text-neutral-400">Restricted</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="py-16 px-24 text-center">
+                                    <div class="d-flex align-items-center gap-10 justify-content-center">
+                                        <!-- View -->
+                                        <a href="/users/{{ user.id }}/edit/" class="bg-info-focus bg-hover-info-200 text-info-600 fw-medium w-32-px h-32-px d-flex justify-content-center align-items-center rounded-circle" title="View/Edit">
+                                            <iconify-icon icon="majesticons:eye-line" class="icon text-lg"></iconify-icon>
+                                        </a>
+
+                                        <!-- Edit -->
+                                        <a href="/users/{{ user.id }}/edit/" class="bg-success-focus bg-hover-success-200 text-success-600 fw-medium w-32-px h-32-px d-flex justify-content-center align-items-center rounded-circle" title="Edit">
+                                            <iconify-icon icon="lucide:edit" class="icon text-lg"></iconify-icon>
+                                        </a>
+
+                                        <!-- Login As -->
+                                        {% if user.id != request.user.id %}
+                                            <form method="post" action="/users/{{ user.id }}/impersonate/" onsubmit="return confirm('Start impersonation session?');" class="d-inline mb-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="border-0 bg-primary-focus bg-hover-primary-200 text-primary-600 fw-medium w-32-px h-32-px d-flex justify-content-center align-items-center rounded-circle" title="Login As">
+                                                    <iconify-icon icon="ri:user-shared-2-line" class="icon text-lg"></iconify-icon>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        <!-- More Actions -->
+                                        <div class="dropdown">
+                                            <button class="border-0 bg-neutral-100 bg-hover-neutral-200 text-neutral-600 fw-medium w-32-px h-32-px d-flex justify-content-center align-items-center rounded-circle" type="button" data-bs-toggle="dropdown" title="More">
+                                                <iconify-icon icon="ri:more-2-fill" class="icon text-lg"></iconify-icon>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end border shadow-sm p-8">
+                                                <li><a href="javascript:void(0)" class="dropdown-item radius-4 py-8 text-xs fw-medium text-warning-600" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-reset-url="/users/{{ user.id }}/reset-password/"><iconify-icon icon="ri:key-2-line" class="me-8"></iconify-icon> Reset Password</a></li>
+                                                {% if user.is_active and user.id != request.user.id %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a href="javascript:void(0)" class="dropdown-item radius-4 py-8 text-xs fw-medium text-danger-600" data-bs-toggle="modal" data-bs-target="#deactivateUserModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-deactivate-url="/users/{{ user.id }}/deactivate/"><iconify-icon icon="ri:user-unfollow-line" class="me-8"></iconify-icon> Deactivate</a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-64 text-center">
+                                    <iconify-icon icon="ri:user-search-line" class="text-4xl text-neutral-200 mb-12"></iconify-icon>
+                                    <p class="text-neutral-400 mb-0">No users found matching your search criteria.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-24 py-16 border-top border-neutral-100 d-flex align-items-center justify-content-between">
+                    <span class="text-xs text-neutral-400 fw-medium">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ stats.total_users }} records</span>
+                    <div class="d-flex gap-8">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}&q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status={{ filters.status }}" class="btn btn-sm btn-outline-neutral-200 text-neutral-600 px-16 radius-8">Previous</a>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}&q={{ filters.q }}&role={{ filters.role }}&school_id={{ filters.school_id }}&status={{ filters.status }}" class="btn btn-sm btn-outline-neutral-200 text-neutral-600 px-16 radius-8">Next</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content radius-12 border-0 shadow-lg">
+            <div class="modal-header border-bottom border-neutral-100 py-16 px-24">
+                <h6 class="mb-0 fw-bold">Platform Bulk Actions</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="/users/bulk-action/" id="bulkActionForm">
+                {% csrf_token %}
+                <input type="hidden" name="user_ids" id="bulkUserIds">
+                <div class="modal-body p-24">
+                    <div class="alert alert-primary bg-primary-50 border-0 radius-8 mb-20 d-flex align-items-center gap-12">
+                        <iconify-icon icon="ri:information-line" class="text-xl text-primary-600"></iconify-icon>
+                        <span class="text-xs text-primary-600 fw-bold">Modifying <span id="bulkSelectedCountModal">0</span> selected users.</span>
+                    </div>
+
+                    <div class="mb-16">
+                        <label class="form-label text-xs fw-bold text-neutral-600 uppercase mb-8">Choose Action</label>
+                        <select class="form-select border-neutral-200" name="action" id="bulkActionSelect" required>
+                            <option value="">Select action...</option>
+                            <option value="activate">Activate Selected Accounts</option>
+                            <option value="deactivate">Deactivate Selected Accounts</option>
+                            <option value="change_role">Change Global Role</option>
+                            <option value="assign_school">Re-assign Institution</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-0 d-none" id="bulkRoleWrap">
+                        <label class="form-label text-xs fw-bold text-neutral-600 uppercase mb-8">New Role Assignment</label>
+                        <select class="form-select border-neutral-200" name="role" id="bulkRoleSelect">
+                            <option value="">Select role...</option>
+                            {% for group_label, options in grouped_role_choices %}
+                                <optgroup label="{{ group_label }}">
+                                    {% for value,label in options %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-0 d-none" id="bulkSchoolWrap">
+                        <label class="form-label text-xs fw-bold text-neutral-600 uppercase mb-8">Assign to Institution</label>
+                        <select class="form-select border-neutral-200" name="school_id" id="bulkSchoolSelect">
+                            <option value="">Select institution...</option>
+                            {% for school in schools %}
+                                <option value="{{ school.id }}">{{ school.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-neutral-100 py-16 px-24">
+                    <button type="button" class="btn btn-sm btn-neutral-100 text-neutral-600 px-16 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary-600 px-24 fw-bold shadow-primary">Apply Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content radius-12 border-0 shadow-lg">
+            <div class="modal-header border-bottom border-neutral-100 py-16 px-24">
+                <h6 class="mb-0 fw-bold">Reset User Password</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="" id="resetPasswordForm">
+                {% csrf_token %}
+                <div class="modal-body p-24">
+                    <p class="text-sm text-secondary-light mb-20">Securely set a new password for <strong id="resetPasswordUsername" class="text-primary-600">user</strong>.</p>
+                    <div class="mb-0">
+                        <label class="form-label text-xs fw-bold text-neutral-600 uppercase mb-8">New Secure Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-neutral-50 border-neutral-200 text-neutral-400"><iconify-icon icon="ri:lock-password-line"></iconify-icon></span>
+                            <input type="password" name="password" class="form-control border-neutral-200" id="resetPasswordInput" required minlength="8" placeholder="••••••••">
+                        </div>
+                        <small class="text-neutral-400 mt-8 d-block">Recommended: Mix letters, numbers, and symbols.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-neutral-100 py-16 px-24">
+                    <button type="button" class="btn btn-sm btn-neutral-100 text-neutral-600 px-16 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-warning-600 text-white px-24 fw-bold shadow-warning">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deactivateUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content radius-12 border-0 shadow-lg">
+            <div class="modal-body p-32 text-center">
+                <div class="w-64-px h-64-px bg-danger-50 text-danger-600 rounded-circle d-flex justify-content-center align-items-center mx-auto mb-20 shadow-danger-sm">
+                    <iconify-icon icon="ri:error-warning-line" class="text-3xl"></iconify-icon>
+                </div>
+                <h5 class="mb-8 fw-bold">Restrict Account?</h5>
+                <p class="text-sm text-secondary-light mb-32">You are about to deactivate <strong id="deactivateUsername">user</strong>. They will lose all platform access until manually reactivated.</p>
+
+                <form method="post" action="" id="deactivateUserForm">
+                    {% csrf_token %}
+                    <div class="d-flex gap-12 justify-content-center">
+                        <button type="button" class="btn btn-neutral-100 text-neutral-600 px-24 radius-8 fw-bold" data-bs-dismiss="modal">Keep Active</button>
+                        <button type="submit" class="btn btn-danger-600 px-24 radius-8 fw-bold shadow-danger">Confirm Deactivation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-  <script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
-      const selectAll = document.getElementById("selectAllUsers");
-      const boxes = Array.from(document.querySelectorAll(".user-select"));
-      const exportCsvBtn = document.getElementById("exportSelectedCsvBtn");
-      const exportExcelBtn = document.getElementById("exportSelectedExcelBtn");
-      const bulkActionBtn = document.getElementById("bulkActionBtn");
-      const bulkUserIds = document.getElementById("bulkUserIds");
-      const bulkSelectedCount = document.getElementById("bulkSelectedCount");
-      const bulkActionSelect = document.getElementById("bulkActionSelect");
-      const bulkRoleWrap = document.getElementById("bulkRoleWrap");
-      const bulkSchoolWrap = document.getElementById("bulkSchoolWrap");
-      const bulkRoleSelect = document.getElementById("bulkRoleSelect");
-      const bulkSchoolSelect = document.getElementById("bulkSchoolSelect");
+        const selectAll = document.getElementById("selectAllUsers");
+        const boxes = Array.from(document.querySelectorAll(".user-select"));
+        const exportCsvBtn = document.getElementById("exportSelectedCsvBtn");
+        const exportExcelBtn = document.getElementById("exportSelectedExcelBtn");
+        const bulkActionBtn = document.getElementById("bulkActionBtn");
+        const bulkUserIds = document.getElementById("bulkUserIds");
+        const bulkSelectedCount = document.getElementById("bulkSelectedCount");
+        const bulkSelectedCountModal = document.getElementById("bulkSelectedCountModal");
+        const bulkActionSelect = document.getElementById("bulkActionSelect");
+        const bulkRoleWrap = document.getElementById("bulkRoleWrap");
+        const bulkSchoolWrap = document.getElementById("bulkSchoolWrap");
+        const resetPasswordModal = document.getElementById("resetPasswordModal");
+        const resetPasswordForm = document.getElementById("resetPasswordForm");
+        const resetPasswordUsername = document.getElementById("resetPasswordUsername");
+        const deactivateUserModal = document.getElementById("deactivateUserModal");
+        const deactivateUserForm = document.getElementById("deactivateUserForm");
+        const deactivateUsername = document.getElementById("deactivateUsername");
 
-      function selectedIds() {
-        return boxes.filter((box) => box.checked).map((box) => box.value).filter(Boolean);
-      }
+        function selectedIds() {
+            return boxes.filter(box => box.checked).map(box => box.value);
+        }
 
-      function syncMasterCheckbox() {
-        if (!selectAll) return;
-        const selected = selectedIds().length;
-        selectAll.checked = boxes.length > 0 && selected === boxes.length;
-        selectAll.indeterminate = selected > 0 && selected < boxes.length;
-      }
+        function syncActions() {
+            const ids = selectedIds();
+            const enabled = ids.length > 0;
 
-      function syncActions() {
-        const ids = selectedIds();
-        const enabled = ids.length > 0;
-        if (exportCsvBtn) exportCsvBtn.disabled = !enabled;
-        if (exportExcelBtn) exportExcelBtn.disabled = !enabled;
-        if (bulkActionBtn) bulkActionBtn.disabled = !enabled;
-        if (bulkUserIds) bulkUserIds.value = ids.join(",");
-        if (bulkSelectedCount) bulkSelectedCount.textContent = String(ids.length);
-        syncMasterCheckbox();
-      }
+            bulkActionBtn.classList.toggle("d-none", !enabled);
+            bulkUserIds.value = ids.join(",");
+            bulkSelectedCount.textContent = ids.length;
+            bulkSelectedCountModal.textContent = ids.length;
 
-      function buildExportUrl(format) {
-        const params = new URLSearchParams({
-          q: "{{ filters.q|default:'' }}",
-          role: "{{ filters.role|default:'' }}",
-          school_id: "{{ filters.school_id|default:'' }}",
-          status: "{{ filters.status|default:'' }}",
-          page_size: "{{ page_size }}",
-          export: format,
-          user_ids: selectedIds().join(","),
-        });
-        return "/users/?" + params.toString();
-      }
+            // Indeterminate state for master checkbox
+            if (selectAll) {
+                selectAll.checked = boxes.length > 0 && ids.length === boxes.length;
+                selectAll.indeterminate = ids.length > 0 && ids.length < boxes.length;
+            }
+        }
 
-      if (selectAll) {
-        selectAll.addEventListener("change", function () {
-          boxes.forEach((box) => {
-            box.checked = selectAll.checked;
-          });
-          syncActions();
-        });
-      }
+        if (selectAll) {
+            selectAll.addEventListener("change", function () {
+                boxes.forEach(box => box.checked = selectAll.checked);
+                syncActions();
+            });
+        }
 
-      boxes.forEach((box) => box.addEventListener("change", syncActions));
+        boxes.forEach(box => box.addEventListener("change", syncActions));
 
-      exportCsvBtn && exportCsvBtn.addEventListener("click", function () {
-        window.location.href = buildExportUrl("csv");
-      });
+        function buildExportUrl(format) {
+            const baseUrl = format === "excel" ? "/users/export/excel/" : "/users/export/csv/";
+            const params = new URLSearchParams({
+                q: "{{ filters.q|default:'' }}",
+                role: "{{ filters.role|default:'' }}",
+                school_id: "{{ filters.school_id|default:'' }}",
+                status: "{{ filters.status|default:'' }}",
+                user_ids: selectedIds().join(",")
+            });
+            return baseUrl + "?" + params.toString();
+        }
 
-      exportExcelBtn && exportExcelBtn.addEventListener("click", function () {
-        window.location.href = buildExportUrl("excel");
-      });
+        if(exportCsvBtn) exportCsvBtn.addEventListener("click", () => window.location.href = buildExportUrl("csv"));
+        if(exportExcelBtn) exportExcelBtn.addEventListener("click", () => window.location.href = buildExportUrl("excel"));
 
-      if (bulkActionSelect) {
         bulkActionSelect.addEventListener("change", function () {
-          const action = bulkActionSelect.value;
-          const needsRole = action === "change_role";
-          const needsSchool = action === "assign_school";
-          if (bulkRoleWrap) bulkRoleWrap.classList.toggle("d-none", !needsRole);
-          if (bulkSchoolWrap) bulkSchoolWrap.classList.toggle("d-none", !needsSchool);
-          if (!needsRole && bulkRoleSelect) bulkRoleSelect.value = "";
-          if (!needsSchool && bulkSchoolSelect) bulkSchoolSelect.value = "";
+            const action = bulkActionSelect.value;
+            bulkRoleWrap.classList.toggle("d-none", action !== "change_role");
+            bulkSchoolWrap.classList.toggle("d-none", action !== "assign_school");
         });
-      }
 
-      syncActions();
+        resetPasswordModal.addEventListener("show.bs.modal", function (event) {
+            const trigger = event.relatedTarget;
+            resetPasswordUsername.textContent = trigger.getAttribute("data-username");
+            resetPasswordForm.setAttribute("action", trigger.getAttribute("data-reset-url"));
+        });
+
+        deactivateUserModal.addEventListener("show.bs.modal", function (event) {
+            const trigger = event.relatedTarget;
+            deactivateUsername.textContent = trigger.getAttribute("data-username");
+            deactivateUserForm.setAttribute("action", trigger.getAttribute("data-deactivate-url"));
+        });
     });
-  </script>
+</script>
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .shadow-danger-sm { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+    .radius-circle { border-radius: 50% !important; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .hover-bg-neutral-50:hover { background-color: #f8fafc !important; }
+</style>
 {% endblock %}

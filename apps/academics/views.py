@@ -1,15 +1,23 @@
+import csv
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-import csv
 
 from apps.core.permissions import has_permission, role_required
-from apps.core.ui import build_layout_context
-from apps.schools.models import School
 from apps.core.tenancy import school_scope_for_user, selected_school_for_request
+from apps.core.ui import build_layout_context
 
-from .models import AcademicClass, AcademicSubject, TeacherAllocation, AcademicYear, ClassMaster, SectionMaster, SubjectMaster
+from .models import (
+    AcademicClass,
+    AcademicSubject,
+    AcademicYear,
+    ClassMaster,
+    SectionMaster,
+    SubjectMaster,
+    TeacherAllocation,
+)
 
 
 def _school_scope(user):
@@ -23,9 +31,15 @@ def _selected_school(request):
 def _academics_queryset_for_user(user):
     schools = _school_scope(user)
     return {
-        "classes": AcademicClass.objects.select_related("school", "class_teacher").filter(school__in=schools),
-        "subjects": AcademicSubject.objects.select_related("school", "academic_class").filter(school__in=schools),
-        "allocations": TeacherAllocation.objects.select_related("school", "teacher", "academic_class", "subject").filter(school__in=schools),
+        "classes": AcademicClass.objects.select_related("school", "class_teacher").filter(
+            school__in=schools
+        ),
+        "subjects": AcademicSubject.objects.select_related("school", "academic_class").filter(
+            school__in=schools
+        ),
+        "allocations": TeacherAllocation.objects.select_related(
+            "school", "teacher", "academic_class", "subject"
+        ).filter(school__in=schools),
     }
 
 
@@ -54,7 +68,15 @@ def _parse_ids(raw: str) -> list[int]:
     return sorted(set(ids))
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "ADMIN",
+    "PRINCIPAL",
+    "TEACHER",
+    "ADMISSION_COUNSELOR",
+    "CAREER_COUNSELOR",
+)
 def academics_export_csv(request):
     if not has_permission(request.user, "academics.view"):
         messages.error(request, "You do not have permission to view academics.")
@@ -79,7 +101,18 @@ def academics_export_csv(request):
         ids = _parse_ids(request.GET.get("class_ids") or request.GET.get("ids") or "")
         if ids:
             qs = qs.filter(id__in=ids)
-        writer.writerow(["id", "school", "name", "section", "room_name", "capacity", "class_teacher", "is_active"])
+        writer.writerow(
+            [
+                "id",
+                "school",
+                "name",
+                "section",
+                "room_name",
+                "capacity",
+                "class_teacher",
+                "is_active",
+            ]
+        )
         for c in qs.order_by("name", "section", "id")[:20000]:
             teacher = c.class_teacher.get_full_name() if c.class_teacher else ""
             if not teacher and c.class_teacher:
@@ -124,7 +157,15 @@ def academics_export_csv(request):
     return redirect("/academics/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "ADMIN",
+    "PRINCIPAL",
+    "TEACHER",
+    "ADMISSION_COUNSELOR",
+    "CAREER_COUNSELOR",
+)
 def academics_export_excel(request):
     if not has_permission(request.user, "academics.view"):
         messages.error(request, "You do not have permission to view academics.")
@@ -203,7 +244,15 @@ def academics_export_excel(request):
     return redirect("/academics/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "ADMIN",
+    "PRINCIPAL",
+    "TEACHER",
+    "ADMISSION_COUNSELOR",
+    "CAREER_COUNSELOR",
+)
 def academics_overview(request):
     if request.method == "POST" and not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -224,7 +273,11 @@ def academics_overview(request):
         subjects = subjects.filter(school=school)
         allocations = allocations.filter(school=school)
 
-    if request.method == "POST" and request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL"}:
+    if request.method == "POST" and request.user.role in {
+        "SUPER_ADMIN",
+        "SCHOOL_OWNER",
+        "PRINCIPAL",
+    }:
         action = request.POST.get("action", "").strip()
         if school is None:
             messages.error(request, "Select a valid school before saving academics.")
@@ -243,7 +296,11 @@ def academics_overview(request):
                 teacher_id = request.POST.get("class_teacher")
                 teacher = None
                 if teacher_id:
-                    teacher = get_user_model().objects.filter(id=teacher_id, role="TEACHER", school=school).first()
+                    teacher = (
+                        get_user_model()
+                        .objects.filter(id=teacher_id, role="TEACHER", school=school)
+                        .first()
+                    )
                 AcademicClass.objects.get_or_create(
                     school=school,
                     name=class_name,
@@ -278,13 +335,21 @@ def academics_overview(request):
             return redirect(f"/academics/?school={school.id}")
 
         if action == "create_allocation":
-            teacher = get_user_model().objects.filter(
-                id=request.POST.get("teacher"),
-                role="TEACHER",
-                school=school,
+            teacher = (
+                get_user_model()
+                .objects.filter(
+                    id=request.POST.get("teacher"),
+                    role="TEACHER",
+                    school=school,
+                )
+                .first()
+            )
+            academic_class = AcademicClass.objects.filter(
+                id=request.POST.get("academic_class"), school=school
             ).first()
-            academic_class = AcademicClass.objects.filter(id=request.POST.get("academic_class"), school=school).first()
-            subject = AcademicSubject.objects.filter(id=request.POST.get("subject"), school=school).first()
+            subject = AcademicSubject.objects.filter(
+                id=request.POST.get("subject"), school=school
+            ).first()
             if not teacher or not academic_class or not subject:
                 messages.error(request, "Choose a valid teacher, class, and subject.")
             elif subject.academic_class_id != academic_class.id:
@@ -306,13 +371,37 @@ def academics_overview(request):
     context["academic_classes"] = classes.order_by("name", "section")
     context["academic_subjects"] = subjects.order_by("academic_class__name", "name")
     context["teacher_allocations"] = allocations.order_by("academic_class__name", "subject__name")
-    context["class_masters"] = ClassMaster.objects.filter(school=school if school else request.user.school, is_active=True).order_by("name") if (school or request.user.school_id) else ClassMaster.objects.none()
-    context["section_masters"] = SectionMaster.objects.filter(school=school if school else request.user.school, is_active=True).order_by("name") if (school or request.user.school_id) else SectionMaster.objects.none()
-    context["subject_masters"] = SubjectMaster.objects.filter(school=school if school else request.user.school, is_active=True).order_by("name") if (school or request.user.school_id) else SubjectMaster.objects.none()
-    context["teacher_options"] = get_user_model().objects.filter(
-        role="TEACHER",
-        school=school if school else request.user.school,
-    ).order_by("first_name", "username") if (school or request.user.school_id) else get_user_model().objects.none()
+    context["class_masters"] = (
+        ClassMaster.objects.filter(
+            school=school if school else request.user.school, is_active=True
+        ).order_by("name")
+        if (school or request.user.school_id)
+        else ClassMaster.objects.none()
+    )
+    context["section_masters"] = (
+        SectionMaster.objects.filter(
+            school=school if school else request.user.school, is_active=True
+        ).order_by("name")
+        if (school or request.user.school_id)
+        else SectionMaster.objects.none()
+    )
+    context["subject_masters"] = (
+        SubjectMaster.objects.filter(
+            school=school if school else request.user.school, is_active=True
+        ).order_by("name")
+        if (school or request.user.school_id)
+        else SubjectMaster.objects.none()
+    )
+    context["teacher_options"] = (
+        get_user_model()
+        .objects.filter(
+            role="TEACHER",
+            school=school if school else request.user.school,
+        )
+        .order_by("first_name", "username")
+        if (school or request.user.school_id)
+        else get_user_model().objects.none()
+    )
     context["academics_stats"] = {
         "classes": context["academic_classes"].count(),
         "subjects": context["academic_subjects"].count(),
@@ -323,7 +412,7 @@ def academics_overview(request):
     return render(request, "academics/overview.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def master_list(request, master_type):
     if not has_permission(request.user, "academics.view"):
         messages.error(request, "You do not have permission to view academics.")
@@ -331,13 +420,19 @@ def master_list(request, master_type):
 
     school = _selected_school(request)
     if master_type == "classes":
-        qs = ClassMaster.objects.filter(school__in=_school_scope(request.user)).select_related("school")
+        qs = ClassMaster.objects.filter(school__in=_school_scope(request.user)).select_related(
+            "school"
+        )
         title = "Class Master"
     elif master_type == "sections":
-        qs = SectionMaster.objects.filter(school__in=_school_scope(request.user)).select_related("school")
+        qs = SectionMaster.objects.filter(school__in=_school_scope(request.user)).select_related(
+            "school"
+        )
         title = "Section Master"
     else:
-        qs = SubjectMaster.objects.filter(school__in=_school_scope(request.user)).select_related("school")
+        qs = SubjectMaster.objects.filter(school__in=_school_scope(request.user)).select_related(
+            "school"
+        )
         title = "Subject Master"
 
     if school:
@@ -357,7 +452,7 @@ def master_list(request, master_type):
     return render(request, "academics/masters_list.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def master_create(request, master_type):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -387,7 +482,7 @@ def master_create(request, master_type):
     return redirect(f"/academics/masters/{master_type}/?school={school.id}")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def master_edit(request, master_type, item_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -400,7 +495,9 @@ def master_edit(request, master_type, item_id):
         model = SectionMaster
     else:
         model = SubjectMaster
-    item = model.objects.select_related("school").filter(id=item_id, school_id__in=school_ids).first()
+    item = (
+        model.objects.select_related("school").filter(id=item_id, school_id__in=school_ids).first()
+    )
     if not item:
         messages.error(request, "Item not found.")
         return redirect(f"/academics/masters/{master_type}/")
@@ -422,7 +519,7 @@ def master_edit(request, master_type, item_id):
     return render(request, "academics/master_edit.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def master_delete(request, master_type, item_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -450,14 +547,16 @@ def master_delete(request, master_type, item_id):
     return redirect(f"/academics/masters/{master_type}/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_year_list(request):
     if not has_permission(request.user, "academics.view"):
         messages.error(request, "You do not have permission to view academics.")
         return redirect("dashboard")
 
     school = _selected_school(request)
-    years = AcademicYear.objects.filter(school__in=_school_scope(request.user)).select_related("school")
+    years = AcademicYear.objects.filter(school__in=_school_scope(request.user)).select_related(
+        "school"
+    )
     if school:
         years = years.filter(school=school)
 
@@ -472,7 +571,7 @@ def academic_year_list(request):
     return render(request, "academics/years_list.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_year_create(request):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -515,13 +614,17 @@ def academic_year_create(request):
     return render(request, "academics/year_form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_year_edit(request, year_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
         return redirect("/academics/years/")
 
-    year = AcademicYear.objects.select_related("school").filter(id=year_id, school__in=_school_scope(request.user)).first()
+    year = (
+        AcademicYear.objects.select_related("school")
+        .filter(id=year_id, school__in=_school_scope(request.user))
+        .first()
+    )
     if not year:
         messages.error(request, "Academic year not found.")
         return redirect("/academics/years/")
@@ -533,7 +636,9 @@ def academic_year_edit(request, year_id):
 
         is_current = request.POST.get("is_current") == "on"
         if is_current:
-            AcademicYear.objects.filter(school=year.school, is_current=True).exclude(id=year.id).update(is_current=False)
+            AcademicYear.objects.filter(school=year.school, is_current=True).exclude(
+                id=year.id
+            ).update(is_current=False)
         year.is_current = is_current
 
         year.save()
@@ -552,7 +657,7 @@ def academic_year_edit(request, year_id):
     return render(request, "academics/year_form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_year_delete(request, year_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -573,14 +678,18 @@ def academic_year_delete(request, year_id):
     return redirect("/academics/years/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_class_edit(request, class_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
         return redirect("/academics/")
 
     school_ids = list(_school_scope(request.user).values_list("id", flat=True))
-    academic_class = AcademicClass.objects.select_related("school", "class_teacher").filter(id=class_id, school_id__in=school_ids).first()
+    academic_class = (
+        AcademicClass.objects.select_related("school", "class_teacher")
+        .filter(id=class_id, school_id__in=school_ids)
+        .first()
+    )
     if not academic_class:
         messages.error(request, "Class not found.")
         return redirect("/academics/")
@@ -595,14 +704,22 @@ def academic_class_edit(request, class_id):
         teacher_id = (request.POST.get("class_teacher") or "").strip()
         teacher = None
         if teacher_id.isdigit():
-            teacher = get_user_model().objects.filter(id=int(teacher_id), role="TEACHER", school=academic_class.school).first()
+            teacher = (
+                get_user_model()
+                .objects.filter(id=int(teacher_id), role="TEACHER", school=academic_class.school)
+                .first()
+            )
         academic_class.class_teacher = teacher
 
         academic_class.save()
         messages.success(request, "Class updated.")
         return redirect(f"/academics/?school={academic_class.school_id}")
 
-    teachers = get_user_model().objects.filter(role="TEACHER", school=academic_class.school).order_by("first_name", "username")
+    teachers = (
+        get_user_model()
+        .objects.filter(role="TEACHER", school=academic_class.school)
+        .order_by("first_name", "username")
+    )
     context = build_layout_context(request.user, current_section="academics")
     context.update(
         {
@@ -615,7 +732,7 @@ def academic_class_edit(request, class_id):
     return render(request, "academics/entity_edit.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_class_delete(request, class_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -637,14 +754,18 @@ def academic_class_delete(request, class_id):
     return redirect("/academics/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_subject_edit(request, subject_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
         return redirect("/academics/")
 
     school_ids = list(_school_scope(request.user).values_list("id", flat=True))
-    subject = AcademicSubject.objects.select_related("school", "academic_class").filter(id=subject_id, school_id__in=school_ids).first()
+    subject = (
+        AcademicSubject.objects.select_related("school", "academic_class")
+        .filter(id=subject_id, school_id__in=school_ids)
+        .first()
+    )
     if not subject:
         messages.error(request, "Subject not found.")
         return redirect("/academics/")
@@ -668,7 +789,7 @@ def academic_subject_edit(request, subject_id):
     return render(request, "academics/entity_edit.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def academic_subject_delete(request, subject_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
@@ -690,14 +811,18 @@ def academic_subject_delete(request, subject_id):
     return redirect("/academics/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def teacher_allocation_delete(request, allocation_id):
     if not has_permission(request.user, "academics.manage"):
         messages.error(request, "You do not have permission to manage academics.")
         return redirect("/academics/")
 
     school_ids = list(_school_scope(request.user).values_list("id", flat=True))
-    allocation = TeacherAllocation.objects.select_related("school").filter(id=allocation_id, school_id__in=school_ids).first()
+    allocation = (
+        TeacherAllocation.objects.select_related("school")
+        .filter(id=allocation_id, school_id__in=school_ids)
+        .first()
+    )
     if not allocation:
         messages.error(request, "Allocation not found.")
         return redirect("/academics/")

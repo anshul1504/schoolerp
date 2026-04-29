@@ -2,278 +2,191 @@
 {% load static %}
 
 {% block title %}Students | School ERP{% endblock %}
-{% block page_eyebrow %}Student Management{% endblock %}
-{% block page_heading %}Student directory{% endblock %}
-{% block page_copy %}Operational directory for search, filter, selection, export, and direct student actions.{% endblock %}
+
+{% block page_heading %}Student Directory{% endblock %}
 
 {% block content %}
 <section class="student-page">
-  <div class="row g-3 mb-4">
-    <div class="col-xl-3 col-sm-6">
-      <div class="student-stat-card h-100">
-        <div class="card-body">
-          <span class="text-xs text-uppercase text-primary-600">Total</span>
-          <h4 class="mt-10 mb-6">{{ student_stats.total }}</h4>
-          <p class="text-neutral-600 text-sm mb-0">All visible records.</p>
+  <div class="card mb-4 radius-12 border-neutral-200">
+    <div class="card-body p-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h6 class="mb-1">Students</h6>
+          <p class="text-sm text-secondary-light mb-0">Filter, sort, and manage students by class, section, status, and workflow.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          {% if can_manage_students %}
+            <a class="btn btn-sm btn-outline-secondary radius-8" href="/students/import/">Import</a>
+            <a class="btn btn-sm btn-primary-600 radius-8" href="/students/create/">Add Student</a>
+          {% endif %}
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-primary radius-8 dropdown-toggle" type="button" data-bs-toggle="dropdown">Export</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="?{{ sort_query_base }}&export=csv">Export CSV</a></li>
+              <li><a class="dropdown-item" href="?{{ sort_query_base }}&export=excel">Export Excel</a></li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-xl-3 col-sm-6">
-      <div class="student-stat-card h-100">
-        <div class="card-body">
-          <span class="text-xs text-uppercase text-success-600">Active</span>
-          <h4 class="mt-10 mb-6">{{ student_stats.active }}</h4>
-          <p class="text-neutral-600 text-sm mb-0">Currently enrolled.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-sm-6">
-      <div class="student-stat-card h-100">
-        <div class="card-body">
-          <span class="text-xs text-uppercase text-danger-600">Inactive</span>
-          <h4 class="mt-10 mb-6">{{ student_stats.inactive }}</h4>
-          <p class="text-neutral-600 text-sm mb-0">Transferred or left.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-sm-6">
-      <div class="student-stat-card h-100">
-        <div class="card-body">
-          <span class="text-xs text-uppercase text-info-600">Classes</span>
-          <h4 class="mt-10 mb-6">{{ student_stats.classes }}</h4>
-          <p class="text-neutral-600 text-sm mb-0">Distinct classes in view.</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="student-filter-card mb-4">
-    <div class="student-filter-card__head d-flex flex-wrap align-items-center justify-content-between gap-3">
-      <div>
-        <h6 class="mb-4">Filters</h6>
-        <p class="text-neutral-600 text-sm mb-0">Search by name, admission no, guardian, class, section, or workflow.</p>
-      </div>
-      <div class="student-toolbar-actions">
-        {% if can_manage_students %}
-          <a class="btn btn-outline-primary radius-8 px-20 py-11" href="/students/import/">Import</a>
-          <a class="btn btn-primary-600 radius-8 px-20 py-11" href="/students/create/">Add Student</a>
-        {% endif %}
-      </div>
-    </div>
-    <div class="student-filter-card__body">
-      <form method="get" class="row g-3">
-        <div class="col-xl-5 col-lg-4">
-          <label class="form-label">Search</label>
-          <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="Name, admission no, guardian">
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4">
-          <label class="form-label">Admission No</label>
-          <input type="text" name="admission_no" class="form-control" value="{{ filters.admission_no }}" placeholder="Exact or partial">
-        </div>
-        <div class="col-xl-3 col-lg-3 col-md-4">
-          <label class="form-label">Academic year</label>
-          <select name="academic_year" class="form-control">
-            <option value="">All years</option>
-            {% for year in academic_year_options %}
-              <option value="{{ year }}" {% if filters.academic_year == year %}selected{% endif %}>{{ year }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-xl-2 col-lg-2 col-md-4">
-          <label class="form-label">Class</label>
-          <select name="class_name" class="form-control">
-            <option value="">All classes</option>
-            {% for class_option in class_options %}
-              <option value="{{ class_option }}" {% if filters.class_name == class_option %}selected{% endif %}>{{ class_option }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-xl-2 col-lg-2 col-md-4">
-          <label class="form-label">Section</label>
-          <select name="section" class="form-control">
-            <option value="">All sections</option>
-            {% for section in section_options %}
-              <option value="{{ section }}" {% if filters.section == section %}selected{% endif %}>{{ section }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-xl-2 col-lg-2 col-md-4">
-          <label class="form-label">Status</label>
-          <select name="status" class="form-control">
-            <option value="">All status</option>
-            <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
-            <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
-          </select>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4">
-          <label class="form-label">Workflow</label>
-          <select name="workflow" class="form-control">
-            <option value="">All workflow</option>
-            <option value="complete" {% if filters.workflow == 'complete' %}selected{% endif %}>Complete</option>
-            <option value="in_progress" {% if filters.workflow == 'in_progress' %}selected{% endif %}>In Progress</option>
-            <option value="missing_documents" {% if filters.workflow == 'missing_documents' %}selected{% endif %}>Missing Documents</option>
-            <option value="transferred" {% if filters.workflow == 'transferred' %}selected{% endif %}>Transferred</option>
-          </select>
-        </div>
-        <div class="col-xl-1 col-lg-2 col-md-4">
-          <label class="form-label">Show</label>
-          <select name="page_size" class="form-control">
-            {% for size in page_size_options %}
-              <option value="{{ size }}" {% if filters.page_size == size %}selected{% endif %}>{{ size }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-xl-1 col-lg-2 d-flex align-items-end">
-          <button type="submit" class="btn btn-primary-600 w-100 radius-8 py-11">Apply</button>
-        </div>
-        <div class="col-xl-1 col-lg-2 d-flex align-items-end">
-          <a href="/students/" class="btn btn-outline-secondary w-100 radius-8 py-11">Reset</a>
+      <form method="get" class="mt-3">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-xl-4 col-lg-4">
+            <label class="form-label text-sm font-semibold">Search</label>
+            <input type="text" name="q" class="form-control radius-8" value="{{ filters.q }}" placeholder="Name, admission no, guardian">
+          </div>
+          <div class="col-xl-2 col-lg-3 col-md-4">
+            <label class="form-label text-sm font-semibold">Admission No</label>
+            <input type="text" name="admission_no" class="form-control radius-8" value="{{ filters.admission_no }}">
+          </div>
+          <div class="col-xl-2 col-lg-3 col-md-4">
+            <label class="form-label text-sm font-semibold">Academic Year</label>
+            <select name="academic_year" class="form-select radius-8">
+              <option value="">All</option>
+              {% for year in academic_year_options %}
+                <option value="{{ year }}" {% if filters.academic_year == year %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-xl-2 col-lg-2 col-md-4">
+            <label class="form-label text-sm font-semibold">Class</label>
+            <select name="class_name" class="form-select radius-8">
+              <option value="">All</option>
+              {% for class_option in class_options %}
+                <option value="{{ class_option }}" {% if filters.class_name == class_option %}selected{% endif %}>{{ class_option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-xl-2 col-lg-2 col-md-4">
+            <label class="form-label text-sm font-semibold">Status</label>
+            <select name="status" class="form-select radius-8">
+              <option value="">All</option>
+              <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+              <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+          </div>
+          <div class="col-12 mt-3">
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
+              <button type="submit" class="btn btn-primary-600 radius-8">Apply Filters</button>
+              <a href="/students/" class="btn btn-outline-secondary radius-8">Reset</a>
+            </div>
+          </div>
         </div>
       </form>
     </div>
   </div>
 
-  <div class="student-list-card">
-    <div class="student-list-card__head d-flex flex-wrap align-items-center justify-content-between gap-3">
-      <div>
-        <h6 class="mb-4">Students Directory</h6>
-        <p class="text-neutral-600 text-sm mb-0">Serial number, selection, workflow, and direct actions in one table.</p>
-      </div>
-      <div class="d-flex flex-wrap align-items-center gap-10">
-        <span class="student-pill">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</span>
-        <span class="student-pill success">{{ student_stats.complete }} complete</span>
-        <span class="student-pill warning">{{ student_stats.in_progress }} in progress</span>
-      </div>
-    </div>
-    <div class="student-list-card__body">
-      {% if request.user.role != "SCHOOL_OWNER" %}
-        <div class="student-view-toggle mb-16">
-          <a href="?{{ sort_query_base }}&sort={{ filters.sort }}&direction={{ filters.direction }}&view=list" class="{% if view_mode != 'classwise' %}is-active{% endif %}">List View</a>
-          <a href="?{{ sort_query_base }}&sort={{ filters.sort }}&direction={{ filters.direction }}&view=classwise" class="{% if view_mode == 'classwise' %}is-active{% endif %}">Class-wise View</a>
+  <div class="card radius-12 border-neutral-200 overflow-hidden">
+    <div class="card-body p-0">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-bottom bg-neutral-50">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <span class="badge bg-primary-50 text-primary-600">{{ page_obj.paginator.count }} Students</span>
+          <span class="badge bg-success-50 text-success-600">{{ student_stats.complete }} Complete</span>
+          <span class="badge bg-warning-50 text-warning-600">{{ student_stats.in_progress }} In Progress</span>
         </div>
-      {% endif %}
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-16">
-          <div class="text-neutral-600 text-sm">Select rows to export selected students or generate ID cards.</div>
-          <div class="d-flex flex-wrap gap-8">
-            <a class="btn btn-outline-primary btn-sm radius-8" href="?{{ sort_query_base }}&export=csv">Export CSV</a>
-            <a class="btn btn-outline-primary btn-sm radius-8" href="?{{ sort_query_base }}&export=excel">Export Excel</a>
-            {% if request.user.role != "SCHOOL_OWNER" %}
-              <button type="button" class="btn btn-outline-secondary btn-sm radius-8" id="exportSelectedStudentsCsv" disabled>Selected CSV</button>
-              <button type="button" class="btn btn-outline-secondary btn-sm radius-8" id="exportSelectedStudentsExcel" disabled>Selected Excel</button>
-            {% endif %}
-          </div>
+        <div class="d-flex flex-wrap gap-2">
+          {% if can_use_classwise_view %}
+            <div class="btn-group btn-group-sm">
+              <a href="?{{ sort_query_base }}&view=list" class="btn {% if view_mode != 'classwise' %}btn-primary-600{% else %}btn-outline-secondary{% endif %}">List View</a>
+              <a href="?{{ sort_query_base }}&view=classwise" class="btn {% if view_mode == 'classwise' %}btn-primary-600{% else %}btn-outline-secondary{% endif %}">Class View</a>
+            </div>
+          {% endif %}
         </div>
+      </div>
 
       <form method="get" action="/students/id-cards/designer/" id="idCardForm"></form>
 
       {% if view_mode == 'classwise' %}
-        {% regroup students by class_name as class_groups %}
-        <div class="classwise-grid">
-          {% for class_group in class_groups %}
-            <div class="classwise-card">
-              <div class="classwise-card__head">
-                <strong>{{ class_group.grouper }}</strong>
-                <span>{{ class_group.list|length }} student{{ class_group.list|length|pluralize }}</span>
-              </div>
-              <div class="classwise-card__body">
-                {% for student in class_group.list %}
-                  <a href="/students/{{ student.slug }}/" class="classwise-row">
-                    <span>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</span>
-                    <small>{{ student.section }} - {{ student.admission_no }}</small>
-                  </a>
-                {% endfor %}
-              </div>
+        <div class="p-4 border-bottom bg-white">
+            {% regroup students by class_name as class_groups %}
+            <div class="row gy-4">
+              {% for class_group in class_groups %}
+                <div class="col-xl-4 col-md-6">
+                  <div class="card radius-8 border-neutral-200">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2 px-3 bg-neutral-50">
+                        <strong class="text-md">{{ class_group.grouper }}</strong>
+                        <span class="badge bg-neutral-100 text-neutral-600">{{ class_group.list|length }}</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for student in class_group.list %}
+                              <a href="/students/{{ student.slug }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3">
+                                <span class="text-sm font-medium">{{ student.first_name }} {{ student.last_name }}</span>
+                                <small class="text-secondary-light">{{ student.admission_no }}</small>
+                              </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="col-12 text-center py-5">No students found.</div>
+              {% endfor %}
             </div>
-          {% empty %}
-            <div class="student-empty-state">No students found.</div>
-          {% endfor %}
         </div>
       {% elif students %}
-        <div class="student-table-responsive">
-          <table class="student-table">
-            <thead>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-neutral-50">
               <tr>
-                <th class="student-th-48">#</th>
-                {% if request.user.role != "SCHOOL_OWNER" %}
-                  <th class="student-th-check">
-                    <label class="student-check-wrap" title="Select all students">
-                      <input type="checkbox" id="selectAllStudents">
-                      <span></span>
-                    </label>
-                  </th>
-                {% endif %}
-                <th>Student</th>
-                <th class="student-col-secondary">Admission No</th>
-                <th>Class</th>
-                <th class="student-col-secondary">Guardian</th>
-                <th class="student-col-secondary">Workflow</th>
-                <th class="student-th-160">Actions</th>
+                <th class="text-xs text-secondary-light font-bold ps-4">S.No</th>
+                <th class="text-xs text-secondary-light font-bold">Student</th>
+                <th class="text-xs text-secondary-light font-bold">Admission No</th>
+                <th class="text-xs text-secondary-light font-bold">Class</th>
+                <th class="text-xs text-secondary-light font-bold">Guardian</th>
+                <th class="text-xs text-secondary-light font-bold">Workflow</th>
+                <th class="text-xs text-secondary-light font-bold text-end pe-4">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for student in students %}
                 <tr>
-                  <td class="text-neutral-500">{{ forloop.counter0|add:page_obj.start_index }}</td>
-                  {% if request.user.role != "SCHOOL_OWNER" %}
-                    <td>
-                      <label class="student-check-wrap" title="Select {{ student.first_name }} {{ student.last_name }}">
-                        <input type="checkbox" name="student_ids" value="{{ student.id }}" class="student-select" form="idCardForm">
-                        <span></span>
-                      </label>
-                    </td>
-                  {% endif %}
+                  <td class="text-sm text-secondary-light ps-4">{{ forloop.counter0|add:page_obj.start_index }}</td>
                   <td>
-                    <a href="/students/{{ student.slug }}/" class="student-row-link">
-                      <div class="student-name-block">
+                    <div class="d-flex align-items-center gap-3">
                         {% if student.photo %}
-                          <img src="{{ student.photo.url }}" alt="{{ student.first_name }}" class="student-avatar">
+                          <img src="{{ student.photo.url }}" alt="" class="radius-8" style="width: 40px; height: 40px; object-fit: cover;">
                         {% else %}
-                          <div class="student-avatar">{{ student.first_name|first|upper }}</div>
+                          <div class="radius-8 bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center font-bold" style="width: 40px; height: 40px;">{{ student.first_name|first|upper }}</div>
                         {% endif %}
                         <div>
-                          <div class="student-name-text">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
-                          <div class="student-subtext">{{ student.school.name }}</div>
+                          <div class="text-sm font-semibold">{{ student.first_name }} {{ student.last_name }}</div>
+                          <div class="text-xs text-secondary-light">{{ student.school.name }}</div>
                         </div>
-                      </div>
-                    </a>
+                    </div>
                   </td>
-                  <td class="student-col-secondary"><a href="/students/{{ student.slug }}/" class="student-row-link">{{ student.admission_no }}</a></td>
-                  <td><a href="/students/{{ student.slug }}/" class="student-row-link">{{ student.class_name }} - {{ student.section }}</a></td>
-                  <td class="student-col-secondary">
-                    <a href="/students/{{ student.slug }}/" class="student-row-link">
-                      <div>{{ student.guardian_name|default:"-" }}</div>
-                      <div class="student-subtext">{{ student.relation_with_student|default:"-" }}</div>
-                    </a>
-                  </td>
-                  <td class="student-col-secondary">
-                    <a href="/students/{{ student.slug }}/" class="student-row-link">
-                      <div class="student-workflow">
-                        <div class="student-workflow__top">
-                          <span class="student-pill {{ student.workflow.tone }}">{{ student.workflow.label }}</span>
-                          <span class="student-pill info">{{ student.workflow.percent }}%</span>
-                        </div>
-                        <div class="progress-track"><div class="progress-bar" data-sf-width="{{ student.workflow.percent }}"></div></div>
-                        <div class="student-workflow__meta">
-                          <span class="student-pill">{{ student.workflow.completed }}/{{ student.workflow.total }} steps</span>
-                          {% if student.workflow.missing %}
-                            <span class="student-pill warning">{{ student.workflow.missing|length }} missing</span>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </a>
+                  <td class="text-sm">{{ student.admission_no }}</td>
+                  <td class="text-sm">{{ student.class_name }} - {{ student.section }}</td>
+                  <td class="text-sm">
+                    <div class="font-medium">{{ student.guardian_name|default:"-" }}</div>
+                    <div class="text-xs text-secondary-light">{{ student.relation_with_student|default:"-" }}</div>
                   </td>
                   <td>
-                    <div class="student-actions">
-                      <a class="btn btn-outline-primary btn-sm radius-8" href="/students/{{ student.slug }}/" title="View student"><i class="ri-eye-line"></i></a>
-                      {% if can_manage_students %}
-                        <a class="btn btn-primary-600 btn-sm radius-8" href="/students/{{ student.slug }}/edit/" title="Edit student"><i class="ri-edit-line"></i></a>
-                      {% endif %}
-                      {% if can_delete_students %}
-                        <form method="post" action="/students/{{ student.slug }}/delete/" onsubmit="return confirm('Delete {{ student.first_name }} {{ student.last_name }}? This cannot be undone.');">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-danger btn-sm radius-8" title="Delete student"><i class="ri-delete-bin-line"></i></button>
-                        </form>
-                      {% endif %}
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-{{ student.workflow.tone }}-50 text-{{ student.workflow.tone }}-600">{{ student.workflow.label }}</span>
+                        <span class="text-xs text-secondary-light">{{ student.workflow.percent }}%</span>
+                    </div>
+                  </td>
+                  <td class="text-end pe-4">
+                    <div class="dropdown">
+                        <button class="btn btn-sm text-secondary-light" type="button" data-bs-toggle="dropdown">
+                            <i class="ri-more-2-fill"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/students/{{ student.slug }}/"><i class="ri-eye-line me-2"></i>View</a></li>
+                            {% if can_manage_students %}
+                            <li><a class="dropdown-item" href="/students/{{ student.slug }}/edit/"><i class="ri-edit-line me-2"></i>Edit</a></li>
+                            {% endif %}
+                            {% if can_delete_students %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="/students/{{ student.slug }}/delete/" onsubmit="return confirm('Delete?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger"><i class="ri-delete-bin-line me-2"></i>Delete</button>
+                                </form>
+                            </li>
+                            {% endif %}
+                        </ul>
                     </div>
                   </td>
                 </tr>
@@ -282,79 +195,32 @@
           </table>
         </div>
 
-        <div class="student-pagination">
-          <div class="text-sm text-neutral-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
-          <div class="page-links">
-            {% if page_obj.has_previous %}
-              <a href="?{{ sort_query_base }}&sort={{ filters.sort }}&direction={{ filters.direction }}&page={{ page_obj.previous_page_number }}">Prev</a>
-            {% endif %}
-            {% for page_num in page_obj.paginator.page_range %}
-              {% if page_num == page_obj.number %}
-                <span class="active">{{ page_num }}</span>
-              {% elif page_num >= page_obj.number|add:-2 and page_num <= page_obj.number|add:2 %}
-                <a href="?{{ sort_query_base }}&sort={{ filters.sort }}&direction={{ filters.direction }}&page={{ page_num }}">{{ page_num }}</a>
-              {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-              <a href="?{{ sort_query_base }}&sort={{ filters.sort }}&direction={{ filters.direction }}&page={{ page_obj.next_page_number }}">Next</a>
-            {% endif %}
-          </div>
+        <div class="p-4 d-flex flex-wrap justify-content-between align-items-center gap-3 bg-neutral-50 border-top">
+          <div class="text-sm text-secondary-light">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
+          <nav>
+            <ul class="pagination pagination-sm mb-0 gap-2">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link radius-8 border-neutral-200 text-secondary-light" href="?{{ sort_query_base }}&page={{ page_obj.previous_page_number }}">Prev</a></li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                    <li class="page-item active"><span class="page-link radius-8 bg-primary-600 border-primary-600">{{ page_num }}</span></li>
+                    {% elif page_num >= page_obj.number|add:-2 and page_num <= page_obj.number|add:2 %}
+                    <li class="page-item"><a class="page-link radius-8 border-neutral-200 text-secondary-light" href="?{{ sort_query_base }}&page={{ page_num }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link radius-8 border-neutral-200 text-secondary-light" href="?{{ sort_query_base }}&page={{ page_obj.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+          </nav>
         </div>
       {% else %}
-        <div class="student-empty-state">No student records match the current filters.</div>
+        <div class="text-center py-5 text-secondary-light">No student records match the current filters.</div>
       {% endif %}
     </div>
   </div>
 </section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const selectAll = document.getElementById("selectAllStudents");
-    const checkboxes = Array.from(document.querySelectorAll(".student-select"));
-    const exportCsvBtn = document.getElementById("exportSelectedStudentsCsv");
-    const exportExcelBtn = document.getElementById("exportSelectedStudentsExcel");
-    if (!selectAll) return;
-
-    function selectedIds() {
-      return checkboxes.filter((c) => c.checked).map((c) => c.value).filter(Boolean);
-    }
-
-    function updateSelected() {
-      const enabled = selectedIds().length > 0;
-      if (exportCsvBtn) exportCsvBtn.disabled = !enabled;
-      if (exportExcelBtn) exportExcelBtn.disabled = !enabled;
-    }
-
-    selectAll.addEventListener("change", function () {
-      checkboxes.forEach((checkbox) => {
-        checkbox.checked = selectAll.checked;
-      });
-      updateSelected();
-    });
-    checkboxes.forEach((c) => c.addEventListener("change", updateSelected));
-
-    function buildUrl(format) {
-      const ids = selectedIds().join(",");
-      const params = new URLSearchParams({
-        q: "{{ filters.q|default:'' }}",
-        admission_no: "{{ filters.admission_no|default:'' }}",
-        academic_year: "{{ filters.academic_year|default:'' }}",
-        class_name: "{{ filters.class_name|default:'' }}",
-        section: "{{ filters.section|default:'' }}",
-        status: "{{ filters.status|default:'' }}",
-        workflow: "{{ filters.workflow|default:'' }}",
-        export: format,
-        student_ids: ids,
-      });
-      return "/students/?" + params.toString();
-    }
-
-    if (exportCsvBtn) exportCsvBtn.addEventListener("click", function () { window.location.href = buildUrl("csv"); });
-    if (exportExcelBtn) exportExcelBtn.addEventListener("click", function () { window.location.href = buildUrl("excel"); });
-
-    updateSelected();
-  });
-</script>
 {% endblock %}

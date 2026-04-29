@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit Project{% else %}Add New Project{% endif %} | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{% if is_edit %}Edit Project{% else %}Add New Project{% endif %}{% endblock %}
+{% block breadcrumb_active %}{% if is_edit %}Edit Project{% else %}Add New Project{% endif %}{% endblock %}
+
+{% block heading_actions %}
+<div class="d-flex gap-16 align-items-center">
+    <a href="{% if is_edit %}{% url 'research:project_detail' project.pk %}{% else %}{% url 'research:project_list' %}{% endif %}"
+       class="btn btn-light border radius-8 px-20 d-flex align-items-center gap-8">
+        <i class="ri-arrow-left-line"></i> Back
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4 justify-content-center">
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-sm">
+            <div class="card-header bg-primary-600 text-white border-0 py-20 px-32">
+                <h6 class="mb-0 fw-bold text-white d-flex align-items-center gap-8">
+                    <i class="ri-article-line"></i>
+                    Project Details
+                </h6>
+            </div>
+            <div class="card-body p-32">
+                <form method="post" class="needs-validation">
+                    {% csrf_token %}
+
+                    <div class="row gy-4">
+                        <!-- Section 1: Basic Information -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-10 mb-20 border-bottom border-neutral-100 pb-12">
+                                <i class="ri-information-line text-primary-600 text-xl"></i>
+                                <h6 class="mb-0 fw-bold text-primary-light">Basic Information</h6>
+                            </div>
+                            <div class="row gy-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-primary-light">Project Title <span class="text-danger">*</span></label>
+                                    {{ form.title }}
+                                    <div class="form-text text-secondary-light mt-4">Enter the full name of the research project.</div>
+                                    {% if form.title.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.title.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-primary-light">Description <span class="text-danger">*</span></label>
+                                    {{ form.description }}
+                                    <div class="form-text text-secondary-light mt-4">Briefly describe the project objectives and approach.</div>
+                                    {% if form.description.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.description.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Project Management -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-10 mb-20 border-bottom border-neutral-100 pb-12">
+                                <i class="ri-shield-user-line text-primary-600 text-xl"></i>
+                                <h6 class="mb-0 fw-bold text-primary-light">Project Management</h6>
+                            </div>
+                            <div class="row gy-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary-light">Principal Investigator (PI) <span class="text-danger">*</span></label>
+                                    {{ form.pi }}
+                                    <div class="form-text text-secondary-light mt-4">Select the lead researcher for this project.</div>
+                                    {% if form.pi.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.pi.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary-light">Status</label>
+                                    {{ form.status }}
+                                    <div class="form-text text-secondary-light mt-4">Set the current phase of the project.</div>
+                                    {% if form.status.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.status.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Timeline & Budget -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-10 mb-20 border-bottom border-neutral-100 pb-12">
+                                <i class="ri-calendar-line text-primary-600 text-xl"></i>
+                                <h6 class="mb-0 fw-bold text-primary-light">Timeline & Budget</h6>
+                            </div>
+                            <div class="row gy-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary-light">Start Date</label>
+                                    {{ form.start_date }}
+                                    {% if form.start_date.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.start_date.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary-light">End Date</label>
+                                    {{ form.end_date }}
+                                    {% if form.end_date.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.end_date.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary-light">Approved Budget ({{ school.currency }})</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-neutral-100 border-neutral-200">{{ school.currency }}</span>
+                                        {{ form.budget }}
+                                    </div>
+                                    {% if form.budget.errors %}<div class="text-danger text-xs mt-4 fw-medium">{{ form.budget.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="mt-40 pt-24 border-top border-neutral-100 d-flex align-items-center justify-content-end gap-16">
+                        <a href="{% if is_edit %}{% url 'research:project_detail' project.pk %}{% else %}{% url 'research:project_list' %}{% endif %}"
+                           class="btn btn-light radius-8 px-24 fw-bold">Cancel</a>
+                        <button type="submit" class="btn btn-primary-600 radius-8 px-32 py-12 fw-bold shadow-primary">
+                            <i class="ri-save-line me-8"></i>
+                            {% if is_edit %}Save Changes{% else %}Save Project{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

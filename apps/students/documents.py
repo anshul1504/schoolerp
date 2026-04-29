@@ -5,7 +5,6 @@ We keep this in a single place so both Students and Front Office modules
 agree on what "missing documents" means.
 """
 
-
 REQUIRED_DOCUMENT_SETS = {
     # Minimum for basic operations / identity.
     "basic": [
@@ -54,4 +53,3 @@ def completeness_score(student, required="basic"):
         "total": total,
         "percent": int((present / total) * 100),
     }
-

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{{ title }}{% endblock %}
+{% block breadcrumb_active %}Story Form{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-1">
+            <div class="card-header bg-base py-16 px-24 border-bottom">
+                <h6 class="mb-0 fw-bold">Success Story Details</h6>
+            </div>
+            <div class="card-body p-24">
+                <form method="post" enctype="multipart/form-data" class="row gy-4">
+                    {% csrf_token %}
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold text-sm text-primary-light">Associate Alumnus</label>
+                        {{ form.alumni }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-sm text-primary-light">Featured</label>
+                        <div class="form-check mt-8">
+                            {{ form.is_featured }}
+                            <label class="form-check-label ms-8" for="{{ form.is_featured.id_for_label }}">Feature on Dashboard</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">Story Headline</label>
+                        {{ form.title }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">Story Content</label>
+                        {{ form.content }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">Feature Image</label>
+                        {{ form.image }}
+                    </div>
+
+                    <div class="col-12 mt-32 d-flex gap-12">
+                        <button type="submit" class="btn btn-primary-600 radius-8 px-24">Publish Story</button>
+                        <a href="{% url 'alumni:success_stories' %}" class="btn btn-outline-secondary-600 radius-8 px-24">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

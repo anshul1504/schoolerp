@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Compliance | School ERP{% endblock %}
+{% block page_heading %}Student Compliance Tracker{% endblock %}
+{% block breadcrumb_active %}Student Compliance{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Student Documentation Compliance</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Track pending documents, health forms, and compliance items for students.</p>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label">Search Student</label>
+            <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Search by name or admission number...">
+          </div>
+          <div class="col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-600">Apply</button>
+            <a class="btn btn-outline-secondary" href="{% url 'compliance_office:student_list' %}">Reset</a>
+          </div>
+        </div>
+      </form>
+
+      {% if students %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Admission No</th>
+                <th>Class</th>
+                <th>Compliance Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="w-32-px h-32-px rounded-circle bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center text-sm fw-medium me-12">
+                        {{ s.first_name|first }}{{ s.last_name|first }}
+                      </span>
+                      <span class="fw-medium text-neutral-700">{{ s.get_full_name|default:s.first_name }}</span>
+                    </div>
+                  </td>
+                  <td>{{ s.admission_no }}</td>
+                  <td>{{ s.class_name }} - {{ s.section }}</td>
+                  <td>
+                    {% with reminders=s.compliance_reminders.all %}
+                      {% if not reminders %}
+                         <span class="badge bg-success-50 text-success-600 d-inline-flex align-items-center gap-1"><iconify-icon icon="ri:check-line"></iconify-icon> Fully Compliant</span>
+                      {% else %}
+                         {% with pending=reminders|dictsort:"status" %}
+                           <span class="badge bg-warning-50 text-warning-600 d-inline-flex align-items-center gap-1"><iconify-icon icon="ri:alert-line"></iconify-icon> Action Needed</span>
+                           <div class="text-xs text-neutral-500 mt-1">{{ reminders|length }} items logged</div>
+                         {% endwith %}
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" href="/students/{{ s.slug }}/compliance/"><iconify-icon icon="ri:eye-line"></iconify-icon> Manage</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:user-search-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No students found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

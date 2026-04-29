@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}SEO Detail{% endblock %}
+{% block page_heading %}SEO Detail{% endblock %}
+{% block breadcrumb_active %}SEO Detail{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm"><div class="card-header border-bottom py-16 px-24 d-flex justify-content-between"><h6 class="mb-0">{{ record.keyword }}</h6><a class="btn btn-primary-600" href="{% url 'digital_marketing:seo_edit' record.id %}">Edit</a></div><div class="card-body p-24"><div class="row g-3"><div class="col-md-6"><strong>Tracked On:</strong> {{ record.tracked_on }}</div><div class="col-md-6"><strong>Page URL:</strong> {{ record.page_url }}</div><div class="col-md-3"><strong>Rank:</strong> {{ record.ranking_position }}</div><div class="col-md-3"><strong>Impressions:</strong> {{ record.impressions }}</div><div class="col-md-3"><strong>Clicks:</strong> {{ record.clicks }}</div><div class="col-md-3"><strong>CTR%:</strong> {{ record.ctr_percent }}</div><div class="col-12"><strong>Audit Notes:</strong><p class="mb-0">{{ record.audit_notes|default:'-' }}</p></div></div></div></div>
+{% endblock %}

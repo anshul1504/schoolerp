@@ -7,10 +7,11 @@
 {% block page_copy %}Simple print-ready list for ID vendors with student photo access, admission details, and clear printable references.{% endblock %}
 
 {% block content %}
+<div class="student-page students-v3 students-v4">
 <div class="row gy-4">
   <div class="col-12">
-    <div class="sheet-card">
-      <div class="sheet-card__head d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="card radius-12 border-neutral-200">
+      <div class="mb-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
           <h6 class="mb-4">Student vendor sheet</h6>
           <p class="text-neutral-600 text-sm mb-0">{{ selected_students|length }} selected student{{ selected_students|length|pluralize }}. This view is simplified for photo collection and external ID printing support.</p>
@@ -26,7 +27,7 @@
           </form>
         </div>
       </div>
-      <div class="sheet-card__body">
+      <div class="card-body">
         <div class="helper-strip">
           <span class="helper-pill">Photo link included</span>
           <span class="helper-pill">Admission and class details included</span>
@@ -37,7 +38,7 @@
           <table class="sheet-table">
             <thead>
               <tr>
-                <th class="sf-th-80">Photo</th>
+                <th class="text-xs text-secondary-light font-bold 80">Photo</th>
                 <th>Student</th>
                 <th>Admission No</th>
                 <th>Class</th>
@@ -94,4 +95,11 @@
     </div>
   </div>
 </div>
+</div>
 {% endblock %}
+
+
+
+
+
+

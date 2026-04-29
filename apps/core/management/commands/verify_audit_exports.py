@@ -9,7 +9,9 @@ class Command(BaseCommand):
     help = "Verify AuditLogExport file SHA256 and checksum chain linkage."
 
     def add_arguments(self, parser):
-        parser.add_argument("--limit", type=int, default=5000, help="Max exports to verify (latest first).")
+        parser.add_argument(
+            "--limit", type=int, default=5000, help="Max exports to verify (latest first)."
+        )
 
     def handle(self, *args, **options):
         limit = int(options.get("limit") or 5000)
@@ -29,7 +31,9 @@ class Command(BaseCommand):
             expected_prev = (exp.prev_sha256 or "").strip()
             if expected_prev and expected_prev != last_sha:
                 failures += 1
-                self.stderr.write(f"[FAIL] export_id={exp.id} prev_sha256 mismatch expected={expected_prev} actual={last_sha}")
+                self.stderr.write(
+                    f"[FAIL] export_id={exp.id} prev_sha256 mismatch expected={expected_prev} actual={last_sha}"
+                )
                 last_sha = exp.sha256
                 continue
 
@@ -45,7 +49,9 @@ class Command(BaseCommand):
             actual = hashlib.sha256(data).hexdigest()
             if actual != exp.sha256:
                 failures += 1
-                self.stderr.write(f"[FAIL] export_id={exp.id} sha256 mismatch expected={exp.sha256} actual={actual}")
+                self.stderr.write(
+                    f"[FAIL] export_id={exp.id} sha256 mismatch expected={exp.sha256} actual={actual}"
+                )
             else:
                 ok += 1
 
@@ -54,4 +60,3 @@ class Command(BaseCommand):
         self.stdout.write(f"Verified exports: ok={ok} failed={failures} total={len(exports)}")
         if failures:
             raise SystemExit(1)
-

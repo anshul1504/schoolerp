@@ -70,4 +70,3 @@ def provision_user_deactivate(request):
     user.is_active = False
     user.save(update_fields=["is_active"])
     return Response({"ok": True, "changed": True, "user_id": user.id})
-

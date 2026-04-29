@@ -2,56 +2,102 @@
 
 {% block title %}Plan Features{% endblock %}
 {% block page_heading %}Plan Features{% endblock %}
-{% block page_copy %}Create feature toggles and attach them to plans using checkboxes.{% endblock %}
-{% block page_eyebrow %}Billing{% endblock %}
+{% block breadcrumb_active %}Billing / Features{% endblock %}
 
-{% block content %}
-  <div class="card mb-24">
-    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
-      <div>
-        <h6 class="mb-4">Features</h6>
-        <p class="text-neutral-600 text-sm mb-0">These appear as checkboxes inside plan setup.</p>
-      </div>
-      <div class="d-flex gap-10">
-        <a href="/billing/plans/" class="btn btn-outline-secondary">Plans</a>
-        <a href="/billing/features/create/" class="btn btn-primary">Create Feature</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-body p-24">
-      <div class="table-responsive">
-        <table class="table align-middle">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for feature in features %}
-              <tr>
-                <td><strong>{{ feature.name }}</strong></td>
-                <td class="text-muted">{{ feature.code }}</td>
-                <td class="text-muted text-sm">{{ feature.description|default:"—" }}</td>
-                <td>
-                  {% if feature.is_active %}
-                    <span class="badge bg-success">Active</span>
-                  {% else %}
-                    <span class="badge bg-secondary">Inactive</span>
-                  {% endif %}
-                </td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="4" class="text-center text-muted">No features yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+{% block heading_actions %}
+<div class="d-flex align-items-center gap-3">
+    <a href="/billing/features/create/" class="btn btn-primary d-flex align-items-center gap-2">
+        <iconify-icon icon="ri:add-line"></iconify-icon>
+        Create Feature
+    </a>
+</div>
 {% endblock %}
 
+{% block content %}
+<div class="card h-100">
+    <div class="card-body p-0 dataTable-wrapper">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+                <!-- Nav Links for Billing Module -->
+                <div class="btn-group" role="group">
+                    <a href="/billing/plans/" class="btn btn-outline-primary">Plans</a>
+                    <a href="/billing/features/" class="btn btn-primary">Features</a>
+                    <a href="/billing/schools/" class="btn btn-outline-primary">Subscriptions</a>
+                    <a href="/billing/invoices/" class="btn btn-outline-primary">Invoices</a>
+                    <a href="/billing/coupons/" class="btn btn-outline-primary">Coupons</a>
+                    <a href="/billing/webhooks/" class="btn btn-outline-primary">Webhooks</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-0 table-responsive">
+            <table class="table bordered-table mb-0 data-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feature in features %}
+                    <tr>
+                        <td><strong>{{ feature.name }}</strong></td>
+                        <td><span class="text-primary-600">{{ feature.code }}</span></td>
+                        <td><span class="text-secondary-light text-sm">{{ feature.description|default:"—" }}</span></td>
+                        <td>
+                            {% if feature.is_active %}
+                            <span class="bg-success-100 text-success-600 px-16 py-4 radius-4 fw-medium text-sm">Active</span>
+                            {% else %}
+                            <span class="bg-danger-100 text-danger-600 px-16 py-4 radius-4 fw-medium text-sm">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-24 text-secondary-light">
+                            No features created yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if features.has_other_pages %}
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-20 py-12 border-top border-neutral-200">
+            <span class="text-secondary-light text-sm">
+                Showing {{ features.start_index }} to {{ features.end_index }} of {{ features.paginator.count }} entries
+            </span>
+            <ul class="pagination mb-0 d-flex gap-2">
+                {% if features.has_previous %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ features.previous_page_number }}">Prev</a>
+                </li>
+                {% endif %}
+
+                {% for num in features.paginator.page_range %}
+                    {% if features.number == num %}
+                    <li class="page-item">
+                        <span class="page-link px-12 py-8 rounded bg-primary-600 text-white">{{ num }}</span>
+                    </li>
+                    {% elif num > features.number|add:'-3' and num < features.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if features.has_next %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ features.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

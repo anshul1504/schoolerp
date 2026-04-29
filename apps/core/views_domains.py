@@ -34,14 +34,19 @@ def domain_create(request):
         is_primary = request.POST.get("is_primary") == "on"
         is_active = request.POST.get("is_active") == "on"
 
-        if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+        if (
+            not school_id.isdigit()
+            or not School.objects.filter(id=int(school_id), is_active=True).exists()
+        ):
             messages.error(request, "Valid school is required.")
         elif not domain:
             messages.error(request, "Domain is required.")
         elif SchoolDomain.objects.filter(domain=domain).exists():
             messages.error(request, "That domain is already mapped.")
         else:
-            SchoolDomain.objects.create(school_id=int(school_id), domain=domain, is_primary=is_primary, is_active=is_active)
+            SchoolDomain.objects.create(
+                school_id=int(school_id), domain=domain, is_primary=is_primary, is_active=is_active
+            )
             messages.success(request, "Domain mapped.")
             return redirect("/platform/domains/")
 
@@ -62,7 +67,10 @@ def domain_update(request, id):
         is_primary = request.POST.get("is_primary") == "on"
         is_active = request.POST.get("is_active") == "on"
 
-        if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+        if (
+            not school_id.isdigit()
+            or not School.objects.filter(id=int(school_id), is_active=True).exists()
+        ):
             messages.error(request, "Valid school is required.")
         elif not domain:
             messages.error(request, "Domain is required.")
@@ -92,4 +100,3 @@ def domain_delete(request, id):
     obj.delete()
     messages.success(request, "Domain deleted.")
     return redirect("/platform/domains/")
-

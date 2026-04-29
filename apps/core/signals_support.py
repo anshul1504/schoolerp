@@ -4,7 +4,6 @@ from django.dispatch import receiver
 from apps.core.change_log import record_change
 from apps.core.models import SupportTicket
 
-
 WATCH_FIELDS = [
     "school_id",
     "created_by_id",
@@ -32,7 +31,9 @@ def _ticket_pre_save(sender, instance: SupportTicket, **kwargs):
 @receiver(post_save, sender=SupportTicket)
 def _ticket_post_save(sender, instance: SupportTicket, created: bool, **kwargs):
     if created:
-        record_change(entity="core.SupportTicket", object_id=instance.pk, action="CREATED", changes={})
+        record_change(
+            entity="core.SupportTicket", object_id=instance.pk, action="CREATED", changes={}
+        )
         return
     before = getattr(instance, "_changelog_before", None) or {}
     after = {field: getattr(instance, field) for field in WATCH_FIELDS}
@@ -41,10 +42,11 @@ def _ticket_post_save(sender, instance: SupportTicket, created: bool, **kwargs):
         if before.get(field) != after.get(field):
             changes[field] = {"before": before.get(field), "after": after.get(field)}
     if changes:
-        record_change(entity="core.SupportTicket", object_id=instance.pk, action="UPDATED", changes=changes)
+        record_change(
+            entity="core.SupportTicket", object_id=instance.pk, action="UPDATED", changes=changes
+        )
 
 
 @receiver(post_delete, sender=SupportTicket)
 def _ticket_post_delete(sender, instance: SupportTicket, **kwargs):
     record_change(entity="core.SupportTicket", object_id=instance.pk, action="DELETED", changes={})
-

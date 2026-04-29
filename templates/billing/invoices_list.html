@@ -1,128 +1,218 @@
 {% extends "base.html" %}
 
 {% block title %}Subscription Invoices{% endblock %}
-{% block page_heading %}Subscription Invoices{% endblock %}
-{% block page_copy %}Track invoices and payments per school subscription.{% endblock %}
-{% block page_eyebrow %}Billing{% endblock %}
+{% block page_heading %}Invoices{% endblock %}
+{% block breadcrumb_active %}Billing / Invoices{% endblock %}
+
+{% block heading_actions %}
+<div class="d-flex align-items-center gap-3">
+    <a href="/billing/invoices/create/" class="btn btn-primary d-flex align-items-center gap-2">
+        <iconify-icon icon="ri:add-line"></iconify-icon>
+        Create Invoice
+    </a>
+</div>
+{% endblock %}
 
 {% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Invoices</h6>
-          <p>Create invoices, record payments, and export billing data.</p>
-        </div>
-        <div class="sf-actions">
-          <a href="/billing/plans/" class="btn btn-outline-secondary">Plans</a>
-          <a href="/billing/schools/" class="btn btn-outline-secondary">Schools</a>
-          <a href="/billing/coupons/" class="btn btn-outline-secondary">Coupons</a>
-          <a href="/billing/webhooks/events/" class="btn btn-outline-secondary">Webhooks</a>
-          <a href="?q={{ filters.q }}&school_id={{ filters.school_id }}&status={{ filters.status }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&export=csv" class="btn btn-outline-secondary">Export CSV</a>
-          <a href="?q={{ filters.q }}&school_id={{ filters.school_id }}&status={{ filters.status }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&export=excel" class="btn btn-outline-secondary">Export Excel</a>
-          <button type="button" class="btn btn-outline-secondary" id="exportSelectedInvoicesCsvBtn" disabled>Export Selected (CSV)</button>
-          <button type="button" class="btn btn-outline-secondary" id="exportSelectedInvoicesExcelBtn" disabled>Export Selected (Excel)</button>
-          <a href="/billing/invoices/create/" class="btn btn-primary">Create Invoice</a>
-        </div>
-      </div>
+<div class="card h-100">
+    <div class="card-body p-0 dataTable-wrapper">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+                <!-- Nav Links for Billing Module -->
+                <div class="btn-group" role="group">
+                    <a href="/billing/plans/" class="btn btn-outline-primary">Plans</a>
+                    <a href="/billing/features/" class="btn btn-outline-primary">Features</a>
+                    <a href="/billing/schools/" class="btn btn-outline-primary">Subscriptions</a>
+                    <a href="/billing/invoices/" class="btn btn-primary">Invoices</a>
+                    <a href="/billing/coupons/" class="btn btn-outline-primary">Coupons</a>
+                    <a href="/billing/webhooks/" class="btn btn-outline-primary">Webhooks</a>
+                </div>
+            </div>
 
-      <form method="get" class="sf-filters mt-3">
-        <div class="row gy-3 gx-3 align-items-end">
-          <div class="col-lg-4">
-            <label class="form-label">Search</label>
-            <input class="form-control" name="q" value="{{ filters.q }}" placeholder="invoice id, school, plan">
-          </div>
-          <div class="col-lg-3">
-            <label class="form-label">School</label>
-            <select class="form-control" name="school_id">
-              <option value="">All schools</option>
-              {% for s in schools %}
-                <option value="{{ s.id }}" {% if filters.school_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-lg-2">
-            <label class="form-label">Status</label>
-            <select class="form-control" name="status">
-              <option value="">All</option>
-              <option value="DRAFT" {% if filters.status == "DRAFT" %}selected{% endif %}>Draft</option>
-              <option value="ISSUED" {% if filters.status == "ISSUED" %}selected{% endif %}>Issued</option>
-              <option value="PAID" {% if filters.status == "PAID" %}selected{% endif %}>Paid</option>
-              <option value="VOID" {% if filters.status == "VOID" %}selected{% endif %}>Void</option>
-            </select>
-          </div>
-          <div class="col-lg-3">
-            <label class="form-label">Period from</label>
-            <input type="date" class="form-control" name="date_from" value="{{ filters.date_from }}">
-          </div>
-          <div class="col-lg-3">
-            <label class="form-label">Period to</label>
-            <input type="date" class="form-control" name="date_to" value="{{ filters.date_to }}">
-          </div>
-          <div class="col-lg-2 d-grid">
-            <button class="btn btn-outline-secondary">Apply</button>
-          </div>
-          <div class="col-12">
-            <a href="/billing/invoices/" class="btn btn-outline-secondary">Reset</a>
-          </div>
+            <!-- Export Buttons -->
+            <div class="d-flex align-items-center gap-16">
+                <div class="dropdown">
+                    <button type="button" class="px-12 py-5-px border border-neutral-300 radius-8 d-flex align-items-center gap-20 " data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="d-flex align-items-center gap-1 text-secondary-light text-sm">
+                            <i class="ri-file-upload-line text-md line-height-1"></i>
+                            Export
+                        </span>
+                        <span class="">
+                            <i class="ri-arrow-down-s-line"></i>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu p-12 border bg-base shadow">
+                        <li>
+                            <a href="?q={{ filters.q }}&school_id={{ filters.school_id }}&status={{ filters.status }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&export=csv" class="dropdown-item px-16 py-8 rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-10">
+                                <i class="ri-file-text-line"></i> CSV
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?q={{ filters.q }}&school_id={{ filters.school_id }}&status={{ filters.status }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&export=excel" class="dropdown-item px-16 py-8 rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-10">
+                                <i class="ri-file-excel-line"></i> Excel
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item px-16 py-8 rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-10" id="exportSelectedInvoicesCsvBtn" disabled>
+                                <i class="ri-file-text-line"></i> Export Selected (CSV)
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item px-16 py-8 rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-10" id="exportSelectedInvoicesExcelBtn" disabled>
+                                <i class="ri-file-excel-line"></i> Export Selected (Excel)
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-      </form>
+
+        <div class="px-20 py-16 border-bottom border-neutral-200">
+            <form method="get" class="row gy-3 gx-3 align-items-end">
+                <div class="col-lg-3">
+                    <label class="form-label text-sm fw-semibold text-primary-light">Search</label>
+                    <div class="position-relative">
+                        <input class="form-control radius-8 dt-input ps-32" name="q" value="{{ filters.q }}" placeholder="ID, School, Plan">
+                        <iconify-icon icon="ion:search-outline" class="position-absolute top-50 translate-middle-y ms-12 text-secondary-light"></iconify-icon>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label text-sm fw-semibold text-primary-light">School</label>
+                    <select class="form-control radius-8 form-select" name="school_id">
+                        <option value="">All schools</option>
+                        {% for s in schools %}
+                            <option value="{{ s.id }}" {% if filters.school_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label text-sm fw-semibold text-primary-light">Status</label>
+                    <select class="form-control radius-8 form-select" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="DRAFT" {% if filters.status == "DRAFT" %}selected{% endif %}>Draft</option>
+                        <option value="ISSUED" {% if filters.status == "ISSUED" %}selected{% endif %}>Issued</option>
+                        <option value="PAID" {% if filters.status == "PAID" %}selected{% endif %}>Paid</option>
+                        <option value="VOID" {% if filters.status == "VOID" %}selected{% endif %}>Void</option>
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label text-sm fw-semibold text-primary-light">Period From</label>
+                    <input type="date" class="form-control radius-8" name="date_from" value="{{ filters.date_from }}">
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label text-sm fw-semibold text-primary-light">Period To</label>
+                    <input type="date" class="form-control radius-8" name="date_to" value="{{ filters.date_to }}">
+                </div>
+                <div class="col-lg-1 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary-600 px-16 h-100 flex-grow-1" aria-label="Apply filters"><i class="ri-search-line"></i></button>
+                    <a href="/billing/invoices/" class="btn btn-outline-secondary px-16 h-100 flex-grow-1" aria-label="Reset filters"><i class="ri-refresh-line"></i></a>
+                </div>
+            </form>
+        </div>
+
+        <div class="p-0 table-responsive">
+            <table class="table bordered-table mb-0 data-table">
+                <thead>
+                    <tr>
+                        <th scope="col" class="w-40-px">
+                            <div class="form-check style-check d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input" id="selectAllInvoices" aria-label="Select all invoices">
+                            </div>
+                        </th>
+                        <th scope="col">#</th>
+                        <th scope="col">School</th>
+                        <th scope="col">Plan</th>
+                        <th scope="col">Period</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr>
+                        <td>
+                            <div class="form-check style-check d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input invoice-select" value="{{ inv.id }}" aria-label="Select invoice {{ inv.id }}">
+                            </div>
+                        </td>
+                        <td><span class="text-secondary-light">#{{ inv.id }}</span></td>
+                        <td>
+                            <strong class="text-primary-light">{{ inv.school.name }}</strong>
+                        </td>
+                        <td><span class="text-secondary-light">{{ inv.plan.code }}</span></td>
+                        <td>
+                            <span class="text-secondary-light text-sm d-block">{{ inv.period_start }} to</span>
+                            <span class="text-secondary-light text-sm d-block">{{ inv.period_end }}</span>
+                        </td>
+                        <td><span class="fw-semibold text-primary-light">Rs {{ inv.amount }}</span></td>
+                        <td>
+                            {% if inv.status == "PAID" %}
+                            <span class="bg-success-100 text-success-600 px-12 py-4 radius-4 fw-medium text-xs">PAID</span>
+                            {% elif inv.status == "ISSUED" %}
+                            <span class="bg-info-100 text-info-600 px-12 py-4 radius-4 fw-medium text-xs">ISSUED</span>
+                            {% elif inv.status == "VOID" %}
+                            <span class="bg-neutral-200 text-neutral-600 px-12 py-4 radius-4 fw-medium text-xs">VOID</span>
+                            {% else %}
+                            <span class="bg-warning-100 text-warning-600 px-12 py-4 radius-4 fw-medium text-xs">DRAFT</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="/billing/invoices/{{ inv.id }}/" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+                                <iconify-icon icon="ri:bank-card-line"></iconify-icon> Payments
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-24 text-secondary-light">
+                            No invoices found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if invoices.has_other_pages %}
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-20 py-12 border-top border-neutral-200">
+            <span class="text-secondary-light text-sm">
+                Showing {{ invoices.start_index }} to {{ invoices.end_index }} of {{ invoices.paginator.count }} entries
+            </span>
+            <ul class="pagination mb-0 d-flex gap-2">
+                {% if invoices.has_previous %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ invoices.previous_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.school_id %}&school_id={{ filters.school_id }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}">Prev</a>
+                </li>
+                {% endif %}
+
+                {% for num in invoices.paginator.page_range %}
+                    {% if invoices.number == num %}
+                    <li class="page-item">
+                        <span class="page-link px-12 py-8 rounded bg-primary-600 text-white">{{ num }}</span>
+                    </li>
+                    {% elif num > invoices.number|add:'-3' and num < invoices.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ num }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.school_id %}&school_id={{ filters.school_id }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if invoices.has_next %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ invoices.next_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.school_id %}&school_id={{ filters.school_id }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
-  </div>
+</div>
+{% endblock %}
 
-  <div class="sf-card">
-    <div class="sf-card__body">
-      <div class="table-responsive">
-        <table class="table align-middle sf-table">
-          <thead>
-            <tr>
-              <th class="sf-th-52">
-                <input type="checkbox" class="form-check-input" id="selectAllInvoices" aria-label="Select all invoices">
-              </th>
-              <th>#</th>
-              <th>School</th>
-              <th>Plan</th>
-              <th>Period</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for inv in invoices %}
-              <tr>
-                <td>
-                  <input type="checkbox" class="form-check-input invoice-select" value="{{ inv.id }}" aria-label="Select invoice {{ inv.id }}">
-                </td>
-                <td class="text-muted">{{ inv.id }}</td>
-                <td><strong>{{ inv.school.name }}</strong></td>
-                <td>{{ inv.plan.code }}</td>
-                <td class="text-muted text-sm">{{ inv.period_start }} → {{ inv.period_end }}</td>
-                <td>Rs {{ inv.amount }}</td>
-                <td>
-                  {% if inv.status == "PAID" %}
-                    <span class="badge bg-success">Paid</span>
-                  {% elif inv.status == "ISSUED" %}
-                    <span class="badge bg-info">Issued</span>
-                  {% elif inv.status == "VOID" %}
-                    <span class="badge bg-secondary">Void</span>
-                  {% else %}
-                    <span class="badge bg-warning text-dark">Draft</span>
-                  {% endif %}
-                </td>
-                <td class="text-end">
-                  <a href="/billing/invoices/{{ inv.id }}/" class="btn btn-sm btn-outline-primary">Payments</a>
-                </td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="8" class="text-center text-muted">No invoices yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
+{% block extra_js %}
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const selectAll = document.getElementById("selectAllInvoices");
@@ -162,12 +252,17 @@
         boxes.forEach((b) => b.addEventListener("change", updateSelectedActions));
       }
 
-      exportCsvBtn && exportCsvBtn.addEventListener("click", function () {
-        window.location.href = buildExportUrl("csv");
-      });
-      exportExcelBtn && exportExcelBtn.addEventListener("click", function () {
-        window.location.href = buildExportUrl("excel");
-      });
+      if (exportCsvBtn) {
+        exportCsvBtn.addEventListener("click", function () {
+          window.location.href = buildExportUrl("csv");
+        });
+      }
+
+      if (exportExcelBtn) {
+        exportExcelBtn.addEventListener("click", function () {
+          window.location.href = buildExportUrl("excel");
+        });
+      }
 
       updateSelectedActions();
     });

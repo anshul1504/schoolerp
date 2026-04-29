@@ -18,7 +18,9 @@ class AdmissionApplication(models.Model):
         ("CLOSED", "Closed"),
     )
 
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="admission_applications")
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="admission_applications"
+    )
     enquiry = models.OneToOneField(
         "frontoffice.Enquiry",
         on_delete=models.SET_NULL,
@@ -27,7 +29,11 @@ class AdmissionApplication(models.Model):
         related_name="admission_application",
     )
     academic_year = models.ForeignKey(
-        AcademicYear, on_delete=models.SET_NULL, null=True, blank=True, related_name="admission_applications"
+        AcademicYear,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admission_applications",
     )
 
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="DRAFT")
@@ -41,21 +47,37 @@ class AdmissionApplication(models.Model):
     previous_school = models.CharField(max_length=255, blank=True)
 
     desired_class_master = models.ForeignKey(
-        ClassMaster, on_delete=models.SET_NULL, null=True, blank=True, related_name="admission_applications"
+        ClassMaster,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admission_applications",
     )
     desired_class_text = models.CharField(max_length=120, blank=True)
     desired_section_master = models.ForeignKey(
-        SectionMaster, on_delete=models.SET_NULL, null=True, blank=True, related_name="admission_applications"
+        SectionMaster,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admission_applications",
     )
     desired_section_text = models.CharField(max_length=60, blank=True)
 
     notes = models.TextField(blank=True)
 
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_admissions"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_admissions",
     )
     updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="updated_admissions"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="updated_admissions",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,7 +85,9 @@ class AdmissionApplication(models.Model):
     class Meta:
         ordering = ["-created_at"]
         constraints = [
-            models.UniqueConstraint(fields=["school", "application_no"], name="uniq_admission_application_no_per_school"),
+            models.UniqueConstraint(
+                fields=["school", "application_no"], name="uniq_admission_application_no_per_school"
+            ),
         ]
 
     def __str__(self):
@@ -87,7 +111,9 @@ class AdmissionApplication(models.Model):
             year = today.year
             prefix = f"APP/{year}/"
             last = (
-                AdmissionApplication.objects.filter(school=self.school, application_no__startswith=prefix)
+                AdmissionApplication.objects.filter(
+                    school=self.school, application_no__startswith=prefix
+                )
                 .order_by("-id")
                 .first()
             )
@@ -102,7 +128,9 @@ class AdmissionApplication(models.Model):
 
 
 class AdmissionDocument(models.Model):
-    application = models.ForeignKey(AdmissionApplication, on_delete=models.CASCADE, related_name="documents")
+    application = models.ForeignKey(
+        AdmissionApplication, on_delete=models.CASCADE, related_name="documents"
+    )
     title = models.CharField(max_length=150)
     document = models.FileField(upload_to="admissions/documents/", null=True, blank=True)
     is_received = models.BooleanField(default=False)
@@ -125,7 +153,9 @@ class AdmissionEvent(models.Model):
         ("STUDENT_CREATED", "Student Created"),
     )
 
-    application = models.ForeignKey(AdmissionApplication, on_delete=models.CASCADE, related_name="events")
+    application = models.ForeignKey(
+        AdmissionApplication, on_delete=models.CASCADE, related_name="events"
+    )
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="admission_events")
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -141,4 +171,3 @@ class AdmissionEvent(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Research Dashboard | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Research Dashboard{% endblock %}
+{% block breadcrumb_active %}Dashboard{% endblock %}
+
+{% block heading_actions %}
+<div class="d-flex gap-16 align-items-center">
+    <div class="dropdown">
+        <button
+            class="btn btn-outline-primary-600 radius-8 px-20 d-flex align-items-center gap-8 shadow-sm dropdown-toggle"
+            type="button" data-bs-toggle="dropdown">
+            <i class="ri-download-2-line"></i>
+            <span>Export Portfolio</span>
+        </button>
+        <ul class="dropdown-menu shadow-lg border-0">
+            <li><a class="dropdown-item py-10 px-16 d-flex align-items-center gap-8"
+                    href="{% url 'research:export_projects_csv' %}"><i class="ri-file-excel-line text-success"></i>
+                    Export as Excel</a></li>
+        </ul>
+    </div>
+    <a href="{% url 'research:project_create' %}"
+        class="btn btn-primary-600 radius-8 px-24 d-flex align-items-center gap-8 shadow-primary">
+        <i class="ri-add-circle-line"></i>
+        <span>Initiate Study</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+    <!-- Top KPI Cards -->
+    <div class="col-12">
+        <div class="row g-4">
+            <div class="col-xxl-3 col-sm-6">
+                <div class="card radius-16 border-0 shadow-sm h-100 transition-all hover-shadow-md">
+                    <div class="card-body p-24">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <div
+                                class="w-56-px h-56-px bg-primary-100 text-primary-600 radius-12 d-flex align-items-center justify-content-center">
+                                <i class="ri-microscope-line text-2xl"></i>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-secondary-light text-xs fw-bold d-block mb-4 uppercase">Total
+                                    Projects</span>
+                                <h3 class="mb-0 fw-bold">{{ total_projects }}</h3>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between border-top pt-12">
+                            <span class="text-success-600 text-xs fw-bold"><i class="ri-arrow-up-line"></i> All
+                                Projects</span>
+                            <span class="text-secondary-light text-xs">Live Count</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xxl-3 col-sm-6">
+                <div class="card radius-16 border-0 shadow-sm h-100 transition-all hover-shadow-md">
+                    <div class="card-body p-24">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <div
+                                class="w-56-px h-56-px bg-success-100 text-success-600 radius-12 d-flex align-items-center justify-content-center">
+                                <i class="ri-hand-coin-line text-2xl"></i>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-secondary-light text-xs fw-bold d-block mb-4 uppercase">Total
+                                    Budget</span>
+                                <h3 class="mb-0 fw-bold">{{ total_budget|floatformat:0 }}</h3>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between border-top pt-12">
+                            <span class="text-success-600 text-xs fw-bold"><i class="ri-checkbox-circle-line"></i> {{
+                                school.currency }} Allocated</span>
+                            <span class="text-secondary-light text-xs">Grant Portfolio</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xxl-3 col-sm-6">
+                <div class="card radius-16 border-0 shadow-sm h-100 transition-all hover-shadow-md">
+                    <div class="card-body p-24">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <div
+                                class="w-56-px h-56-px bg-warning-100 text-warning-600 radius-12 d-flex align-items-center justify-content-center">
+                                <i class="ri-article-line text-2xl"></i>
+                            </div>
+                            <div class="text-end">
+                                <span
+                                    class="text-secondary-light text-xs fw-bold d-block mb-4 uppercase">Publications</span>
+                                <h3 class="mb-0 fw-bold">{{ recent_papers.count }}</h3>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between border-top pt-12">
+                            <span class="text-warning-600 text-xs fw-bold"><i class="ri-book-mark-line"></i>
+                                Published</span>
+                            <span class="text-secondary-light text-xs">Academic Papers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xxl-3 col-sm-6">
+                <div class="card radius-16 border-0 shadow-sm h-100 transition-all hover-shadow-md">
+                    <div class="card-body p-24">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <div
+                                class="w-56-px h-56-px bg-danger-100 text-danger-600 radius-12 d-flex align-items-center justify-content-center">
+                                <i class="ri-shield-check-line text-2xl"></i>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-secondary-light text-xs fw-bold d-block mb-4 uppercase">Ethics
+                                    Review</span>
+                                <h3 class="mb-0 fw-bold">{{ pending_reviews }}</h3>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between border-top pt-12">
+                            <span class="text-danger-600 text-xs fw-bold"><i class="ri-time-line"></i> Pending</span>
+                            <span class="text-secondary-light text-xs">Awaiting Review</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="col-xxl-8">
+        <div class="card radius-12 border-0 shadow-sm mb-24">
+            <div
+                class="card-header bg-transparent border-bottom py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-bold text-primary-light">Publication Trend</h6>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border radius-8" type="button" data-bs-toggle="dropdown">
+                        <i class="ri-more-2-fill"></i>
+                    </button>
+                    <ul class="dropdown-menu shadow-lg border-0">
+                        <li><a class="dropdown-item py-10 px-16 d-flex align-items-center gap-8"
+                                href="{% url 'research:export_projects_csv' %}"><i
+                                    class="ri-file-excel-line text-success"></i> Export as Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body p-24">
+                <div id="trendChart"></div>
+            </div>
+        </div>
+
+        <!-- RECENT PROJECTS TABLE WITH FIX FOR DROPDOWN -->
+        <div class="card radius-12 border-0 shadow-sm">
+            <div
+                class="card-header bg-transparent border-bottom py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-bold text-primary-light">Recent Projects</h6>
+                <a href="{% url 'research:project_list' %}"
+                    class="btn btn-sm btn-outline-primary-600 radius-8 px-16 fw-bold">View Portfolio</a>
+            </div>
+            <div class="card-body p-0">
+                    <div class="table-responsive allow-dropdown">
+                    <table class="table bordered-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">#</th>
+                                <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Project
+                                    Details</th>
+                                <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Budget</th>
+                                <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Status</th>
+                                <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase text-end">
+                                    Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in recent_projects %}
+                            <tr class="border-bottom border-neutral-100">
+                                <td class="py-16 px-24 text-sm text-secondary-light fw-medium">{{ forloop.counter }}
+                                </td>
+                                <td class="py-16 px-24">
+                                    <span class="text-sm fw-bold text-primary-light d-block mb-4">{{ project.title
+                                        }}</span>
+                                    <small class="text-secondary-light">Lead: {{ project.pi.full_name }}</small>
+                                </td>
+                                <td class="py-16 px-24 text-sm fw-bold text-success-600">{{ school.currency }} {{
+                                    project.budget|floatformat:0 }}</td>
+                                <td class="py-16 px-24">
+                                    <span class="px-10 py-2 radius-pill text-xs fw-bold
+                                        {% if project.status == 'ONGOING' %}bg-success-100 text-success-600
+                                        {% elif project.status == 'PROPOSED' %}bg-warning-100 text-warning-600
+                                        {% else %}bg-primary-100 text-primary-600{% endif %}">
+                                        {{ project.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="py-16 px-24 text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-icon bg-neutral-100 radius-8" type="button"
+                                            data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border shadow-sm">
+                                            <li><a class="dropdown-item py-8"
+                                                    href="{% url 'research:project_detail' project.pk %}"><i
+                                                        class="ri-eye-line me-8"></i> View Details</a></li>
+                                            <li><a class="dropdown-item py-8"
+                                                    href="{% url 'research:project_edit' project.pk %}"><i
+                                                        class="ri-edit-line me-8"></i> Edit</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-40 text-secondary-light">No projects in
+                                    repository.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-xxl-4">
+        <div class="card radius-12 border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-bottom py-16 px-24">
+                <h6 class="mb-0 fw-bold text-primary-light">Portfolio Distribution</h6>
+            </div>
+            <div class="card-body p-24">
+                <div id="statusChart"></div>
+
+                <div class="mt-32 d-flex flex-column gap-20">
+                    <div class="p-20 radius-12 bg-neutral-50 border border-neutral-100 shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-8">
+                            <span class="text-sm fw-bold text-primary-light">Ethics Pending</span>
+                            <span class="badge bg-danger-600 text-white">{{ pending_reviews }}</span>
+                        </div>
+                        <p class="text-xs text-secondary-light mb-16">Projects waiting for ethics review approval.</p>
+                        <a href="{% url 'research:ethics_queue' %}"
+                            class="btn btn-sm btn-primary-600 w-100 radius-8 fw-bold py-10">Go to Ethics Review</a>
+                    </div>
+
+                    <div class="p-20 radius-12 bg-neutral-50 border border-neutral-100 shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <span class="text-sm fw-bold text-primary-light">Recent Publications</span>
+                        </div>
+                        <div class="d-flex flex-column gap-16">
+                            {% for paper in recent_papers %}
+                            <div
+                                class="d-flex align-items-start gap-12 pb-12 border-bottom border-neutral-100 last-border-0">
+                                <div
+                                    class="w-32-px h-32-px bg-primary-50 text-primary-600 radius-circle d-flex align-items-center justify-content-center shrink-0">
+                                    <i class="ri-article-line"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs fw-bold text-primary-light d-block line-clamp-1 mb-2">{{
+                                        paper.title }}</span>
+                                    <small class="text-secondary-light text-xxs">{{ paper.journal }} • {{
+                                        paper.publication_date|date:"Y" }}</small>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-secondary-light py-10">No recent outputs.</div>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'research:paper_list' %}"
+                            class="btn btn-sm btn-outline-primary-600 w-100 radius-8 fw-bold mt-16 py-8">View All
+                            Publications</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const chartData = JSON.parse('{{ chart_data_json|safe }}');
+
+        var statusOptions = {
+            series: chartData.status_distribution,
+            chart: { type: 'donut', height: 280 },
+            labels: ['Proposed', 'Ongoing', 'Completed', 'Suspended'],
+            colors: ['#FF9F29', '#45B369', '#487FFF', '#EF4444'],
+            plotOptions: { pie: { donut: { size: '75%', labels: { show: true, total: { show: true, label: 'Projects', fontWeight: 700 } } } } },
+            legend: { position: 'bottom', markers: { radius: 12 } },
+            dataLabels: { enabled: false }
+        };
+        new ApexCharts(document.querySelector("#statusChart"), statusOptions).render();
+
+        var trendOptions = {
+            series: [{ name: 'Publications', data: chartData.publication_trend }],
+            chart: { type: 'area', height: 320, toolbar: { show: false } },
+            colors: ['#487FFF'],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 3 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
+            xaxis: { categories: chartData.publication_labels },
+            grid: { borderColor: '#EDF2F7', strokeDashArray: 4 }
+        };
+        new ApexCharts(document.querySelector("#trendChart"), trendOptions).render();
+    });
+</script>
+{% endblock %}

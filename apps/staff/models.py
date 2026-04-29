@@ -23,7 +23,9 @@ class StaffMember(models.Model):
     class Meta:
         ordering = ["full_name", "id"]
         constraints = [
-            models.UniqueConstraint(fields=["school", "employee_id"], name="uniq_employee_id_per_school"),
+            models.UniqueConstraint(
+                fields=["school", "employee_id"], name="uniq_employee_id_per_school"
+            ),
         ]
 
     def __str__(self):

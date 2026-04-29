@@ -1,41 +1,197 @@
 from functools import wraps
 
 from django.contrib import messages
-from django.shortcuts import redirect
 from django.core.cache import cache
+from django.shortcuts import redirect
 
 from apps.core.models import RolePermissionsOverride
 
-
 DEFAULT_PERMISSIONS = {
     "SUPER_ADMIN": {"*"},
-    "SCHOOL_OWNER": {"schools.view", "schools.manage", "schools.comm_settings", "schools.team", "admissions.*", "students.*", "academics.*", "attendance.*", "fees.*", "exams.*", "communication.*", "staff.*", "reports.view"},
-    "ADMIN": {"schools.view", "schools.manage", "schools.comm_settings", "schools.team", "admissions.*", "students.*", "academics.*", "attendance.*", "fees.*", "exams.*", "communication.*", "staff.*", "reports.view"},
-    "PRINCIPAL": {"schools.view", "schools.manage", "schools.comm_settings", "schools.team", "admissions.*", "students.*", "academics.*", "attendance.*", "exams.*", "communication.*", "staff.*", "reports.view"},
-    "VICE_PRINCIPAL": {"schools.view", "admissions.*", "students.*", "academics.*", "attendance.*", "exams.*", "communication.*", "staff.*", "reports.view"},
-    "MANAGEMENT_TRUSTEE": {"schools.view", "students.view", "academics.view", "attendance.view", "fees.view", "exams.view", "communication.view", "staff.view", "reports.view"},
-    "REPORT_VIEWER": {"schools.view", "students.view", "academics.view", "attendance.view", "fees.view", "exams.view", "communication.view", "staff.view", "reports.view"},
-    "ACADEMIC_COORDINATOR": {"students.view", "academics.*", "attendance.*", "exams.view", "communication.*", "reports.view"},
-    "EXAM_CONTROLLER": {"students.view", "academics.view", "exams.*", "communication.view", "reports.view"},
-    "CLASS_TEACHER": {"students.view", "academics.view", "attendance.*", "exams.view", "communication.*"},
-    "SUBJECT_TEACHER": {"students.view", "academics.view", "attendance.view", "exams.*", "communication.view"},
-    "HOD": {"students.view", "academics.*", "attendance.view", "exams.*", "communication.*", "staff.view", "reports.view"},
-    "SUBSTITUTE_TEACHER": {"students.view", "academics.view", "attendance.manage", "communication.view"},
-    "TUTOR_MENTOR": {"students.view", "academics.view", "attendance.view", "exams.view", "communication.view"},
+    "SCHOOL_OWNER": {
+        "schools.view",
+        "schools.manage",
+        "schools.comm_settings",
+        "schools.team",
+        "admissions.*",
+        "students.*",
+        "academics.*",
+        "attendance.*",
+        "fees.*",
+        "exams.*",
+        "communication.*",
+        "staff.*",
+        "transport.*",
+        "hostel.*",
+        "library.*",
+        "timetable.*",
+        "inventory.*",
+        "reports.view",
+        "research.*",
+    },
+    "ADMIN": {
+        "schools.view",
+        "schools.manage",
+        "schools.comm_settings",
+        "schools.team",
+        "admissions.*",
+        "students.*",
+        "academics.*",
+        "attendance.*",
+        "fees.*",
+        "exams.*",
+        "communication.*",
+        "staff.*",
+        "transport.*",
+        "hostel.*",
+        "library.*",
+        "timetable.*",
+        "inventory.*",
+        "reports.view",
+        "research.*",
+    },
+    "PRINCIPAL": {
+        "schools.view",
+        "schools.manage",
+        "schools.comm_settings",
+        "schools.team",
+        "admissions.*",
+        "students.*",
+        "academics.*",
+        "attendance.*",
+        "fees.view",
+        "exams.*",
+        "communication.*",
+        "staff.*",
+        "transport.view",
+        "hostel.view",
+        "library.view",
+        "timetable.*",
+        "reports.view",
+        "research.*",
+    },
+    "VICE_PRINCIPAL": {
+        "schools.view",
+        "admissions.*",
+        "students.*",
+        "academics.*",
+        "attendance.*",
+        "exams.*",
+        "communication.*",
+        "staff.*",
+        "reports.view",
+    },
+    "MANAGEMENT_TRUSTEE": {
+        "schools.view",
+        "students.view",
+        "academics.view",
+        "attendance.view",
+        "fees.view",
+        "exams.view",
+        "communication.view",
+        "staff.view",
+        "reports.view",
+    },
+    "REPORT_VIEWER": {
+        "schools.view",
+        "students.view",
+        "academics.view",
+        "attendance.view",
+        "fees.view",
+        "exams.view",
+        "communication.view",
+        "staff.view",
+        "reports.view",
+    },
+    "ACADEMIC_COORDINATOR": {
+        "students.view",
+        "academics.*",
+        "attendance.*",
+        "exams.view",
+        "communication.*",
+        "reports.view",
+    },
+    "EXAM_CONTROLLER": {
+        "students.view",
+        "academics.view",
+        "exams.*",
+        "communication.view",
+        "reports.view",
+    },
+    "CLASS_TEACHER": {
+        "students.view",
+        "academics.view",
+        "attendance.*",
+        "exams.view",
+        "communication.*",
+    },
+    "SUBJECT_TEACHER": {
+        "students.view",
+        "academics.view",
+        "attendance.view",
+        "exams.*",
+        "communication.view",
+    },
+    "HOD": {
+        "students.view",
+        "academics.*",
+        "attendance.view",
+        "exams.*",
+        "communication.*",
+        "staff.view",
+        "reports.view",
+    },
+    "SUBSTITUTE_TEACHER": {
+        "students.view",
+        "academics.view",
+        "attendance.manage",
+        "communication.view",
+    },
+    "TUTOR_MENTOR": {
+        "students.view",
+        "academics.view",
+        "attendance.view",
+        "exams.view",
+        "communication.view",
+    },
     "TEACHER": {"students.view", "academics.view", "attendance.*", "exams.*", "communication.*"},
     "STUDENT": {"academics.view", "attendance.view", "exams.view", "communication.view"},
     "PARENT": {"fees.view", "attendance.view", "communication.view"},
-    "OFFICE_ADMIN": {"schools.view", "admissions.*", "students.*", "staff.view", "communication.*", "reports.view"},
+    "OFFICE_ADMIN": {
+        "schools.view",
+        "admissions.*",
+        "students.*",
+        "staff.view",
+        "communication.*",
+        "reports.view",
+    },
     "RECEPTIONIST": {"admissions.*", "students.*", "communication.*", "frontoffice.*"},
-    "ADMISSION_COUNSELOR": {"admissions.*", "students.view", "frontoffice.*", "communication.*", "reports.view"},
+    "ADMISSION_COUNSELOR": {
+        "admissions.*",
+        "students.view",
+        "frontoffice.*",
+        "communication.*",
+        "reports.view",
+    },
     "HR_MANAGER": {"staff.*", "communication.view", "reports.view"},
     "STAFF_COORDINATOR": {"staff.view", "attendance.view", "communication.view"},
     "ACCOUNTANT": {"fees.*", "reports.view"},
     "FEE_MANAGER": {"fees.*", "students.view", "communication.view", "reports.view"},
     "BILLING_EXECUTIVE": {"billing.manage", "fees.*", "reports.view"},
     "AUDITOR": {"fees.view", "billing.view", "activity.view", "reports.view"},
-    "TRANSPORT_MANAGER": {"transport.*", "students.view", "staff.view", "communication.*", "reports.view"},
-    "TRANSPORT_SUPERVISOR": {"transport.view", "transport.manage", "students.view", "communication.view"},
+    "TRANSPORT_MANAGER": {
+        "transport.*",
+        "students.view",
+        "staff.view",
+        "communication.*",
+        "reports.view",
+    },
+    "TRANSPORT_SUPERVISOR": {
+        "transport.view",
+        "transport.manage",
+        "students.view",
+        "communication.view",
+    },
     "DRIVER": {"transport.view", "communication.view"},
     "CONDUCTOR_ATTENDANT": {"transport.view", "students.view", "communication.view"},
     "HOSTEL_MANAGER": {"hostel.*", "students.view", "fees.view", "communication.*", "reports.view"},
@@ -58,16 +214,61 @@ DEFAULT_PERMISSIONS = {
     "DIGITAL_MARKETING_MANAGER": {"communication.*", "admissions.view", "reports.view"},
     "ALUMNI_MANAGER": {"students.view", "communication.*", "reports.view"},
     "PLACEMENT_COORDINATOR": {"students.view", "communication.*", "reports.view"},
-    "RESEARCH_COORDINATOR": {"academics.view", "students.view", "reports.view"},
+    "RESEARCH_COORDINATOR": {"academics.view", "students.view", "reports.view", "research.*"},
+    "CAREER_COUNSELOR": {
+        "students.view",
+        "communication.view",
+        "career_counseling.*",
+        "research.*",
+        "academics.view",
+        "frontoffice.view",
+        "admissions.view",
+    },
 }
 
 
 ROLE_EQUIVALENTS = {
-    "SCHOOL_OWNER": {"ADMIN", "MANAGEMENT_TRUSTEE"},
-    "PRINCIPAL": {"VICE_PRINCIPAL", "ACADEMIC_COORDINATOR", "HOD"},
-    "TEACHER": {"CLASS_TEACHER", "SUBJECT_TEACHER", "SUBSTITUTE_TEACHER", "TUTOR_MENTOR"},
-    "RECEPTIONIST": {"OFFICE_ADMIN", "ADMISSION_COUNSELOR", "SYSTEM_OPERATOR"},
+    "SCHOOL_OWNER": {
+        "ADMIN",
+        "MANAGEMENT_TRUSTEE",
+        "IT_ADMINISTRATOR",
+        "ROLE_PERMISSION_MANAGER",
+        "API_INTEGRATION_USER",
+    },
+    "PRINCIPAL": {
+        "VICE_PRINCIPAL",
+        "ACADEMIC_COORDINATOR",
+        "HOD",
+        "EXAM_CONTROLLER",
+        "HR_MANAGER",
+        "COMPLIANCE_OFFICER",
+        "SECURITY_OFFICER",
+        "DIGITAL_MARKETING_MANAGER",
+        "ALUMNI_MANAGER",
+        "PLACEMENT_COORDINATOR",
+        "RESEARCH_COORDINATOR",
+        "STAFF_COORDINATOR",
+        "EVENT_MANAGER",
+    },
+    "TEACHER": {
+        "CLASS_TEACHER",
+        "SUBJECT_TEACHER",
+        "SUBSTITUTE_TEACHER",
+        "TUTOR_MENTOR",
+        "LAB_ASSISTANT",
+        "SPORTS_COACH",
+    },
+    "RECEPTIONIST": {
+        "OFFICE_ADMIN",
+        "ADMISSION_COUNSELOR",
+        "SYSTEM_OPERATOR",
+        "SCHOOL_COUNSELOR",
+        "NOTIFICATION_MANAGER",
+    },
     "ACCOUNTANT": {"FEE_MANAGER", "BILLING_EXECUTIVE", "AUDITOR"},
+    "TRANSPORT_MANAGER": {"TRANSPORT_SUPERVISOR", "DRIVER", "CONDUCTOR_ATTENDANT"},
+    "HOSTEL_MANAGER": {"HOSTEL_WARDEN", "ASSISTANT_WARDEN", "MESS_MANAGER"},
+    "LIBRARIAN": {"INVENTORY_MANAGER"},
 }
 
 
@@ -82,13 +283,21 @@ def _normalize_permissions(perms):
     return set(str(p).strip() for p in (perms or []) if str(p).strip())
 
 
-def granted_permissions_for_role(role):
-    cache_key = f"role_permissions:{role}"
+def granted_permissions_for_role(role, school_id=None):
+    cache_key = f"role_permissions:{role}:{school_id or 'global'}"
     cached = cache.get(cache_key)
     if cached is not None:
         return set(cached)
 
-    override = RolePermissionsOverride.objects.filter(role=role).first()
+    # Check for school-specific override first
+    override = None
+    if school_id:
+        override = RolePermissionsOverride.objects.filter(school_id=school_id, role=role).first()
+
+    # Fallback to global override if no school-specific one found
+    if not override:
+        override = RolePermissionsOverride.objects.filter(school__isnull=True, role=role).first()
+
     if override:
         perms = _normalize_permissions(override.permissions)
     else:
@@ -103,7 +312,8 @@ def has_permission(user, permission_code):
         return False
 
     role = getattr(user, "role", None) or "STUDENT"
-    perms = granted_permissions_for_role(role)
+    school_id = getattr(user, "school_id", None)
+    perms = granted_permissions_for_role(role, school_id=school_id)
 
     if "*" in perms:
         return True
@@ -154,3 +364,33 @@ def permission_required(permission_code, *, redirect_to="dashboard"):
         return wrapped
 
     return decorator
+
+
+try:
+    from rest_framework import permissions
+
+    class HasModulePermission(permissions.BasePermission):
+        """
+        Dynamically checks module permissions based on the view's basename or explicit configuration.
+        """
+
+        def has_permission(self, request, view):
+            if not request.user or not request.user.is_authenticated:
+                return False
+
+            # Allow super admin and school owner implicitly
+            if request.user.role in ["SUPER_ADMIN", "SCHOOL_OWNER"]:
+                return True
+
+            # If the view specifies a permission code, use it
+            if hasattr(view, "required_permission"):
+                return has_permission(request.user, view.required_permission)
+
+            # Fallback: assume the module name from the app (e.g., 'transport', 'hostel')
+            app_name = view.__module__.split(".")[1]
+            return has_permission(request.user, f"{app_name}.manage") or has_permission(
+                request.user, f"{app_name}.view"
+            )
+
+except ImportError:
+    pass

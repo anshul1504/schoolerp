@@ -29,7 +29,7 @@
               <tr>
                 <td><strong>{{ row.module|title }}</strong></td>
                 <td>
-                  {% if row.state == "GREEN" %}<span class="status-pill status-pill--success">&#x1F7E2; GREEN</span>{% elif row.state == "YELLOW" %}<span class="status-pill status-pill--warning">&#x1F7E1; YELLOW</span>{% else %}<span class="status-pill status-pill--danger">&#x1F534; RED</span>{% endif %}
+                  {% if row.state == "GREEN" %}<span class="badge status-pill--success">&#x1F7E2; GREEN</span>{% elif row.state == "YELLOW" %}<span class="badge status-pill--warning">&#x1F7E1; YELLOW</span>{% else %}<span class="badge status-pill--danger">&#x1F534; RED</span>{% endif %}
                 </td>
                 <td>
                   {% if row.needs_work %}

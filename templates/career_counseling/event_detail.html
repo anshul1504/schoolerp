@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Event Management | {{ event.title }}{% endblock %}
+
+{% block page_heading %}Event Management Dashboard{% endblock %}
+{% block breadcrumb_active %}Event Details{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="row gy-4">
+        <!-- Event Info Summary -->
+        <div class="col-12">
+            <div class="card radius-16 border-0 shadow-1 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="bg-primary-600 p-32 d-flex align-items-center justify-content-between flex-wrap gap-24">
+                        <div class="d-flex align-items-center gap-24">
+                            <div class="w-80-px h-80-px bg-white text-primary-600 radius-16 d-flex flex-column align-items-center justify-content-center shadow-sm">
+                                <span class="fw-bold text-2xl mb-0 line-height-1">{{ event.date|date:"d" }}</span>
+                                <span class="text-xs text-uppercase fw-bold">{{ event.date|date:"M" }}</span>
+                            </div>
+                            <div>
+                                <h4 class="text-white mb-8 fw-bold">{{ event.title }}</h4>
+                                <div class="d-flex align-items-center gap-16 text-white text-opacity-75 text-sm">
+                                    <span><i class="ri-map-pin-line me-4"></i>{{ event.location }}</span>
+                                    <span><i class="ri-time-line me-4"></i>{{ event.time|default:"TBA" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-12">
+                            <a href="{% url 'career_counseling:event_edit' event.pk %}" class="btn btn-white text-primary-600 radius-8 px-24 fw-bold">
+                                <i class="ri-edit-line me-8"></i> Edit Details
+                            </a>
+                        </div>
+                    </div>
+                    <div class="p-24 bg-base">
+                        <p class="text-secondary-light mb-0">{{ event.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Management -->
+        <div class="col-xl-4">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100">
+                    <h6 class="mb-0 fw-bold">Register Student</h6>
+                </div>
+                <div class="card-body p-24">
+                    <form method="post" class="d-flex flex-column gap-20">
+                        {% csrf_token %}
+                        <div>
+                            <label class="form-label text-xs fw-bold text-neutral-500 text-uppercase">Select Student</label>
+                            {{ form.student }}
+                            {% if form.student.errors %}
+                                <div class="text-danger text-xxs mt-4">{{ form.student.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="form-label text-xs fw-bold text-neutral-500 text-uppercase">Registration Status</label>
+                            {{ form.status }}
+                        </div>
+                        <div>
+                            <label class="form-label text-xs fw-bold text-neutral-500 text-uppercase">Counselor Notes</label>
+                            {{ form.notes }}
+                        </div>
+                        <button type="submit" class="btn btn-primary-600 radius-8 w-100 py-12 fw-bold">
+                            <i class="ri-user-add-line me-8"></i> Confirm Registration
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Students List -->
+        <div class="col-xl-8">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100 d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold">Registered Participants ({{ registrations.count }})</h6>
+                    <button class="btn btn-icon btn-sm btn-outline-neutral-200"><i class="ri-download-2-line"></i></button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table border-0 mb-0">
+                            <thead class="bg-neutral-100 dark-bg-neutral-800">
+                                <tr>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Student</th>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Class</th>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-center">Status</th>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in registrations %}
+                                <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                    <td class="py-12 px-24">
+                                        <div class="d-flex align-items-center gap-10">
+                                            <div class="w-32-px h-32-px bg-primary-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center text-xs fw-bold">
+                                                {{ reg.student.full_name|slice:":1"|upper }}
+                                            </div>
+                                            <span class="text-sm fw-bold text-primary-light">{{ reg.student.full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-12 px-24">
+                                        <span class="text-sm text-secondary-light">{{ reg.student.class_room.name }}</span>
+                                    </td>
+                                    <td class="py-12 px-24 text-center">
+                                        <span class="px-8 py-2 radius-pill text-xxs fw-bold
+                                            {% if reg.status == 'CONFIRMED' %}bg-success-100 text-success-600
+                                            {% elif reg.status == 'CANCELLED' %}bg-danger-100 text-danger-600
+                                            {% else %}bg-warning-100 text-warning-600{% endif %}">
+                                            {{ reg.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="py-12 px-24 text-end">
+                                        <a href="{% url 'career_counseling:student_detail' reg.student.pk %}" class="btn btn-icon btn-sm btn-outline-neutral-200 radius-8">
+                                            <i class="ri-user-line"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-48 text-secondary-light text-sm">
+                                        No students registered yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

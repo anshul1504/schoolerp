@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('frontoffice', '0004_calllog'),
+        ("frontoffice", "0004_calllog"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='messagedeliverylog',
-            name='attempt_count',
+            model_name="messagedeliverylog",
+            name="attempt_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='messagedeliverylog',
-            name='delivered_at',
+            model_name="messagedeliverylog",
+            name="delivered_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='messagedeliverylog',
-            name='last_attempt_at',
+            model_name="messagedeliverylog",
+            name="last_attempt_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='messagedeliverylog',
-            name='read_at',
+            model_name="messagedeliverylog",
+            name="read_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

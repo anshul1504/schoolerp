@@ -5,25 +5,36 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('academics', '0003_classmaster_sectionmaster'),
-        ('schools', '0012_campus'),
+        ("academics", "0003_classmaster_sectionmaster"),
+        ("schools", "0012_campus"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SubjectMaster',
+            name="SubjectMaster",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=120)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subject_masters', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=120)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="subject_masters",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['name'],
-                'unique_together': {('school', 'name')},
+                "ordering": ["name"],
+                "unique_together": {("school", "name")},
             },
         ),
     ]

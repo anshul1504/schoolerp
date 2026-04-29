@@ -6,69 +6,155 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('schools', '0003_school_student_capacity_school_allowed_campuses'),
-        ('students', '0006_student_aadhar_card_student_academic_year_and_more'),
+        ("schools", "0003_school_student_capacity_school_allowed_campuses"),
+        ("students", "0006_student_aadhar_card_student_academic_year_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FeeStructure',
+            name="FeeStructure",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=120)),
-                ('class_name', models.CharField(max_length=100)),
-                ('amount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('frequency', models.CharField(default='MONTHLY', max_length=20)),
-                ('due_day', models.PositiveIntegerField(default=10)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fee_structures', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=120)),
+                ("class_name", models.CharField(max_length=100)),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("frequency", models.CharField(default="MONTHLY", max_length=20)),
+                ("due_day", models.PositiveIntegerField(default=10)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fee_structures",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['class_name', 'name'],
-                'unique_together': {('school', 'name', 'class_name')},
+                "ordering": ["class_name", "name"],
+                "unique_together": {("school", "name", "class_name")},
             },
         ),
         migrations.CreateModel(
-            name='StudentFeeLedger',
+            name="StudentFeeLedger",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('billing_month', models.CharField(max_length=20)),
-                ('amount_due', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('amount_paid', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
-                ('due_date', models.DateField()),
-                ('status', models.CharField(choices=[('DUE', 'Due'), ('PARTIAL', 'Partial'), ('PAID', 'Paid')], default='DUE', max_length=10)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('fee_structure', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='student_ledgers', to='fees.feestructure')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fee_ledgers', to='schools.school')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fee_ledgers', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("billing_month", models.CharField(max_length=20)),
+                ("amount_due", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("amount_paid", models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ("due_date", models.DateField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("DUE", "Due"), ("PARTIAL", "Partial"), ("PAID", "Paid")],
+                        default="DUE",
+                        max_length=10,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "fee_structure",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="student_ledgers",
+                        to="fees.feestructure",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fee_ledgers",
+                        to="schools.school",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fee_ledgers",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-due_date', 'student__first_name'],
-                'unique_together': {('student', 'fee_structure', 'billing_month')},
+                "ordering": ["-due_date", "student__first_name"],
+                "unique_together": {("student", "fee_structure", "billing_month")},
             },
         ),
         migrations.CreateModel(
-            name='FeePayment',
+            name="FeePayment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('payment_date', models.DateField()),
-                ('payment_mode', models.CharField(choices=[('CASH', 'Cash'), ('ONLINE', 'Online'), ('CHEQUE', 'Cheque')], default='CASH', max_length=10)),
-                ('reference_no', models.CharField(blank=True, max_length=80)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('collected_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='fee_collections', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fee_payments', to='schools.school')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fee_payments', to='students.student')),
-                ('ledger', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payments', to='fees.studentfeeledger')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("payment_date", models.DateField()),
+                (
+                    "payment_mode",
+                    models.CharField(
+                        choices=[("CASH", "Cash"), ("ONLINE", "Online"), ("CHEQUE", "Cheque")],
+                        default="CASH",
+                        max_length=10,
+                    ),
+                ),
+                ("reference_no", models.CharField(blank=True, max_length=80)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "collected_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="fee_collections",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fee_payments",
+                        to="schools.school",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fee_payments",
+                        to="students.student",
+                    ),
+                ),
+                (
+                    "ledger",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="payments",
+                        to="fees.studentfeeledger",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-payment_date', '-created_at'],
+                "ordering": ["-payment_date", "-created_at"],
             },
         ),
     ]

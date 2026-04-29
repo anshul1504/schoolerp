@@ -5,46 +5,107 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0021_hostelroom_inventoryitem_librarybook_transportroute'),
-        ('schools', '0018_alter_subscriptioninvoice_options_and_more'),
-        ('students', '0019_phase2_student_ops_models'),
+        ("core", "0021_hostelroom_inventoryitem_librarybook_transportroute"),
+        ("schools", "0018_alter_subscriptioninvoice_options_and_more"),
+        ("students", "0019_phase2_student_ops_models"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='InventoryMovement',
+            name="InventoryMovement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('movement_type', models.CharField(choices=[('IN', 'Stock In'), ('OUT', 'Stock Out'), ('ADJUST', 'Adjustment')], max_length=20)),
-                ('quantity', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('notes', models.CharField(blank=True, max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='movements', to='core.inventoryitem')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='inventory_movements', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "movement_type",
+                    models.CharField(
+                        choices=[
+                            ("IN", "Stock In"),
+                            ("OUT", "Stock Out"),
+                            ("ADJUST", "Adjustment"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("quantity", models.DecimalField(decimal_places=2, default=0, max_digits=12)),
+                ("notes", models.CharField(blank=True, max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "item",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="movements",
+                        to="core.inventoryitem",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="inventory_movements",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at', '-id'],
+                "ordering": ["-created_at", "-id"],
             },
         ),
         migrations.CreateModel(
-            name='LibraryIssue',
+            name="LibraryIssue",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('ISSUED', 'Issued'), ('RETURNED', 'Returned'), ('LOST', 'Lost')], default='ISSUED', max_length=20)),
-                ('issued_on', models.DateField()),
-                ('due_on', models.DateField(blank=True, null=True)),
-                ('returned_on', models.DateField(blank=True, null=True)),
-                ('fine_amount', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
-                ('remarks', models.CharField(blank=True, max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('book', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='issues', to='core.librarybook')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='library_issues', to='schools.school')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='library_issues', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("ISSUED", "Issued"), ("RETURNED", "Returned"), ("LOST", "Lost")],
+                        default="ISSUED",
+                        max_length=20,
+                    ),
+                ),
+                ("issued_on", models.DateField()),
+                ("due_on", models.DateField(blank=True, null=True)),
+                ("returned_on", models.DateField(blank=True, null=True)),
+                ("fine_amount", models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ("remarks", models.CharField(blank=True, max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "book",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="issues",
+                        to="core.librarybook",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="library_issues",
+                        to="schools.school",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="library_issues",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at', '-id'],
+                "ordering": ["-created_at", "-id"],
             },
         ),
     ]

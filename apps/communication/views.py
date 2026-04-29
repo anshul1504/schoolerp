@@ -5,9 +5,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.core.permissions import has_permission, role_required
-from apps.core.ui import build_layout_context
-from apps.schools.models import School
 from apps.core.tenancy import school_scope_for_user, selected_school_for_request
+from apps.core.ui import build_layout_context
 
 from .models import Notice
 
@@ -21,7 +20,14 @@ def _selected_school(request):
 
 
 def _audience_scope_for_role(role):
-    if role in {"SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "ACCOUNTANT", "RECEPTIONIST"}:
+    if role in {
+        "SUPER_ADMIN",
+        "SCHOOL_OWNER",
+        "PRINCIPAL",
+        "TEACHER",
+        "ACCOUNTANT",
+        "RECEPTIONIST",
+    }:
         return {"ALL", "STAFF"}
     if role == "STUDENT":
         return {"ALL", "STUDENTS"}
@@ -30,7 +36,18 @@ def _audience_scope_for_role(role):
     return {"ALL"}
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "PRINCIPAL",
+    "TEACHER",
+    "STUDENT",
+    "PARENT",
+    "ACCOUNTANT",
+    "RECEPTIONIST",
+    "ADMISSION_COUNSELOR",
+    "CAREER_COUNSELOR",
+)
 def communication_overview(request):
     if request.method == "POST" and not has_permission(request.user, "communication.manage"):
         messages.error(request, "You do not have permission to manage communication.")
@@ -53,7 +70,9 @@ def communication_overview(request):
     else:
         notices = notices.none()
 
-    notices = notices.filter(is_published=True, audience__in=_audience_scope_for_role(request.user.role))
+    notices = notices.filter(
+        is_published=True, audience__in=_audience_scope_for_role(request.user.role)
+    )
 
     if request.method == "POST":
         if request.user.role not in {"SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST"}:
@@ -80,7 +99,12 @@ def communication_overview(request):
     context["notices"] = notices[:12]
     context["notice_audience_choices"] = [choice[0] for choice in Notice.AUDIENCE_CHOICES]
     context["notice_priority_choices"] = [choice[0] for choice in Notice.PRIORITY_CHOICES]
-    context["can_manage_notices"] = request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST"}
+    context["can_manage_notices"] = request.user.role in {
+        "SUPER_ADMIN",
+        "SCHOOL_OWNER",
+        "PRINCIPAL",
+        "RECEPTIONIST",
+    }
     context["can_send_as_campaign"] = has_permission(request.user, "frontoffice.manage")
     context["communication_stats"] = {
         "published": notices.count(),
@@ -91,7 +115,18 @@ def communication_overview(request):
     return render(request, "communication/overview.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "PRINCIPAL",
+    "TEACHER",
+    "STUDENT",
+    "PARENT",
+    "ACCOUNTANT",
+    "RECEPTIONIST",
+    "ADMISSION_COUNSELOR",
+    "CAREER_COUNSELOR",
+)
 def notice_detail(request, notice_id):
     if not has_permission(request.user, "communication.view"):
         messages.error(request, "You do not have permission to view communication.")
@@ -146,7 +181,7 @@ def _parse_ids(raw: str) -> list[int]:
     return sorted(set(ids))
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def notice_export_csv(request):
     if not _require_manage_access(request):
         return redirect("/communication/")
@@ -173,7 +208,18 @@ def notice_export_csv(request):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="notices_export.csv"'
     writer = csv.writer(response)
-    writer.writerow(["id", "school", "title", "audience", "priority", "is_published", "created_by", "created_at"])
+    writer.writerow(
+        [
+            "id",
+            "school",
+            "title",
+            "audience",
+            "priority",
+            "is_published",
+            "created_by",
+            "created_at",
+        ]
+    )
     for n in qs.order_by("-created_at", "-id")[:20000]:
         creator = n.created_by.get_full_name() if n.created_by else ""
         if not creator and n.created_by:
@@ -193,7 +239,7 @@ def notice_export_csv(request):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def notice_export_excel(request):
     if not _require_manage_access(request):
         return redirect("/communication/")
@@ -244,7 +290,7 @@ def notice_export_excel(request):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def notice_manage_list(request):
     if not _require_manage_access(request):
         return redirect("/communication/")
@@ -272,7 +318,7 @@ def notice_manage_list(request):
     return render(request, "communication/manage_list.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def notice_create(request):
     if not _require_manage_access(request):
         return redirect("/communication/")
@@ -307,7 +353,7 @@ def notice_create(request):
     return render(request, "communication/notice_form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def notice_update(request, notice_id):
     if not _require_manage_access(request):
         return redirect("/communication/")
@@ -339,7 +385,7 @@ def notice_update(request, notice_id):
     return render(request, "communication/notice_form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def notice_delete(request, notice_id):
     if not _require_manage_access(request):
         return redirect("/communication/")

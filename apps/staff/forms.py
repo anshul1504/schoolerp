@@ -16,4 +16,3 @@ class StaffMemberForm(forms.ModelForm):
             "joined_on",
             "is_active",
         ]
-

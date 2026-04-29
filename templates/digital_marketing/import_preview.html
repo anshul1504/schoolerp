@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Import Preview{% endblock %}
+{% block page_heading %}Import Preview{% endblock %}
+{% block breadcrumb_active %}Import Preview{% endblock %}
+{% block content %}
+<div class="card"><div class="card-body"><p>Total rows: {{ total_rows }}</p><form method="post" action="{% url 'digital_marketing:import_data' %}">{% csrf_token %}<input type="hidden" name="stage" value="confirm"><button class="btn btn-primary">Confirm Import</button></form><div class="table-responsive mt-3"><table class="table"><thead><tr><th>Row</th>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>{% for row in preview_rows %}<tr><td>{{ row.row_index }}</td>{% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></div></div>
+{% endblock %}

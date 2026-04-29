@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import PlanFeature, School, SchoolSubscription, SubscriptionInvoice, SubscriptionPayment, SubscriptionPlan
+from .models import (
+    PlanFeature,
+    School,
+    SchoolSubscription,
+    SubscriptionInvoice,
+    SubscriptionPayment,
+    SubscriptionPlan,
+)
 
 admin.site.register(School)
 admin.site.register(SubscriptionPlan)

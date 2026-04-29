@@ -1,33 +1,39 @@
-from datetime import timedelta
+import csv
 import uuid
-from zipfile import ZipFile
 import xml.etree.ElementTree as ET
+from datetime import timedelta
+from zipfile import ZipFile
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.password_validation import validate_password
-from django.core.mail import EmailMultiAlternatives
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils import timezone
-import csv
-from django.conf import settings
 
-from apps.accounts.models import User
-from apps.accounts.models import UserInvitation
+from apps.accounts.models import User, UserInvitation
 from apps.accounts.roles import grouped_role_choices
-from apps.core.permissions import permission_required, role_required
 from apps.core.models import ActivityLog
+from apps.core.permissions import permission_required, role_required
+from apps.core.throttle import throttle_hit
 from apps.core.ui import build_layout_context
 from apps.schools.models import School
-from apps.core.throttle import throttle_hit
 
-
-USER_IMPORT_HEADERS = ["username", "email", "first_name", "last_name", "role", "school_id", "is_active"]
+USER_IMPORT_HEADERS = [
+    "username",
+    "email",
+    "first_name",
+    "last_name",
+    "role",
+    "school_id",
+    "is_active",
+]
 USER_IMPORT_SESSION_KEY = "users_import_preview_v1"
 IMPERSONATE_SESSION_KEY = "impersonate_original_user_id_v1"
 
@@ -93,11 +99,13 @@ def _read_xlsx_upload(upload) -> list[dict]:
         headers = [header.strip() for header in parsed_rows[0]]
         for values in parsed_rows[1:]:
             padded = values + [""] * (len(headers) - len(values))
-            rows.append(dict(zip(headers, padded)))
+            rows.append(dict(zip(headers, padded, strict=False)))
     return rows
 
 
-def _validate_user_import_row(row: dict, schools_by_id: dict[int, School]) -> tuple[dict, list[str]]:
+def _validate_user_import_row(
+    row: dict, schools_by_id: dict[int, School]
+) -> tuple[dict, list[str]]:
     errors: list[str] = []
     username = (row.get("username") or "").strip()
     role = (row.get("role") or "").strip()
@@ -168,7 +176,14 @@ def user_list(request):
     except ValueError:
         page_size_int = 25
 
-    paginator = Paginator(users, page_size_int)
+    filtered_users = users
+    stats = filtered_users.aggregate(
+        total_users=Count("id"),
+        active_users=Count("id", filter=Q(is_active=True)),
+        inactive_users=Count("id", filter=Q(is_active=False)),
+    )
+
+    paginator = Paginator(filtered_users, page_size_int)
     page_obj = paginator.get_page(page)
 
     context = build_layout_context(request.user, current_section="users")
@@ -180,6 +195,7 @@ def user_list(request):
             "schools": schools,
             **_role_context(),
             "filters": {"role": role, "school_id": school_id, "q": query, "status": status},
+            "stats": stats,
         }
     )
     return render(request, "users/list.html", context)
@@ -195,7 +211,9 @@ def user_import(request):
             limit=int(getattr(settings, "THROTTLE_USERS_IMPORT_PER_15M", 20)),
             window_seconds=15 * 60,
         ):
-            messages.error(request, "Too many import attempts. Please wait a few minutes and try again.")
+            messages.error(
+                request, "Too many import attempts. Please wait a few minutes and try again."
+            )
             return redirect("/users/import/")
 
         stage = (request.POST.get("stage") or "preview").strip().lower()
@@ -216,7 +234,13 @@ def user_import(request):
                 row_errors = row.get("errors") or []
                 if row_errors:
                     skipped += 1
-                    errors_out.append({"row": row.get("row_index"), "errors": "; ".join(row_errors), **(row.get("raw") or {})})
+                    errors_out.append(
+                        {
+                            "row": row.get("row_index"),
+                            "errors": "; ".join(row_errors),
+                            **(row.get("raw") or {}),
+                        }
+                    )
                     continue
 
                 username = payload.get("username") or ""
@@ -288,7 +312,9 @@ def user_import(request):
             else:
                 raw_rows = _read_xlsx_upload(import_file)
         except Exception:
-            messages.error(request, "We could not read that file. Please check headers and try again.")
+            messages.error(
+                request, "We could not read that file. Please check headers and try again."
+            )
             return redirect("/users/import/")
 
         preview_rows: list[dict] = []
@@ -364,7 +390,9 @@ def user_import_sample(request, file_type):
     writer = csv.writer(response)
     writer.writerow(USER_IMPORT_HEADERS)
     writer.writerow(["teacher_1", "teacher1@example.com", "Amit", "Sharma", "TEACHER", "1", "yes"])
-    writer.writerow(["accountant_1", "accounts@example.com", "Neha", "Verma", "ACCOUNTANT", "1", "yes"])
+    writer.writerow(
+        ["accountant_1", "accounts@example.com", "Neha", "Verma", "ACCOUNTANT", "1", "yes"]
+    )
     return response
 
 
@@ -748,7 +776,16 @@ def user_impersonate_start(request, id):
     return redirect("/dashboard/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "PRINCIPAL",
+    "TEACHER",
+    "STUDENT",
+    "PARENT",
+    "ACCOUNTANT",
+    "RECEPTIONIST",
+)
 def user_impersonate_stop(request):
     if request.method != "POST":
         messages.error(request, "Invalid stop request.")
@@ -810,8 +847,14 @@ def user_deactivate(request, id):
 @permission_required("users.manage")
 def invitation_list(request):
     invitations = UserInvitation.objects.select_related("user", "user__school", "created_by").all()
+    invitation_stats = invitations.aggregate(
+        total_invitations=Count("id"),
+        pending_invitations=Count("id", filter=Q(accepted_at__isnull=True)),
+        accepted_invitations=Count("id", filter=Q(accepted_at__isnull=False)),
+    )
     context = build_layout_context(request.user, current_section="users")
     context["invitations"] = invitations
+    context["invitation_stats"] = invitation_stats
     return render(request, "users/invitations.html", context)
 
 
@@ -842,7 +885,9 @@ def user_invite(request):
             limit=int(getattr(settings, "THROTTLE_USER_INVITES_PER_15M", 30)),
             window_seconds=15 * 60,
         ):
-            messages.error(request, "Too many invitations. Please wait a few minutes and try again.")
+            messages.error(
+                request, "Too many invitations. Please wait a few minutes and try again."
+            )
             return redirect("/users/invite/")
 
         payload = _user_payload_from_request(request)
@@ -861,7 +906,9 @@ def user_invite(request):
             user.save(update_fields=["password"])
 
             expires_at = timezone.now() + timedelta(days=7)
-            invitation = UserInvitation.objects.create(user=user, created_by=request.user, expires_at=expires_at)
+            invitation = UserInvitation.objects.create(
+                user=user, created_by=request.user, expires_at=expires_at
+            )
 
             if payload.get("email"):
                 try:
@@ -870,14 +917,19 @@ def user_invite(request):
                     invitation.sent_at = timezone.now()
                     invitation.send_error = ""
                     invitation.save(update_fields=["sent_to", "sent_at", "send_error"])
-                    messages.success(request, f"Invitation created and emailed to {payload['email']}.")
+                    messages.success(
+                        request, f"Invitation created and emailed to {payload['email']}."
+                    )
                 except Exception as exc:
                     activation_url = request.build_absolute_uri(f"/activate/{invitation.token}/")
                     invitation.sent_to = payload["email"]
                     invitation.sent_at = None
                     invitation.send_error = str(exc)
                     invitation.save(update_fields=["sent_to", "sent_at", "send_error"])
-                    messages.warning(request, f"Invitation created but email could not be sent. Activation link: {activation_url}")
+                    messages.warning(
+                        request,
+                        f"Invitation created but email could not be sent. Activation link: {activation_url}",
+                    )
             else:
                 activation_url = request.build_absolute_uri(f"/activate/{invitation.token}/")
                 messages.success(request, f"Invitation created. Activation link: {activation_url}")
@@ -903,7 +955,9 @@ def user_resend_invitation(request, id):
         limit=int(getattr(settings, "THROTTLE_USER_INVITE_RESENDS_PER_15M", 60)),
         window_seconds=15 * 60,
     ):
-        messages.error(request, "Too many resend attempts. Please wait a few minutes and try again.")
+        messages.error(
+            request, "Too many resend attempts. Please wait a few minutes and try again."
+        )
         return redirect("/users/invitations/")
 
     if invitation.is_accepted():

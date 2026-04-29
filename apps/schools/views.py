@@ -1,34 +1,39 @@
 import csv
-from datetime import timedelta
 import uuid
+from datetime import timedelta
 
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
-from django.db.models import Q
-from django.http import HttpResponse
-from django.urls import reverse
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
 
-from apps.core.permissions import permission_required, role_required
-from apps.core.permissions import has_permission
+from apps.academics.models import AcademicClass, AcademicYear, ClassMaster, SectionMaster
+from apps.attendance.models import AttendanceSession
+from apps.communication.models import Notice
+from apps.core.permissions import has_permission, permission_required, role_required
+from apps.core.throttle import throttle_hit
 from apps.core.ui import build_layout_context
-from apps.schools.limits import campus_limit_for_school
+from apps.exams.models import Exam
+from apps.fees.models import StudentFeeLedger
 from apps.schools.email_utils import send_email_via_school_smtp
+from apps.schools.feature_access import enabled_feature_codes_for_school
+from apps.schools.limits import campus_limit_for_school
+from apps.students.models import Student
 
 from .forms import CampusForm, SchoolCommunicationSettingsForm, SchoolForm, SchoolTeamInviteForm
-from .models import Campus, ImplementationProject, ImplementationTask, School, SchoolCommunicationSettings, SchoolSubscription, SubscriptionPlan
-from apps.students.models import Student
-from apps.academics.models import AcademicClass
-from apps.attendance.models import AttendanceSession
-from apps.fees.models import StudentFeeLedger
-from apps.exams.models import Exam
-from apps.communication.models import Notice
-from apps.schools.feature_access import enabled_feature_codes_for_school
-from apps.academics.models import AcademicYear, ClassMaster, SectionMaster
-from django.contrib.auth import get_user_model
-from django.views.decorators.http import require_http_methods
-from apps.core.throttle import throttle_hit
+from .models import (
+    Campus,
+    ImplementationProject,
+    ImplementationTask,
+    School,
+    SchoolCommunicationSettings,
+    SchoolSubscription,
+    SubscriptionPlan,
+)
 
 STATE_CITY_MAP = {
     "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati"],
@@ -159,7 +164,8 @@ def _validate_school_import_row(row: dict) -> tuple[dict, list[str]]:
     address_line2 = (row.get("address_line2") or "").strip()
     pincode = (row.get("pincode") or "").strip()
 
-    established_year = _parse_int(row.get("established_year") or "", "established_year", errors, min_value=1800)
+    established_year_raw = (row.get("established_year") or "").strip()
+    established_year = _parse_int(established_year_raw, "established_year", errors, min_value=1800)
     student_capacity = _parse_int(row.get("student_capacity") or "", "student_capacity", errors, min_value=1)
     allowed_campuses = _parse_int(row.get("allowed_campuses") or "", "allowed_campuses", errors, min_value=1)
     is_active = _parse_bool(row.get("is_active"), default=True)
@@ -180,7 +186,7 @@ def _validate_school_import_row(row: dict) -> tuple[dict, list[str]]:
         errors.append("city is required")
     if not state:
         errors.append("state is required")
-    if established_year is None:
+    if not established_year_raw:
         errors.append("established_year is required")
 
     payload = {
@@ -226,10 +232,17 @@ def school_list(request):
     if state:
         schools = schools.filter(state__icontains=state)
     context["schools"] = schools
+    context["stats"] = schools.aggregate(
+        total=Count("id"),
+        active=Count("id", filter=Q(is_active=True)),
+        inactive=Count("id", filter=Q(is_active=False)),
+    )
     context["can_manage_schools"] = has_permission(request.user, "schools.manage")
+    context["can_create_schools"] = True # let's just make it true if user has manage permission, wait, let's keep request.user.role == 'SUPER_ADMIN' for import. Or let's pass state choices here.
     context["can_create_schools"] = request.user.role == "SUPER_ADMIN" and context["can_manage_schools"]
     context["can_edit_school_profile"] = context["can_manage_schools"]
     context["show_bulk_school_actions"] = request.user.role == "SUPER_ADMIN"
+    context["state_choices"] = sorted(STATE_CITY_MAP.keys())
     context["filters"] = {"q": query, "status": status, "state": state}
     return render(request, "schools/list.html", context)
 
@@ -252,6 +265,11 @@ def school_detail(request, id):
     context["fee_ledgers"] = StudentFeeLedger.objects.filter(school=school).count()
     context["exams"] = Exam.objects.filter(school=school).count()
     context["notices"] = Notice.objects.filter(school=school, is_published=True).count()
+    User = get_user_model()
+    context["teacher_count"] = User.objects.filter(role="TEACHER", school=school, is_active=True).count()
+    context["staff_count"] = User.objects.filter(school=school, is_active=True).count()
+    from apps.accounts.models import UserInvitation
+    context["pending_invites"] = UserInvitation.objects.filter(user__school=school, accepted_at__isnull=True).count()
 
     subscription = (
         SchoolSubscription.objects.select_related("plan")
@@ -262,6 +280,27 @@ def school_detail(request, id):
     context["subscription"] = subscription
     context["enabled_features"] = sorted(enabled_feature_codes_for_school(school.id))
     context["campus_count"] = Campus.objects.filter(school=school, is_active=True).count()
+    comm = SchoolCommunicationSettings.objects.filter(school=school).first()
+    smtp_ok = bool(comm and comm.smtp_enabled and comm.smtp_host and comm.smtp_username and comm.smtp_from_email)
+    wa_ok = bool(comm and comm.whatsapp_enabled and comm.whatsapp_provider and comm.whatsapp_provider != "NONE" and comm.whatsapp_access_token and comm.whatsapp_phone_number_id)
+    current_year = AcademicYear.objects.filter(school=school, is_current=True).order_by("-start_date").first()
+    class_master_count = ClassMaster.objects.filter(school=school, is_active=True).count()
+    section_master_count = SectionMaster.objects.filter(school=school, is_active=True).count()
+    setup_checks = [
+        bool(context["campus_count"] > 0),
+        bool(smtp_ok or wa_ok),
+        bool(smtp_ok),
+        bool(current_year),
+        bool(class_master_count > 0),
+        bool(section_master_count > 0),
+        bool(context["classes"] > 0),
+        bool(context["teacher_count"] > 0),
+    ]
+    setup_completed = sum(1 for item in setup_checks if item)
+    setup_total = len(setup_checks)
+    context["setup_completed"] = setup_completed
+    context["setup_total"] = setup_total
+    context["setup_completion_percent"] = int(round((setup_completed / setup_total) * 100)) if setup_total else 0
     impl = ImplementationProject.objects.filter(school=school).first()
     context["implementation_project"] = impl
     if impl:
@@ -631,12 +670,23 @@ def _send_team_invite_email(request, invitation, recipient_email):
 @permission_required("schools.team", redirect_to="dashboard")
 def school_team_invite(request, id):
     from datetime import timedelta
+
     from django.utils import timezone
+
     from apps.accounts.models import User, UserInvitation
 
     school = get_object_or_404(_school_queryset_for_user(request.user), id=id)
     if request.method != "POST":
         messages.error(request, "Invalid invite request.")
+        return redirect(f"/schools/{school.id}/team/")
+
+    ip = (request.META.get("REMOTE_ADDR") or "")[:64]
+    if throttle_hit(
+        f"throttle:school_team_invite:uid:{request.user.id}:school:{school.id}:ip:{ip}",
+        limit=int(getattr(settings, "THROTTLE_SCHOOL_TEAM_INVITES_PER_15M", 40)),
+        window_seconds=15 * 60,
+    ):
+        messages.error(request, "Too many invitation attempts. Please wait a few minutes and try again.")
         return redirect(f"/schools/{school.id}/team/")
 
     form = SchoolTeamInviteForm(request.POST)
@@ -695,9 +745,9 @@ def school_team_invite(request, id):
 @permission_required("schools.team", redirect_to="dashboard")
 def school_team_resend_invite(request, id, invitation_id):
     from datetime import timedelta
-    import uuid
 
     from django.utils import timezone
+
     from apps.accounts.models import UserInvitation
 
     school = get_object_or_404(_school_queryset_for_user(request.user), id=id)
@@ -705,6 +755,15 @@ def school_team_resend_invite(request, id, invitation_id):
 
     if request.method != "POST":
         messages.error(request, "Invalid resend request.")
+        return redirect(f"/schools/{school.id}/team/")
+
+    ip = (request.META.get("REMOTE_ADDR") or "")[:64]
+    if throttle_hit(
+        f"throttle:school_team_resend:uid:{request.user.id}:school:{school.id}:ip:{ip}",
+        limit=int(getattr(settings, "THROTTLE_SCHOOL_TEAM_RESENDS_PER_15M", 80)),
+        window_seconds=15 * 60,
+    ):
+        messages.error(request, "Too many resend attempts. Please wait a few minutes and try again.")
         return redirect(f"/schools/{school.id}/team/")
 
     if invitation.is_accepted():
@@ -741,6 +800,9 @@ def school_team_resend_invite(request, id, invitation_id):
 @permission_required("schools.comm_settings")
 def school_communication_settings(request, id=None):
     if request.user.role == "SUPER_ADMIN":
+        if id is None:
+            messages.error(request, "Choose a school first to manage communication settings.")
+            return redirect("/schools/")
         school = get_object_or_404(School.objects.filter(is_active=True), id=id)
     else:
         if not request.user.school_id:
@@ -781,6 +843,18 @@ def school_communication_settings(request, id=None):
             password = (request.POST.get("smtp_password") or "").strip()
             if password:
                 updated.smtp_password = password
+            else:
+                updated.smtp_password = settings_obj.smtp_password
+            wa_token = (request.POST.get("whatsapp_access_token") or "").strip()
+            if wa_token:
+                updated.whatsapp_access_token = wa_token
+            else:
+                updated.whatsapp_access_token = settings_obj.whatsapp_access_token
+            wa_secret = (request.POST.get("whatsapp_webhook_secret") or "").strip()
+            if wa_secret:
+                updated.whatsapp_webhook_secret = wa_secret
+            else:
+                updated.whatsapp_webhook_secret = settings_obj.whatsapp_webhook_secret
             updated.save()
             messages.success(request, "Communication settings updated.")
             return redirect(request.path)

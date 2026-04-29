@@ -50,7 +50,17 @@ def _export_report(template: ReportTemplate) -> tuple[list[str], list[list]]:
         return [c for c in columns if c in default_cols] or default_cols
 
     if template.dataset == "SCHOOLS":
-        default_cols = ["id", "name", "code", "email", "phone", "city", "state", "is_active", "created_at"]
+        default_cols = [
+            "id",
+            "name",
+            "code",
+            "email",
+            "phone",
+            "city",
+            "state",
+            "is_active",
+            "created_at",
+        ]
         cols = pick_columns(default_cols)
         qs = School.objects.all().order_by("-created_at")
         if str(filters.get("is_active") or "").lower() in {"true", "1", "yes"}:
@@ -59,7 +69,17 @@ def _export_report(template: ReportTemplate) -> tuple[list[str], list[list]]:
         return cols, rows
 
     if template.dataset == "USERS":
-        default_cols = ["id", "username", "email", "first_name", "last_name", "role", "school_id", "is_active", "date_joined"]
+        default_cols = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "school_id",
+            "is_active",
+            "date_joined",
+        ]
         cols = pick_columns(default_cols)
         qs = User.objects.all().order_by("-date_joined")
         role = (filters.get("role") or "").strip().upper()
@@ -72,7 +92,16 @@ def _export_report(template: ReportTemplate) -> tuple[list[str], list[list]]:
         return cols, rows
 
     if template.dataset == "ACTIVITY":
-        default_cols = ["created_at", "actor", "school", "action", "method", "path", "status_code", "ip_address"]
+        default_cols = [
+            "created_at",
+            "actor",
+            "school",
+            "action",
+            "method",
+            "path",
+            "status_code",
+            "ip_address",
+        ]
         cols = pick_columns(default_cols)
         qs = ActivityLog.objects.select_related("actor", "school").all().order_by("-created_at")
         school_id = str(filters.get("school_id") or "").strip()
@@ -96,7 +125,18 @@ def _export_report(template: ReportTemplate) -> tuple[list[str], list[list]]:
         return cols, rows
 
     if template.dataset == "STUDENTS":
-        default_cols = ["id", "school_id", "admission_no", "first_name", "last_name", "class_name", "section", "guardian_name", "guardian_phone", "is_active"]
+        default_cols = [
+            "id",
+            "school_id",
+            "admission_no",
+            "first_name",
+            "last_name",
+            "class_name",
+            "section",
+            "guardian_name",
+            "guardian_phone",
+            "is_active",
+        ]
         cols = pick_columns(default_cols)
         qs = Student.objects.all().order_by("-id")
         school_id = str(filters.get("school_id") or "").strip()
@@ -111,7 +151,17 @@ def _export_report(template: ReportTemplate) -> tuple[list[str], list[list]]:
         return cols, rows
 
     if template.dataset == "FEES_PAYMENTS":
-        default_cols = ["id", "school_id", "student_id", "amount", "payment_date", "payment_mode", "reference_no", "collected_by_id", "created_at"]
+        default_cols = [
+            "id",
+            "school_id",
+            "student_id",
+            "amount",
+            "payment_date",
+            "payment_mode",
+            "reference_no",
+            "collected_by_id",
+            "created_at",
+        ]
         cols = pick_columns(default_cols)
         qs = FeePayment.objects.all().order_by("-payment_date", "-id")
         school_id = str(filters.get("school_id") or "").strip()
@@ -121,13 +171,23 @@ def _export_report(template: ReportTemplate) -> tuple[list[str], list[list]]:
         return cols, rows
 
     if template.dataset == "FEES_LEDGER":
-        default_cols = ["id", "school_id", "student_id", "billing_month", "amount_due", "amount_paid", "due_date", "status", "created_at"]
+        default_cols = [
+            "id",
+            "school_id",
+            "student_id",
+            "billing_month",
+            "amount_due",
+            "amount_paid",
+            "due_date",
+            "status",
+            "created_at",
+        ]
         cols = pick_columns(default_cols)
         qs = StudentFeeLedger.objects.all().order_by("-due_date", "-id")
         school_id = str(filters.get("school_id") or "").strip()
         if school_id.isdigit():
             qs = qs.filter(school_id=int(school_id))
-        rows = [[getattr(l, c, "") for c in cols] for l in qs[:5000]]
+        rows = [[getattr(ledger, c, "") for c in cols] for ledger in qs[:5000]]
         return cols, rows
 
     return ["note"], [["Unsupported dataset"]]
@@ -156,7 +216,9 @@ def report_builder_create(request):
         if not name or dataset not in dict(ReportTemplate.DATASET_CHOICES):
             messages.error(request, "Name and dataset are required.")
         else:
-            ReportTemplate.objects.create(name=name, dataset=dataset, filters=filters, columns=columns, is_active=is_active)
+            ReportTemplate.objects.create(
+                name=name, dataset=dataset, filters=filters, columns=columns, is_active=is_active
+            )
             messages.success(request, "Report template created.")
             return redirect("/reports/builder/")
 
@@ -226,4 +288,3 @@ def report_builder_export_csv(request, id):
         out.append(",".join(_sanitize_cell(v) for v in row))
     response.write("\n".join(out))
     return response
-

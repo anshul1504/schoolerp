@@ -1,10 +1,10 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from datetime import date
-
-from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 from apps.core.models import EntityChangeLog
+from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 
 from .models import AcademicClass, AcademicSubject, AcademicYear, TeacherAllocation
 
@@ -50,15 +50,28 @@ class AcademicsModuleTests(TestCase):
             first_name="Aditi",
             last_name="Sharma",
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
             SchoolSubscription.objects.update_or_create(
                 school=self.other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
     def test_principal_can_open_academics_overview(self):
@@ -107,7 +120,11 @@ class AcademicsModuleTests(TestCase):
             },
         )
         self.assertEqual(allocation_response.status_code, 302)
-        self.assertTrue(TeacherAllocation.objects.filter(teacher=self.teacher, academic_class=academic_class, subject=subject).exists())
+        self.assertTrue(
+            TeacherAllocation.objects.filter(
+                teacher=self.teacher, academic_class=academic_class, subject=subject
+            ).exists()
+        )
 
     def test_teacher_can_view_but_not_manage_academics(self):
         AcademicClass.objects.create(school=self.school, name="Class 7", section="B")
@@ -121,18 +138,26 @@ class AcademicsModuleTests(TestCase):
     def test_academics_export_selected_does_not_leak_cross_school(self):
         c1 = AcademicClass.objects.create(school=self.school, name="Class 5", section="A")
         c2 = AcademicClass.objects.create(school=self.other_school, name="Class 5", section="B")
-        s1 = AcademicSubject.objects.create(school=self.school, academic_class=c1, name="Mathematics", code="MATH")
-        s2 = AcademicSubject.objects.create(school=self.other_school, academic_class=c2, name="Other", code="OTH")
+        s1 = AcademicSubject.objects.create(
+            school=self.school, academic_class=c1, name="Mathematics", code="MATH"
+        )
+        s2 = AcademicSubject.objects.create(
+            school=self.other_school, academic_class=c2, name="Other", code="OTH"
+        )
 
         self.client.force_login(self.principal)
-        class_export = self.client.get(f"/academics/export/csv/?school={self.other_school.id}&dataset=classes&class_ids={c1.id},{c2.id}")
+        class_export = self.client.get(
+            f"/academics/export/csv/?school={self.other_school.id}&dataset=classes&class_ids={c1.id},{c2.id}"
+        )
         self.assertEqual(class_export.status_code, 200)
         body = class_export.content.decode("utf-8", errors="ignore")
         self.assertIn("Class 5", body)
         self.assertIn("A", body)
         self.assertNotIn("B", body)
 
-        subject_export = self.client.get(f"/academics/export/csv/?school={self.other_school.id}&dataset=subjects&subject_ids={s1.id},{s2.id}")
+        subject_export = self.client.get(
+            f"/academics/export/csv/?school={self.other_school.id}&dataset=subjects&subject_ids={s1.id},{s2.id}"
+        )
         self.assertEqual(subject_export.status_code, 200)
         body = subject_export.content.decode("utf-8", errors="ignore")
         self.assertIn("Mathematics", body)
@@ -162,4 +187,8 @@ class AcademicsEntityChangeLogTests(TestCase):
             end_date=date(2027, 3, 31),
             is_current=True,
         )
-        self.assertTrue(EntityChangeLog.objects.filter(entity="academics.AcademicYear", object_id=str(year.id), action="CREATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="academics.AcademicYear", object_id=str(year.id), action="CREATED"
+            ).exists()
+        )

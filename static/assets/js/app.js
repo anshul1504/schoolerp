@@ -5,14 +5,10 @@
   // sidebar submenu collapsible js
   $(".sidebar-menu .dropdown").on("click", function () {
     var item = $(this);
-    item.siblings(".dropdown").children(".sidebar-submenu").slideUp();
-
+    item.siblings(".dropdown").children(".sidebar-submenu").slideUp(300);
     item.siblings(".dropdown").removeClass("dropdown-open");
-
     item.siblings(".dropdown").removeClass("open");
-
-    item.children(".sidebar-submenu").slideToggle();
-
+    item.children(".sidebar-submenu").slideToggle(300);
     item.toggleClass("dropdown-open");
   });
 
@@ -217,12 +213,11 @@
   const colorPickerButtons = document.querySelectorAll(".color-picker-btn");
 
   const colors = {
-    base: "#25A194",
-    red: "#dc2626",
-    blue: "#2563eb",
-    yellow: "#ff9f29",
-    cyan: "#00b8f2",
-    violet: "#7c3aed",
+    base: "#475569", // Slate
+    blue: "#487FFF",
+    green: "#10b981",
+    purple: "#8b5cf6",
+    orange: "#f59e0b",
   };
 
   function applyColor(color) {

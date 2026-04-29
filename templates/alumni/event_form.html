@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{{ title }}{% endblock %}
+{% block breadcrumb_active %}Event Form{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-1">
+            <div class="card-header bg-base py-16 px-24 border-bottom">
+                <h6 class="mb-0 fw-bold">Event Details</h6>
+            </div>
+            <div class="card-body p-24">
+                <form method="post" enctype="multipart/form-data" class="row gy-4">
+                    {% csrf_token %}
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">Event Title</label>
+                        {{ form.title }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">Description</label>
+                        {{ form.description }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Date & Time</label>
+                        {{ form.date }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Location / Venue</label>
+                        {{ form.location }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">Event Poster</label>
+                        {{ form.poster }}
+                    </div>
+
+                    <div class="col-12 mt-32 d-flex gap-12">
+                        <button type="submit" class="btn btn-primary-600 radius-8 px-24">Schedule Event</button>
+                        <a href="{% url 'alumni:event_list' %}" class="btn btn-outline-secondary-600 radius-8 px-24">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

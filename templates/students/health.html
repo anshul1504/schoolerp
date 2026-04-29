@@ -7,12 +7,12 @@
 {% block page_copy %}Track checkups, vaccination, alerts, and sick leave for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
   <div class="row gy-4">
     <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="health" %}</div>
     <div class="col-xl-5">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <h6 class="mb-14">Add Health Record</h6>
           {% if can_manage_students %}
           <form method="post" class="row gy-3">
@@ -29,8 +29,8 @@
       </div>
     </div>
     <div class="col-xl-7">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <h6 class="mb-14">Health Timeline</h6>
           {% if health_records %}
             <div class="d-flex flex-column gap-12">
@@ -53,3 +53,9 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

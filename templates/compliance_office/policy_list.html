@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Compliance Policies | School ERP{% endblock %}
+{% block page_heading %}Compliance Policies & SOPs{% endblock %}
+{% block breadcrumb_active %}Policies{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Policy Directory</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Manage standard operating procedures and policies.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap" href="?q={{ filters.q }}&export=csv"><iconify-icon icon="ri:file-download-line" class="me-2 text-xl"></iconify-icon> Export CSV</a>
+        <a class="btn btn-primary-600 radius-8 px-20 py-11 d-inline-flex align-items-center text-nowrap" href="{% url 'compliance_office:policy_create' %}"><iconify-icon icon="ri:add-line" class="me-2 text-xl"></iconify-icon> Add Policy</a>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      {% url 'compliance_office:policy_list' as reset_url %}
+      {% include "includes/list_search_filter.html" with search_placeholder="Search by title..." reset_url=reset_url %}
+
+      {% if policies %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Effective Date</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in policies %}
+                <tr>
+                  <td><span class="fw-medium text-neutral-700">{{ p.title }}</span></td>
+                  <td>{{ p.category }}</td>
+                  <td>{{ p.effective_date|date:'d M Y' }}</td>
+                  <td>
+                    {% if p.status == 'ACTIVE' %}
+                        <span class="badge bg-success-50 text-success-600">{{ p.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-neutral-100 text-neutral-700">{{ p.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                      <a class="btn btn-sm btn-primary-600 d-inline-flex align-items-center gap-1 text-white" href="{% url 'compliance_office:policy_detail' p.id %}"><iconify-icon icon="ri:eye-line"></iconify-icon> View</a>
+                      <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="{% url 'compliance_office:policy_edit' p.id %}"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit</a>
+                      <form method="post" action="{% url 'compliance_office:policy_delete' p.id %}" class="d-inline" onsubmit="return confirm('Delete this policy?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"><iconify-icon icon="ri:delete-bin-line" class="me-1"></iconify-icon> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:file-shield-2-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No policies found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

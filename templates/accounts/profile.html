@@ -1,68 +1,201 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block title %}My Profile{% endblock %}
-{% block page_heading %}My Profile{% endblock %}
-{% block page_copy %}Update your profile details and photo.{% endblock %}
-{% block page_eyebrow %}Settings{% endblock %}
+{% block title %}Account Settings | {{ school.name }}{% endblock %}
+{% block page_heading %}Account Settings{% endblock %}
+{% block breadcrumb_active %}User Profile{% endblock %}
 
 {% block content %}
-  <section class="platform-shell">
-    <div class="row gy-4">
-      <div class="col-lg-4">
-        <div class="platform-panel h-100">
-          <div class="platform-panel__body text-center">
-            {% if request.user.avatar %}
-              <span class="sf-avatar sf-avatar--xl sf-avatar--border">
-                <img src="{{ request.user.avatar.url }}" alt="Avatar">
-              </span>
-            {% else %}
-              <span class="sf-avatar sf-avatar--xl sf-avatar--soft sf-center sf-avatar--initial-xl">
-                {{ request.user.username|slice:":1"|upper }}
-              </span>
-            {% endif %}
-            <h6 class="mt-3 mb-1">{{ request.user.get_full_name|default:request.user.username }}</h6>
-            <div class="text-muted text-sm">{{ request.user.get_role_display }}</div>
-            <div class="text-muted text-sm">{% if request.user.school %}{{ request.user.school.name }}{% else %}Platform Access{% endif %}</div>
-          </div>
-        </div>
-      </div>
+<div class="mt-24">
+    <!-- Top Identity Card (School Detail Style) -->
+    <div class="card h-100 mb-24 radius-16 border-0 shadow-sm bg-base">
+        <div class="card-body p-24">
+            <div class="d-flex gap-32 flex-md-row flex-column">
+                <!-- Profile Avatar & Core Actions -->
+                <div class="max-w-300-px w-100 text-center">
+                    <form method="post" action="/profile/edit/" enctype="multipart/form-data" id="avatarForm">
+                        {% csrf_token %}
+                        <input type="file" name="avatar" id="profileAvatarInput" class="d-none" accept="image/*" onchange="this.form.submit()">
+                        <div class="position-relative d-inline-block mb-24">
+                            <figure class="w-120-px h-120-px mx-auto rounded-circle overflow-hidden bg-primary-50 d-flex align-items-center justify-content-center border border-4 border-white shadow-sm">
+                                {% if request.user.avatar %}
+                                    <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="w-100 h-100 object-fit-cover" id="profileAvatarPreview">
+                                {% else %}
+                                    <span class="text-4xl text-primary-600 fw-semibold">{{ request.user.username|first|upper }}</span>
+                                {% endif %}
+                            </figure>
+                            <label for="profileAvatarInput" class="position-absolute bottom-0 end-0 w-32-px h-32-px bg-primary-600 text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm cursor-pointer border-2 border-white">
+                                <i class="ri-camera-line"></i>
+                            </label>
+                        </div>
+                    </form>
 
-      <div class="col-lg-8">
-        <div class="platform-panel h-100">
-          <div class="platform-panel__body">
-            <h6 class="mb-2">Profile Details</h6>
-            <p class="text-muted text-sm mb-3">Leave password blank if you do not want to change it.</p>
+                    <h2 class="h6 text-primary-light mb-16 fw-semibold">{{ request.user.get_full_name|default:request.user.username }}</h2>
+                    <p class="mb-0 text-sm">Role: <span class="text-primary-600 fw-semibold">{{ request.user.get_role_display }}</span></p>
+                    <p class="mb-0 text-sm">ID: <span class="text-primary-light fw-semibold">#{{ request.user.id }}</span></p>
 
-            <form method="post" action="/profile/edit/" enctype="multipart/form-data" class="row gy-3">
-              {% csrf_token %}
-              <div class="col-md-6">
-                <label class="form-label">First name</label>
-                <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Last name</label>
-                <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" value="{{ request.user.email }}">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Profile photo</label>
-                <input type="file" name="avatar" class="form-control" accept="image/*">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">New password</label>
-                <input type="password" name="password" class="form-control" autocomplete="new-password" placeholder="Password">
-              </div>
-              <div class="col-12 d-flex gap-10">
-                <button type="submit" class="btn btn-primary-600">Save changes</button>
-                <a href="/dashboard/" class="btn btn-outline-secondary">Back</a>
-              </div>
-            </form>
-          </div>
+                    <div class="mt-32 d-flex flex-wrap gap-12 w-100">
+                        <button type="button" class="btn btn-primary-600 border fw-medium border-primary-600 text-md d-flex justify-content-center align-items-center gap-8 flex-grow-1 px-12 py-8 radius-8 shadow-primary" onclick="document.getElementById('pills-edit-tab').click()">
+                            <span class="d-flex text-lg"><i class="ri-edit-line"></i></span>
+                            Edit Profile
+                        </button>
+                        <a href="/dashboard/" class="btn border fw-medium border-secondary-600 bg-hover-secondary-200 text-secondary-600 text-md d-flex justify-content-center align-items-center gap-8 flex-grow-1 px-12 py-8 radius-8">
+                            <span class="d-flex text-lg"><i class="ri-arrow-left-line"></i></span>
+                            Back
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Vertical Divider -->
+                <div class="d-none d-md-block">
+                    <span class="h-100 w-1-px bg-neutral-200 d-block"></span>
+                </div>
+
+                <!-- Primary Info (Right Side of Top Card) -->
+                <div class="flex-grow-1">
+                    <div class="pb-16 border-bottom d-flex align-items-center justify-content-between gap-20">
+                        <h3 class="h6 text-primary-light text-lg mb-0 fw-semibold">Personal Info</h3>
+                        <span class="bg-success-100 text-success-600 px-16 py-4 radius-4 fw-medium text-sm">Active Account</span>
+                    </div>
+
+                    <div class="mt-16 d-flex flex-column gap-12">
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Username</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ request.user.username }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Full Name</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ request.user.get_full_name|default:"Not Set" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Email Address</span>
+                            <span class="fw-normal text-sm text-primary-600">: {{ request.user.email|default:"No email linked" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Official School</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {% if request.user.school %}{{ request.user.school.name }}{% else %}Global ERP Admin{% endif %}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Joined On</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ request.user.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Last Login</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ request.user.last_login|date:"M d, Y H:i" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-24 d-flex flex-wrap gap-12">
+                        <button class="btn btn-outline-primary-600 px-16 py-8 radius-8 text-sm" onclick="document.getElementById('pills-edit-tab').click()">Account Settings</button>
+                        <button class="btn btn-outline-primary-600 px-16 py-8 radius-8 text-sm" onclick="document.getElementById('pills-edit-tab').click()">Change Password</button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </section>
+
+    <!-- Tabbed Content (School Detail Style) -->
+    <div class="my-16">
+        <ul class="nav nav-pills bordered-tab mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12 active" id="pills-overview-tab" data-bs-toggle="pill" data-bs-target="#pills-overview" type="button" role="tab" aria-controls="pills-overview" aria-selected="true">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-dashboard-line"></i></span>
+                    Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12" id="pills-edit-tab" data-bs-toggle="pill" data-bs-target="#pills-edit" type="button" role="tab" aria-controls="pills-edit" aria-selected="false">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-edit-box-line"></i></span>
+                    Edit Details
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="pills-overview" role="tabpanel" aria-labelledby="pills-overview-tab" tabindex="0">
+                <div class="row row-cols-xxl-4 row-cols-lg-3 row-cols-sm-2 row-cols-1 gy-4">
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Permissions</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ request.user.get_role_display }}</strong>
+                            <small class="text-xs text-neutral-500">Access level</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Status</span>
+                            <strong class="text-xl fw-bold d-block mt-8 text-success">Active</strong>
+                            <small class="text-xs text-neutral-500">Account health</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Details Tab -->
+            <div class="tab-pane fade" id="pills-edit" role="tabpanel" aria-labelledby="pills-edit-tab" tabindex="0">
+                <div class="card shadow-none radius-12 bg-base border border-neutral-200 h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24">
+                        <h6 class="text-lg fw-semibold mb-0">Security & Preferences</h6>
+                    </div>
+                    <div class="card-body p-24">
+                        <form method="post" action="/profile/edit/" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row gy-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-sm text-primary-light mb-8">First Name</label>
+                                    <input type="text" name="first_name" id="field_first_name" class="form-control radius-8 py-10" value="{{ request.user.first_name }}" data-original="{{ request.user.first_name }}" placeholder="First Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-sm text-primary-light mb-8">Last Name</label>
+                                    <input type="text" name="last_name" id="field_last_name" class="form-control radius-8 py-10" value="{{ request.user.last_name }}" data-original="{{ request.user.last_name }}" placeholder="Last Name">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-sm text-primary-light mb-8">Email Address</label>
+                                    <input type="email" name="email" id="field_email" class="form-control radius-8 py-10" value="{{ request.user.email }}" data-original="{{ request.user.email }}" placeholder="Enter email">
+                                </div>
+
+                                <div class="col-12 mt-24">
+                                    <div class="p-24 radius-12 border border-warning-100 bg-warning-50 bg-opacity-30">
+                                        <label class="form-label fw-bold text-sm text-primary-light mb-12">Change Password</label>
+                                        <div class="position-relative">
+                                            <input type="password" name="password" class="form-control radius-8 py-10 pe-48" placeholder="Enter new password to reset">
+                                            <i class="ri-lock-2-line position-absolute end-0 top-50 translate-middle-y me-16 text-neutral-400"></i>
+                                        </div>
+                                        <p class="text-xxs text-neutral-500 mt-12 mb-0"><i class="ri-information-line me-4"></i>Leave this field blank to retain your current password.</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-32 d-flex gap-12">
+                                    <button type="submit" class="btn btn-primary-600 radius-8 px-48 py-12 fw-bold shadow-primary">Save Changes</button>
+                                    <button type="button" onclick="resetProfileForm()" class="btn btn-neutral-600 radius-8 px-32 py-12 fw-medium">
+                                        <i class="ri-refresh-line me-6"></i> Reset Form
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .object-fit-cover { object-fit: cover; }
+    .cursor-pointer { cursor: pointer; }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function resetProfileForm() {
+        document.querySelectorAll('[data-original]').forEach(function(el) {
+            el.value = el.getAttribute('data-original');
+        });
+        const pwdField = document.querySelector('input[name="password"]');
+        if (pwdField) pwdField.value = '';
+    }
+</script>
 {% endblock %}

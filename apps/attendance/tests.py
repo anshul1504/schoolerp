@@ -1,12 +1,12 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from apps.academics.models import AcademicClass, AcademicSubject
-from datetime import date
-
+from apps.core.models import EntityChangeLog
 from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 from apps.students.models import Student
-from apps.core.models import EntityChangeLog
 
 from .models import AttendanceSession, StudentAttendance
 
@@ -39,11 +39,19 @@ class AttendanceModuleTests(TestCase):
             school=self.school,
             first_name="Aditi",
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         self.academic_class = AcademicClass.objects.create(
             school=self.school,
@@ -92,14 +100,18 @@ class AttendanceModuleTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        session = AttendanceSession.objects.get(academic_class=self.academic_class, attendance_date="2026-04-21")
+        session = AttendanceSession.objects.get(
+            academic_class=self.academic_class, attendance_date="2026-04-21"
+        )
         entry = StudentAttendance.objects.get(session=session, student=self.student)
         self.assertEqual(entry.status, "LATE")
         self.assertEqual(entry.remark, "Bus delay")
 
     def test_teacher_can_view_attendance_sheet_for_selected_class(self):
         self.client.force_login(self.teacher)
-        response = self.client.get(f"/attendance/?academic_class={self.academic_class.id}&date=2026-04-21")
+        response = self.client.get(
+            f"/attendance/?academic_class={self.academic_class.id}&date=2026-04-21"
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.student.admission_no)
@@ -118,11 +130,19 @@ class AttendanceModuleTests(TestCase):
             established_year=2005,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         other_user = get_user_model().objects.create_user(
             username="teacher2",
@@ -130,13 +150,29 @@ class AttendanceModuleTests(TestCase):
             role="TEACHER",
             school=other_school,
         )
-        other_class = AcademicClass.objects.create(school=other_school, name="Class 5", section="B", class_teacher=other_user)
-        AttendanceSession.objects.create(school=other_school, academic_class=other_class, attendance_date="2026-04-21", marked_by=other_user, note="Other note")
+        other_class = AcademicClass.objects.create(
+            school=other_school, name="Class 5", section="B", class_teacher=other_user
+        )
+        AttendanceSession.objects.create(
+            school=other_school,
+            academic_class=other_class,
+            attendance_date="2026-04-21",
+            marked_by=other_user,
+            note="Other note",
+        )
 
-        AttendanceSession.objects.create(school=self.school, academic_class=self.academic_class, attendance_date="2026-04-21", marked_by=self.teacher, note="My note")
+        AttendanceSession.objects.create(
+            school=self.school,
+            academic_class=self.academic_class,
+            attendance_date="2026-04-21",
+            marked_by=self.teacher,
+            note="My note",
+        )
 
         self.client.force_login(self.teacher)
-        response = self.client.get(f"/attendance/?school={other_school.id}&dataset=sessions&export=csv")
+        response = self.client.get(
+            f"/attendance/?school={other_school.id}&dataset=sessions&export=csv"
+        )
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8", errors="ignore")
         self.assertIn("My note", body)
@@ -181,14 +217,26 @@ class AttendanceEntityChangeLogTests(TestCase):
             is_active=True,
         )
         User = get_user_model()
-        self.teacher = User.objects.create_user(username="teacher_attlog", password="pass123", role="TEACHER", school=self.school)
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        self.teacher = User.objects.create_user(
+            username="teacher_attlog", password="pass123", role="TEACHER", school=self.school
+        )
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
-        self.academic_class = AcademicClass.objects.create(school=self.school, name="Class 1", section="A", class_teacher=self.teacher)
+        self.academic_class = AcademicClass.objects.create(
+            school=self.school, name="Class 1", section="A", class_teacher=self.teacher
+        )
         self.student = Student.objects.create(
             school=self.school,
             admission_no="A-001",
@@ -209,7 +257,17 @@ class AttendanceEntityChangeLogTests(TestCase):
             attendance_date=date(2026, 4, 20),
             marked_by=self.teacher,
         )
-        self.assertTrue(EntityChangeLog.objects.filter(entity="attendance.AttendanceSession", object_id=str(session.id), action="CREATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="attendance.AttendanceSession", object_id=str(session.id), action="CREATED"
+            ).exists()
+        )
 
-        entry = StudentAttendance.objects.create(session=session, student=self.student, status="PRESENT", remark="")
-        self.assertTrue(EntityChangeLog.objects.filter(entity="attendance.StudentAttendance", object_id=str(entry.id), action="CREATED").exists())
+        entry = StudentAttendance.objects.create(
+            session=session, student=self.student, status="PRESENT", remark=""
+        )
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="attendance.StudentAttendance", object_id=str(entry.id), action="CREATED"
+            ).exists()
+        )

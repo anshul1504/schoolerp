@@ -5,91 +5,141 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0020_alter_rolepermissionsoverride_role_and_more'),
-        ('schools', '0018_alter_subscriptioninvoice_options_and_more'),
+        ("core", "0020_alter_rolepermissionsoverride_role_and_more"),
+        ("schools", "0018_alter_subscriptioninvoice_options_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='HostelRoom',
+            name="HostelRoom",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('room_number', models.CharField(max_length=40)),
-                ('block_name', models.CharField(blank=True, max_length=80)),
-                ('bed_capacity', models.PositiveIntegerField(default=1)),
-                ('occupied_beds', models.PositiveIntegerField(default=0)),
-                ('warden_name', models.CharField(blank=True, max_length=120)),
-                ('mess_plan', models.CharField(blank=True, max_length=80)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hostel_rooms', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("room_number", models.CharField(max_length=40)),
+                ("block_name", models.CharField(blank=True, max_length=80)),
+                ("bed_capacity", models.PositiveIntegerField(default=1)),
+                ("occupied_beds", models.PositiveIntegerField(default=0)),
+                ("warden_name", models.CharField(blank=True, max_length=120)),
+                ("mess_plan", models.CharField(blank=True, max_length=80)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="hostel_rooms",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['school__name', 'room_number', '-id'],
-                'unique_together': {('school', 'room_number')},
+                "ordering": ["school__name", "room_number", "-id"],
+                "unique_together": {("school", "room_number")},
             },
         ),
         migrations.CreateModel(
-            name='InventoryItem',
+            name="InventoryItem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sku', models.CharField(max_length=40)),
-                ('name', models.CharField(max_length=180)),
-                ('category', models.CharField(blank=True, max_length=80)),
-                ('quantity_on_hand', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('reorder_level', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('unit', models.CharField(default='unit', max_length=20)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='inventory_items', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("sku", models.CharField(max_length=40)),
+                ("name", models.CharField(max_length=180)),
+                ("category", models.CharField(blank=True, max_length=80)),
+                (
+                    "quantity_on_hand",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                ("reorder_level", models.DecimalField(decimal_places=2, default=0, max_digits=12)),
+                ("unit", models.CharField(default="unit", max_length=20)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="inventory_items",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['school__name', 'name', '-id'],
-                'unique_together': {('school', 'sku')},
+                "ordering": ["school__name", "name", "-id"],
+                "unique_together": {("school", "sku")},
             },
         ),
         migrations.CreateModel(
-            name='LibraryBook',
+            name="LibraryBook",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('accession_no', models.CharField(max_length=40)),
-                ('title', models.CharField(max_length=180)),
-                ('author', models.CharField(blank=True, max_length=140)),
-                ('category', models.CharField(blank=True, max_length=80)),
-                ('total_copies', models.PositiveIntegerField(default=1)),
-                ('available_copies', models.PositiveIntegerField(default=1)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='library_books', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("accession_no", models.CharField(max_length=40)),
+                ("title", models.CharField(max_length=180)),
+                ("author", models.CharField(blank=True, max_length=140)),
+                ("category", models.CharField(blank=True, max_length=80)),
+                ("total_copies", models.PositiveIntegerField(default=1)),
+                ("available_copies", models.PositiveIntegerField(default=1)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="library_books",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['school__name', 'title', '-id'],
-                'unique_together': {('school', 'accession_no')},
+                "ordering": ["school__name", "title", "-id"],
+                "unique_together": {("school", "accession_no")},
             },
         ),
         migrations.CreateModel(
-            name='TransportRoute',
+            name="TransportRoute",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('route_code', models.CharField(max_length=40)),
-                ('route_name', models.CharField(blank=True, max_length=120)),
-                ('vehicle_number', models.CharField(blank=True, max_length=40)),
-                ('driver_name', models.CharField(blank=True, max_length=120)),
-                ('attendant_name', models.CharField(blank=True, max_length=120)),
-                ('stops', models.JSONField(blank=True, default=list)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transport_routes', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("route_code", models.CharField(max_length=40)),
+                ("route_name", models.CharField(blank=True, max_length=120)),
+                ("vehicle_number", models.CharField(blank=True, max_length=40)),
+                ("driver_name", models.CharField(blank=True, max_length=120)),
+                ("attendant_name", models.CharField(blank=True, max_length=120)),
+                ("stops", models.JSONField(blank=True, default=list)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="transport_routes",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['school__name', 'route_code', '-id'],
-                'unique_together': {('school', 'route_code')},
+                "ordering": ["school__name", "route_code", "-id"],
+                "unique_together": {("school", "route_code")},
             },
         ),
     ]

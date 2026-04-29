@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Social Hub{% endblock %}
+{% block page_heading %}Social Media Hub{% endblock %}
+{% block breadcrumb_active %}Social Hub{% endblock %}
+{% block content %}
+<div class="row gy-3 mb-24">
+  <div class="col-xl-2 col-md-4 col-6"><div class="p-16 radius-8 bg-primary-50 border border-primary-100"><small class="text-primary-600">Accounts</small><h5 class="mb-0 mt-6">{{ stats.total_accounts }}</h5></div></div>
+  <div class="col-xl-2 col-md-4 col-6"><div class="p-16 radius-8 bg-success-50 border border-success-100"><small class="text-success-600">Active</small><h5 class="mb-0 mt-6">{{ stats.active_accounts }}</h5></div></div>
+  <div class="col-xl-2 col-md-4 col-6"><div class="p-16 radius-8 bg-info-50 border border-info-100"><small class="text-info-600">Total Posts</small><h5 class="mb-0 mt-6">{{ stats.total_posts }}</h5></div></div>
+  <div class="col-xl-2 col-md-4 col-6"><div class="p-16 radius-8 bg-warning-50 border border-warning-100"><small class="text-warning-600">Organic Posts</small><h5 class="mb-0 mt-6">{{ stats.organic_posts }}</h5></div></div>
+  <div class="col-xl-2 col-md-4 col-6"><div class="p-16 radius-8 bg-secondary-100 border border-secondary-200"><small class="text-secondary">Scheduled</small><h5 class="mb-0 mt-6">{{ stats.scheduled_posts }}</h5></div></div>
+  <div class="col-xl-2 col-md-4 col-6"><div class="p-16 radius-8 bg-danger-50 border border-danger-100"><small class="text-danger-600">Failed</small><h5 class="mb-0 mt-6">{{ stats.failed_posts }}</h5></div></div>
+</div>
+
+<div class="card h-100 radius-12 border-0 shadow-sm mb-24">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <h6 class="mb-0">Connected Accounts</h6>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:social_oauth_start' 'instagram' %}">Connect Instagram</a>
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:social_oauth_start' 'facebook' %}">Connect Facebook</a>
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:social_post_create' %}">Create Post</a>
+      <a class="btn btn-primary-600 radius-8 px-20 py-11" href="{% url 'digital_marketing:social_account_create' %}">Connect Account</a>
+    </div>
+  </div>
+  <div class="card-body p-24">
+    <div class="table-responsive">
+      <table class="table bordered-table mb-0">
+        <thead><tr><th>Platform</th><th>Handle</th><th>Profile</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for a in accounts %}
+          <tr>
+            <td>{{ a.get_platform_display }}</td>
+            <td>{{ a.handle }}</td>
+            <td>{% if a.profile_url %}<a href="{{ a.profile_url }}" target="_blank" rel="noreferrer">Open</a>{% else %}-{% endif %}</td>
+            <td>{% if a.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'digital_marketing:social_account_edit' a.id %}">Edit</a> <form method="post" action="{% url 'digital_marketing:social_account_test_connection' a.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-secondary">Test</button></form></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center py-20">No social account connected.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="row gy-3">
+  <div class="col-xl-5">
+    <div class="card h-100 radius-12 border-0 shadow-sm">
+      <div class="card-header border-bottom py-16 px-24"><h6 class="mb-0">Recent Connection Tests</h6></div>
+      <div class="card-body p-24">
+        <div class="table-responsive"><table class="table bordered-table mb-0"><thead><tr><th>Account</th><th>Result</th><th>Time</th></tr></thead><tbody>{% for t in recent_tests %}<tr><td>{{ t.account.handle }}</td><td>{% if t.result == "SUCCESS" %}<span class="badge bg-success">Success</span>{% else %}<span class="badge bg-danger">Failed</span>{% endif %}</td><td>{{ t.tested_at|date:"d M Y H:i" }}</td></tr>{% empty %}<tr><td colspan="3" class="text-center py-20">No test logs yet.</td></tr>{% endfor %}</tbody></table></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    <div class="card h-100 radius-12 border-0 shadow-sm">
+      <div class="card-header border-bottom py-16 px-24"><h6 class="mb-0">Recent Social Posts</h6></div>
+      <div class="card-body p-24">
+        <div class="table-responsive"><table class="table bordered-table mb-0"><thead><tr><th>Title</th><th>Type</th><th>Account</th><th>Status</th><th>Leads</th></tr></thead><tbody>{% for p in posts %}<tr><td>{{ p.title }}</td><td>{% if p.campaign %}<span class="badge bg-info-100 text-info-600">Campaign</span>{% else %}<span class="badge bg-success-100 text-success-600">Organic</span>{% endif %}</td><td>{{ p.account|default:"-" }}</td><td>{{ p.get_status_display }}</td><td>{{ p.leads_generated }}</td></tr>{% empty %}<tr><td colspan="5" class="text-center py-20">No social posts yet.</td></tr>{% endfor %}</tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

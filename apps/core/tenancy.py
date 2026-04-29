@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional
-
 from apps.schools.models import School
 
 
@@ -18,7 +16,7 @@ def allowed_school_ids_for_user(user) -> list[int]:
     return list(school_scope_for_user(user).values_list("id", flat=True))
 
 
-def selected_school_for_request(request) -> Optional[School]:
+def selected_school_for_request(request) -> School | None:
     """Return the selected school for the request, respecting SUPER_ADMIN school picker."""
     user = getattr(request, "user", None)
     if not user or not getattr(user, "is_authenticated", False):
@@ -33,7 +31,28 @@ def selected_school_for_request(request) -> Optional[School]:
     return user.school if getattr(user, "school_id", None) else None
 
 
+def get_selected_school_or_redirect(request, section_name=None):
+    """
+    Helper for views to get the selected school or redirect with an error message.
+    Returns (school, redirect_response). If redirect_response is not None, the view should return it.
+    """
+    from django.contrib import messages
+    from django.shortcuts import redirect
+
+    school = selected_school_for_request(request)
+    if not school and request.user.school:
+        school = request.user.school
+
+    if not school:
+        msg = "Please select a school to continue."
+        if section_name:
+            msg = f"Please select a school to view {section_name} data."
+        messages.error(request, msg)
+        return None, redirect("dashboard")
+
+    return school, None
+
+
 def scope_queryset_to_user_schools(qs, user, *, school_field: str = "school_id"):
     """Apply a school scope filter to a queryset using the given school_field."""
     return qs.filter(**{f"{school_field}__in": allowed_school_ids_for_user(user)})
-

@@ -1,42 +1,73 @@
 from django.urls import path
 
+from apps.schools.views_subscription import subscription_blocked
+
 from .views import demo_index, demo_page
-from .views_activity import activity_list, activity_change_log_list, activity_exports_create, activity_exports_download, activity_exports_list
+from .views_activity import (
+    activity_change_log_list,
+    activity_exports_create,
+    activity_exports_download,
+    activity_exports_list,
+    activity_list,
+)
+from .views_announcements import (
+    announcement_create,
+    announcement_delete,
+    announcement_list,
+    announcement_update,
+)
 from .views_billing import (
+    billing_webhook_events,
+    billing_webhook_generic,
+    coupon_create,
+    coupon_list,
+    feature_create,
+    feature_list,
     invoice_create,
     invoice_list,
     invoice_payments,
     invoice_status_update,
-    billing_webhook_events,
-    billing_webhook_generic,
-    coupon_list,
-    coupon_create,
-    feature_create,
-    feature_list,
     payment_create,
     plan_create,
     plan_delete,
     plan_list,
-    seed_default_plans,
     plan_update,
     school_subscription_update,
     school_subscriptions,
+    seed_default_plans,
 )
-from .views_platform import platform_home, platform_rollout, super_admin_hub, super_admin_pages_index, super_admin_role_sheet, super_admin_role_detail, super_admin_gap_sheet, super_admin_academics, super_admin_decision_dashboard, super_admin_setup_wizard, super_admin_transport, super_admin_hostel, super_admin_library, super_admin_lab, super_admin_inventory, super_admin_fee_reconciliation
+from .views_domains import domain_create, domain_delete, domain_list, domain_update
+from .views_platform import (
+    platform_home,
+    platform_rollout,
+    super_admin_academics,
+    super_admin_backup_trigger,
+    super_admin_communication_logs,
+    super_admin_decision_dashboard,
+    super_admin_fee_reconciliation,
+    super_admin_gap_sheet,
+    super_admin_hostel,
+    super_admin_hub,
+    super_admin_inventory,
+    super_admin_lab,
+    super_admin_library,
+    super_admin_pages_index,
+    super_admin_role_detail,
+    super_admin_role_sheet,
+    super_admin_setup_wizard,
+    super_admin_system_ops,
+    super_admin_transport,
+)
 from .views_platform_security import platform_security
-from .views_announcements import announcement_list, announcement_create, announcement_update, announcement_delete
-from .views_support import support_ticket_list, support_ticket_create, support_ticket_detail
-from .views_domains import domain_list, domain_create, domain_update, domain_delete
-from .views_tokens import token_list, token_create, token_toggle
-from .views_reports import reports_overview
+from .views_provisioning_api import provision_user_deactivate, provision_user_upsert
 from .views_report_builder import (
-    report_builder_list,
     report_builder_create,
-    report_builder_update,
     report_builder_delete,
     report_builder_export_csv,
+    report_builder_list,
+    report_builder_update,
 )
-from .views_provisioning_api import provision_user_upsert, provision_user_deactivate
+from .views_reports import reports_overview
 from .views_scheduled_reports import (
     scheduled_report_create,
     scheduled_report_delete,
@@ -51,24 +82,25 @@ from .views_settings import (
     settings_permissions_matrix,
     settings_rbac_audit,
     settings_rbac_user_grants,
-    settings_two_factor_policy,
     settings_role_matrix,
+    settings_two_factor_policy,
 )
-from apps.schools.views_subscription import subscription_blocked
+from .views_support import support_ticket_create, support_ticket_detail, support_ticket_list
+from .views_tokens import token_create, token_list, token_toggle
 from .views_users import (
     invitation_list,
+    user_bulk_action,
     user_create,
     user_deactivate,
-    user_bulk_action,
+    user_export_csv,
+    user_export_excel,
+    user_impersonate_start,
+    user_impersonate_stop,
     user_import,
     user_import_errors_csv,
     user_import_sample,
-    user_export_csv,
-    user_export_excel,
     user_invite,
     user_list,
-    user_impersonate_start,
-    user_impersonate_stop,
     user_resend_invitation,
     user_reset_password,
     user_update,
@@ -80,7 +112,11 @@ urlpatterns = [
     path("activity/changes/", activity_change_log_list, name="activity-change-logs"),
     path("activity/exports/", activity_exports_list, name="activity-exports-list"),
     path("activity/exports/create/", activity_exports_create, name="activity-exports-create"),
-    path("activity/exports/<int:id>/download/", activity_exports_download, name="activity-exports-download"),
+    path(
+        "activity/exports/<int:id>/download/",
+        activity_exports_download,
+        name="activity-exports-download",
+    ),
     path("billing/plans/", plan_list, name="plan-list"),
     path("billing/plans/seed-defaults/", seed_default_plans, name="plan-seed-defaults"),
     path("billing/features/", feature_list, name="billing-features"),
@@ -89,18 +125,34 @@ urlpatterns = [
     path("billing/plans/<int:id>/edit/", plan_update, name="plan-edit"),
     path("billing/plans/<int:id>/delete/", plan_delete, name="plan-delete"),
     path("billing/schools/", school_subscriptions, name="billing-schools"),
-    path("billing/schools/<int:school_id>/update/", school_subscription_update, name="billing-school-update"),
+    path(
+        "billing/schools/<int:school_id>/update/",
+        school_subscription_update,
+        name="billing-school-update",
+    ),
     path("billing/invoices/", invoice_list, name="billing-invoices"),
     path("billing/invoices/create/", invoice_create, name="billing-invoice-create"),
     path("billing/invoices/<int:invoice_id>/", invoice_payments, name="billing-invoice-payments"),
-    path("billing/invoices/<int:invoice_id>/status/", invoice_status_update, name="billing-invoice-status-update"),
-    path("billing/invoices/<int:invoice_id>/payments/create/", payment_create, name="billing-payment-create"),
+    path(
+        "billing/invoices/<int:invoice_id>/status/",
+        invoice_status_update,
+        name="billing-invoice-status-update",
+    ),
+    path(
+        "billing/invoices/<int:invoice_id>/payments/create/",
+        payment_create,
+        name="billing-payment-create",
+    ),
     path("billing/webhooks/events/", billing_webhook_events, name="billing-webhook-events"),
     path("billing/webhooks/generic/", billing_webhook_generic, name="billing-webhook-generic"),
     path("billing/coupons/", coupon_list, name="billing-coupon-list"),
     path("billing/coupons/create/", coupon_create, name="billing-coupon-create"),
     path("api/provision/users/upsert/", provision_user_upsert, name="api-provision-user-upsert"),
-    path("api/provision/users/deactivate/", provision_user_deactivate, name="api-provision-user-deactivate"),
+    path(
+        "api/provision/users/deactivate/",
+        provision_user_deactivate,
+        name="api-provision-user-deactivate",
+    ),
     path("platform/", platform_home, name="platform-home"),
     path("platform/rollout/", platform_rollout, name="platform-rollout"),
     path("super-admin/", super_admin_hub, name="super-admin-hub"),
@@ -109,19 +161,44 @@ urlpatterns = [
     path("super-admin/roles/<str:role>/", super_admin_role_detail, name="super-admin-role-detail"),
     path("super-admin/gaps/", super_admin_gap_sheet, name="super-admin-gap-sheet"),
     path("super-admin/academics/", super_admin_academics, name="super-admin-academics"),
-    path("super-admin/decision/", super_admin_decision_dashboard, name="super-admin-decision-dashboard"),
+    path(
+        "super-admin/decision/",
+        super_admin_decision_dashboard,
+        name="super-admin-decision-dashboard",
+    ),
     path("super-admin/setup/", super_admin_setup_wizard, name="super-admin-setup-wizard"),
     path("super-admin/transport/", super_admin_transport, name="super-admin-transport"),
     path("super-admin/hostel/", super_admin_hostel, name="super-admin-hostel"),
     path("super-admin/library/", super_admin_library, name="super-admin-library"),
     path("super-admin/lab/", super_admin_lab, name="super-admin-lab"),
     path("super-admin/inventory/", super_admin_inventory, name="super-admin-inventory"),
-    path("super-admin/fees/", super_admin_fee_reconciliation, name="super-admin-fee-reconciliation"),
+    path(
+        "super-admin/fees/", super_admin_fee_reconciliation, name="super-admin-fee-reconciliation"
+    ),
+    path(
+        "super-admin/communication-logs/",
+        super_admin_communication_logs,
+        name="super-admin-communication-logs",
+    ),
+    path("super-admin/system/", super_admin_system_ops, name="super-admin-system-ops"),
+    path(
+        "super-admin/system/backup/", super_admin_backup_trigger, name="super-admin-backup-trigger"
+    ),
     path("platform/security/", platform_security, name="platform-security"),
     path("platform/announcements/", announcement_list, name="platform-announcements"),
-    path("platform/announcements/create/", announcement_create, name="platform-announcement-create"),
-    path("platform/announcements/<int:id>/edit/", announcement_update, name="platform-announcement-edit"),
-    path("platform/announcements/<int:id>/delete/", announcement_delete, name="platform-announcement-delete"),
+    path(
+        "platform/announcements/create/", announcement_create, name="platform-announcement-create"
+    ),
+    path(
+        "platform/announcements/<int:id>/edit/",
+        announcement_update,
+        name="platform-announcement-edit",
+    ),
+    path(
+        "platform/announcements/<int:id>/delete/",
+        announcement_delete,
+        name="platform-announcement-delete",
+    ),
     path("platform/support/", support_ticket_list, name="platform-support-list"),
     path("platform/support/create/", support_ticket_create, name="platform-support-create"),
     path("platform/support/<int:id>/", support_ticket_detail, name="platform-support-detail"),
@@ -137,12 +214,28 @@ urlpatterns = [
     path("reports/builder/create/", report_builder_create, name="report-builder-create"),
     path("reports/builder/<int:id>/edit/", report_builder_update, name="report-builder-edit"),
     path("reports/builder/<int:id>/delete/", report_builder_delete, name="report-builder-delete"),
-    path("reports/builder/<int:id>/export/csv/", report_builder_export_csv, name="report-builder-export-csv"),
+    path(
+        "reports/builder/<int:id>/export/csv/",
+        report_builder_export_csv,
+        name="report-builder-export-csv",
+    ),
     path("reports/scheduled/", scheduled_report_list, name="scheduled-report-list"),
     path("reports/scheduled/create/", scheduled_report_create, name="scheduled-report-create"),
-    path("reports/scheduled/<int:report_id>/edit/", scheduled_report_update, name="scheduled-report-edit"),
-    path("reports/scheduled/<int:report_id>/delete/", scheduled_report_delete, name="scheduled-report-delete"),
-    path("reports/scheduled/<int:report_id>/run/", scheduled_report_run_now, name="scheduled-report-run"),
+    path(
+        "reports/scheduled/<int:report_id>/edit/",
+        scheduled_report_update,
+        name="scheduled-report-edit",
+    ),
+    path(
+        "reports/scheduled/<int:report_id>/delete/",
+        scheduled_report_delete,
+        name="scheduled-report-delete",
+    ),
+    path(
+        "reports/scheduled/<int:report_id>/run/",
+        scheduled_report_run_now,
+        name="scheduled-report-run",
+    ),
     path("settings/", settings_index, name="settings-index"),
     path("settings/branding/", settings_branding, name="settings-branding"),
     path("settings/role-matrix/", settings_role_matrix, name="settings-role-matrix"),

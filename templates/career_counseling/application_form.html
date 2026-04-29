@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Log{% endif %} Application | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{% if is_edit %}Modify{% else %}Record{% endif %} University Application{% endblock %}
+{% block breadcrumb_active %}Application Form{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card radius-16 border-0 shadow-1">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100">
+                    <h6 class="mb-0 fw-bold">Application Details</h6>
+                </div>
+                <div class="card-body p-24">
+                    <form method="post" class="row gy-4">
+                        {% csrf_token %}
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Student Selection</label>
+                            {{ form.student }}
+                            {% if form.student.errors %}
+                                <div class="text-danger text-xxs mt-4">{{ form.student.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">University</label>
+                            {{ form.university }}
+                            {% if form.university.errors %}
+                                <div class="text-danger text-xxs mt-4">{{ form.university.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Course / Program Name</label>
+                            {{ form.course_name }}
+                            {% if form.course_name.errors %}
+                                <div class="text-danger text-xxs mt-4">{{ form.course_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Application Status</label>
+                            {{ form.status }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Deadline</label>
+                            {{ form.deadline }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Applied On</label>
+                            {{ form.applied_on }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Counselor Notes</label>
+                            {{ form.notes }}
+                        </div>
+
+                        <div class="col-12 mt-32 d-flex gap-12">
+                            <button type="submit" class="btn btn-primary-600 radius-8 px-24">
+                                {% if is_edit %}Update Application{% else %}Save Application{% endif %}
+                            </button>
+                            <a href="{% url 'career_counseling:application_list' %}" class="btn bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100 radius-8 px-24">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

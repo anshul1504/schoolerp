@@ -1,17 +1,19 @@
 import csv
-from zipfile import ZipFile
 import xml.etree.ElementTree as ET
+from zipfile import ZipFile
 
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.core.permissions import permission_required, role_required
-from apps.core.permissions import has_permission
-from apps.core.tenancy import allowed_school_ids_for_user, selected_school_for_request, school_scope_for_user
-from apps.core.ui import build_layout_context
 from apps.core.models import ActivityLog
-from apps.schools.models import School
+from apps.core.permissions import has_permission, permission_required, role_required
+from apps.core.tenancy import (
+    allowed_school_ids_for_user,
+    school_scope_for_user,
+    selected_school_for_request,
+)
+from apps.core.ui import build_layout_context
 
 from .forms import StaffMemberForm
 from .models import StaffMember
@@ -21,7 +23,16 @@ def _selected_school(request):
     return selected_school_for_request(request)
 
 
-STAFF_IMPORT_HEADERS = ["full_name", "staff_role", "employee_id", "designation", "phone", "email", "joined_on", "is_active"]
+STAFF_IMPORT_HEADERS = [
+    "full_name",
+    "staff_role",
+    "employee_id",
+    "designation",
+    "phone",
+    "email",
+    "joined_on",
+    "is_active",
+]
 STAFF_IMPORT_SESSION_KEY = "staff_import_preview_v1"
 
 
@@ -78,7 +89,7 @@ def _read_xlsx_upload(upload) -> list[dict]:
         headers = [header.strip() for header in parsed_rows[0]]
         for values in parsed_rows[1:]:
             padded = values + [""] * (len(headers) - len(values))
-            rows.append(dict(zip(headers, padded)))
+            rows.append(dict(zip(headers, padded, strict=False)))
     return rows
 
 
@@ -113,7 +124,7 @@ def _validate_staff_import_row(row: dict) -> tuple[dict, list[str]]:
     return payload, errors
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.view")
 def staff_list(request):
     school = _selected_school(request)
@@ -142,7 +153,7 @@ def staff_list(request):
     return render(request, "staff/list.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.manage")
 def staff_create(request):
     school = _selected_school(request)
@@ -161,7 +172,7 @@ def staff_create(request):
             member.school = school
             member.save()
             messages.success(request, "Staff member created.")
-            return redirect("/staff/?school=%s" % school.id)
+            return redirect(f"/staff/?school={school.id}")
         messages.error(request, "Please fix the errors and try again.")
     else:
         form = StaffMemberForm()
@@ -171,7 +182,7 @@ def staff_create(request):
     return render(request, "staff/form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.manage")
 def staff_edit(request, id):
     school_ids = allowed_school_ids_for_user(request.user)
@@ -182,7 +193,7 @@ def staff_edit(request, id):
         if form.is_valid():
             form.save()
             messages.success(request, "Staff member updated.")
-            return redirect("/staff/?school=%s" % member.school_id)
+            return redirect(f"/staff/?school={member.school_id}")
         messages.error(request, "Please fix the errors and try again.")
     else:
         form = StaffMemberForm(instance=member)
@@ -192,7 +203,7 @@ def staff_edit(request, id):
     return render(request, "staff/form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.manage")
 def staff_delete(request, id):
     school_ids = allowed_school_ids_for_user(request.user)
@@ -202,13 +213,13 @@ def staff_delete(request, id):
         school_id = member.school_id
         member.delete()
         messages.success(request, "Staff member deleted.")
-        return redirect("/staff/?school=%s" % school_id)
+        return redirect(f"/staff/?school={school_id}")
 
     messages.error(request, "Invalid delete request.")
     return redirect("/staff/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.manage")
 def staff_import(request):
     school = _selected_school(request)
@@ -239,7 +250,13 @@ def staff_import(request):
                 row_errors = row.get("errors") or []
                 if row_errors:
                     skipped += 1
-                    errors_out.append({"row": row.get("row_index"), "errors": "; ".join(row_errors), **(row.get("raw") or {})})
+                    errors_out.append(
+                        {
+                            "row": row.get("row_index"),
+                            "errors": "; ".join(row_errors),
+                            **(row.get("raw") or {}),
+                        }
+                    )
                     continue
 
                 employee_id = (payload.get("employee_id") or "").strip()
@@ -255,12 +272,18 @@ def staff_import(request):
 
                 # Update by employee_id when provided; otherwise create new row.
                 if employee_id:
-                    obj = StaffMember.objects.filter(school=school, employee_id=employee_id).only("id").first()
+                    obj = (
+                        StaffMember.objects.filter(school=school, employee_id=employee_id)
+                        .only("id")
+                        .first()
+                    )
                     if obj:
                         StaffMember.objects.filter(id=obj.id).update(**defaults)
                         updated += 1
                     else:
-                        StaffMember.objects.create(school=school, employee_id=employee_id, **defaults)
+                        StaffMember.objects.create(
+                            school=school, employee_id=employee_id, **defaults
+                        )
                         created += 1
                 else:
                     StaffMember.objects.create(school=school, **defaults)
@@ -312,7 +335,9 @@ def staff_import(request):
             else:
                 raw_rows = _read_xlsx_upload(import_file)
         except Exception:
-            messages.error(request, "We could not read that file. Please check headers and try again.")
+            messages.error(
+                request, "We could not read that file. Please check headers and try again."
+            )
             return redirect(f"/staff/import/?school={school.id}")
 
         preview_rows: list[dict] = []
@@ -348,11 +373,17 @@ def staff_import(request):
         return render(request, "staff/import_preview.html", context)
 
     context = build_layout_context(request.user, current_section="staff")
-    context.update({"selected_school": school, "headers": STAFF_IMPORT_HEADERS, "school_options": school_scope_for_user(request.user)})
+    context.update(
+        {
+            "selected_school": school,
+            "headers": STAFF_IMPORT_HEADERS,
+            "school_options": school_scope_for_user(request.user),
+        }
+    )
     return render(request, "staff/import.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.manage")
 def staff_import_errors_csv(request):
     school = _selected_school(request)
@@ -387,7 +418,7 @@ def staff_import_errors_csv(request):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.manage")
 def staff_import_sample(request, file_type):
     school = _selected_school(request)
@@ -406,12 +437,34 @@ def staff_import_sample(request, file_type):
     response["Content-Disposition"] = 'attachment; filename="staff-import-sample.csv"'
     writer = csv.writer(response)
     writer.writerow(STAFF_IMPORT_HEADERS)
-    writer.writerow(["Rahul Mehta", "TEACHER", "EMP-001", "Math Teacher", "9876543210", "rahul@example.com", "2026-04-01", "yes"])
-    writer.writerow(["Priya Singh", "STAFF", "EMP-002", "Office Admin", "9876543222", "priya@example.com", "2026-04-10", "yes"])
+    writer.writerow(
+        [
+            "Rahul Mehta",
+            "TEACHER",
+            "EMP-001",
+            "Math Teacher",
+            "9876543210",
+            "rahul@example.com",
+            "2026-04-01",
+            "yes",
+        ]
+    )
+    writer.writerow(
+        [
+            "Priya Singh",
+            "STAFF",
+            "EMP-002",
+            "Office Admin",
+            "9876543222",
+            "priya@example.com",
+            "2026-04-10",
+            "yes",
+        ]
+    )
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.view")
 def staff_export_csv(request):
     school = _selected_school(request)
@@ -436,7 +489,20 @@ def staff_export_csv(request):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="staff_export.csv"'
     writer = csv.writer(response)
-    writer.writerow(["id", "school", "full_name", "staff_role", "employee_id", "designation", "phone", "email", "joined_on", "is_active"])
+    writer.writerow(
+        [
+            "id",
+            "school",
+            "full_name",
+            "staff_role",
+            "employee_id",
+            "designation",
+            "phone",
+            "email",
+            "joined_on",
+            "is_active",
+        ]
+    )
     for m in qs.order_by("full_name", "id")[:20000]:
         writer.writerow(
             [
@@ -455,7 +521,7 @@ def staff_export_csv(request):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 @permission_required("staff.view")
 def staff_export_excel(request):
     school = _selected_school(request)

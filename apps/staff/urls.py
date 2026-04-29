@@ -1,17 +1,16 @@
 from django.urls import path
 
 from .views import (
-    staff_list,
     staff_create,
-    staff_edit,
     staff_delete,
+    staff_edit,
+    staff_export_csv,
+    staff_export_excel,
     staff_import,
     staff_import_errors_csv,
     staff_import_sample,
-    staff_export_csv,
-    staff_export_excel,
+    staff_list,
 )
-
 
 urlpatterns = [
     path("", staff_list, name="staff-list"),

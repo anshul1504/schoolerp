@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0001_initial"),
     ]
@@ -13,9 +12,17 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="PlatformSettings",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("product_name", models.CharField(default="SchoolFlow", max_length=80)),
-                ("product_meta", models.CharField(default="A product by The Webfix", max_length=120)),
+                (
+                    "product_meta",
+                    models.CharField(default="A product by The Webfix", max_length=120),
+                ),
                 ("support_email", models.EmailField(blank=True, max_length=254)),
                 ("logo", models.ImageField(blank=True, null=True, upload_to="platform/")),
                 ("updated_at", models.DateTimeField(auto_now=True)),
@@ -24,11 +31,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="RoleSectionsOverride",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("role", models.CharField(max_length=20, unique=True)),
                 ("sections", models.JSONField(default=list)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
     ]
-

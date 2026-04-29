@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Create{% endif %} Event | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{% if is_edit %}Modify{% else %}New{% endif %} Career Event{% endblock %}
+{% block breadcrumb_active %}Event Form{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card radius-16 border-0 shadow-1">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100">
+                    <h6 class="mb-0 fw-bold">Event Details</h6>
+                </div>
+                <div class="card-body p-24">
+                    <form method="post" class="row gy-4">
+                        {% csrf_token %}
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Event Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger text-xxs mt-4">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Description</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Date</label>
+                            {{ form.date }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Time / Duration</label>
+                            {{ form.time }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Location / Platform</label>
+                            {{ form.location }}
+                        </div>
+
+                        <div class="col-12 mt-32 d-flex gap-12">
+                            <button type="submit" class="btn btn-primary-600 radius-8 px-24">
+                                {% if is_edit %}Update Event{% else %}Create Event{% endif %}
+                            </button>
+                            <a href="{% url 'career_counseling:event_list' %}" class="btn bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100 radius-8 px-24">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

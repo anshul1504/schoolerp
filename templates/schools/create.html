@@ -1,115 +1,58 @@
 {% extends 'base.html' %}
 
 {% block title %}Create School | School ERP{% endblock %}
-{% block page_eyebrow %}School Setup{% endblock %}
 {% block page_heading %}Create school profile{% endblock %}
-{% block page_copy %}Register a school in guided steps so the setup feels clean, short, and professional.{% endblock %}
-
-{% block extra_css %}
-<style>
-  .setup-wizard {
-    display: grid;
-    gap: 20px;
-  }
-
-  .setup-steps {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .setup-step {
-    border: 1px solid var(--neutral-200);
-    background: #fff;
-    border-radius: 14px;
-    padding: 14px;
-  }
-
-  .setup-step strong,
-  .setup-step span {
-    display: block;
-  }
-
-  .setup-step span {
-    margin-top: 4px;
-    font-size: 0.78rem;
-    color: var(--neutral-500);
-  }
-
-  .setup-step.active {
-    border-color: rgba(30, 41, 59, 0.22);
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.08), rgba(71, 85, 105, 0.06));
-  }
-
-  .setup-panel {
-    display: none;
-  }
-
-  .setup-panel.active {
-    display: block;
-  }
-
-  .setup-card {
-    border: 1px solid var(--neutral-200);
-    border-radius: 18px;
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .setup-card__head {
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--neutral-200);
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.1), rgba(71, 85, 105, 0.08));
-  }
-
-  .setup-card__body {
-    padding: 20px;
-  }
-
-  .required-mark {
-    color: var(--danger-600);
-    font-weight: 700;
-    margin-left: 4px;
-  }
-
-  .setup-card__body .form-label {
-    font-weight: 600;
-    color: var(--neutral-700);
-    margin-bottom: 6px;
-  }
-
-  @media (max-width: 767.98px) {
-    .setup-steps {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-{% endblock %}
+{% block breadcrumb_active %}Create School{% endblock %}
 
 {% block content %}
-<div class="card">
+<style>
+  .setup-panel { display: none; animation: fadeIn 0.4s ease; }
+  .setup-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .setup-steps { display: flex; justify-content: space-between; position: relative; margin-bottom: 2rem; padding: 0 1rem; }
+  .setup-steps::before { content: ''; position: absolute; top: 20px; left: 2rem; right: 2rem; height: 2px; background: var(--neutral-200); z-index: 1; }
+
+  .setup-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; cursor: default; }
+  .setup-step .step-circle { width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid var(--neutral-300); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--neutral-500); transition: all 0.3s; font-size: 14px; }
+  .setup-step .step-label { font-size: 13px; color: var(--neutral-500); font-weight: 500; transition: all 0.3s; white-space: nowrap; }
+
+  .setup-step.active .step-circle { border-color: var(--primary-600); background: var(--primary-600); color: white; box-shadow: 0 0 0 4px var(--primary-50); }
+  .setup-step.active .step-label { color: var(--primary-700); font-weight: 600; }
+
+  .setup-step.completed .step-circle { border-color: var(--success-600); background: var(--success-600); color: white; }
+  .setup-step.completed .step-label { color: var(--success-700); }
+
+  .setup-card { background: white; border: 1px solid var(--neutral-200); border-radius: 12px; padding: 24px; }
+  .setup-card__head { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--neutral-100); }
+</style>
+<div class="mt-24">
+<div class="card h-100">
   <div class="card-body p-24">
     <form method="post" enctype="multipart/form-data" class="setup-wizard" id="schoolSetupWizard">
       {% csrf_token %}
 
-      {% if form and form.errors %}
-        <div class="alert alert-danger mb-0">
-          <strong>Please fix the highlighted errors:</strong>
-          <ul class="mb-0 mt-2">
-            {% for field, errors in form.errors.items %}
-              {% for error in errors %}
-                <li>{{ field|capfirst }}: {{ error }}</li>
-              {% endfor %}
-            {% endfor %}
-          </ul>
+      <div class="setup-steps mb-32">
+        <div class="setup-step active" data-step="0">
+          <div class="step-circle">1</div>
+          <div class="step-label">Basic</div>
         </div>
-      {% endif %}
-
-      <div class="setup-steps">
-        <div class="setup-step active" data-step="0"><strong>Step 1</strong><span>Basic</span></div>
-        <div class="setup-step" data-step="1"><strong>Step 2</strong><span>Contact</span></div>
-        <div class="setup-step" data-step="2"><strong>Step 3</strong><span>Academics</span></div>
-        <div class="setup-step" data-step="3"><strong>Step 4</strong><span>Address</span></div>
+        <div class="setup-step" data-step="1">
+          <div class="step-circle">2</div>
+          <div class="step-label">Contact</div>
+        </div>
+        <div class="setup-step" data-step="2">
+          <div class="step-circle">3</div>
+          <div class="step-label">Academics</div>
+        </div>
+        <div class="setup-step" data-step="3">
+          <div class="step-circle">4</div>
+          <div class="step-label">Professional</div>
+        </div>
+        <div class="setup-step" data-step="4">
+          <div class="step-circle">5</div>
+          <div class="step-label">Address</div>
+        </div>
       </div>
 
       <section class="setup-panel active" data-panel="0">
@@ -131,7 +74,7 @@
               </div>
               <div class="col-lg-6"><label class="form-label">Principal name<span class="required-mark">*</span></label><input type="text" name="principal_name" class="form-control" value="{% if form %}{{ form.principal_name.value|default:'' }}{% endif %}" required></div>
               <div class="col-lg-3"><label class="form-label">Established year<span class="required-mark">*</span></label><input type="number" name="established_year" class="form-control" min="1900" max="2100" value="{% if form %}{{ form.established_year.value|default:'' }}{% endif %}" required></div>
-              <div class="col-lg-3 d-flex align-items-center"><div class="form-check mt-24"><input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked><label class="form-check-label" for="is_active">School active</label></div></div>
+              <div class="col-lg-3 d-flex align-items-center"><div class="form-check mt-24"><input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if form and form.is_active.value == False %}{% else %}checked{% endif %}><label class="form-check-label" for="is_active">School active</label></div></div>
               <div class="col-lg-6"><label class="form-label">Student capacity<span class="required-mark">*</span></label><input type="number" name="student_capacity" class="form-control" min="1" value="{% if form and form.student_capacity.value %}{{ form.student_capacity.value }}{% else %}1000{% endif %}" required></div>
               <div class="col-lg-6"><label class="form-label">Allowed campuses / schools<span class="required-mark">*</span></label><input type="number" name="allowed_campuses" class="form-control" min="1" value="{% if form and form.allowed_campuses.value %}{{ form.allowed_campuses.value }}{% else %}1{% endif %}" required></div>
               <div class="col-lg-6">
@@ -199,29 +142,73 @@
       <section class="setup-panel" data-panel="3">
         <div class="setup-card">
           <div class="setup-card__head">
+            <h6 class="mb-4">Professional & Billing Info</h6>
+            <p class="text-neutral-600 text-sm mb-0">Legal and payment details for official documentation and invoicing.</p>
+          </div>
+          <div class="setup-card__body">
+            <div class="row gy-4">
+              <div class="col-lg-6">
+                <label class="form-label">Registration Number</label>
+                <input type="text" name="registration_number" class="form-control" value="{% if form %}{{ form.registration_number.value|default:'' }}{% endif %}" placeholder="e.g. REG-12345">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">GST Number</label>
+                <input type="text" name="gst_number" class="form-control" value="{% if form %}{{ form.gst_number.value|default:'' }}{% endif %}" placeholder="Optional, e.g. 22AAAAA0000A1Z5">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">CIN Number</label>
+                <input type="text" name="cin_number" class="form-control" value="{% if form %}{{ form.cin_number.value|default:'' }}{% endif %}" placeholder="Optional">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">UPI ID</label>
+                <input type="text" name="upi_id" class="form-control" value="{% if form %}{{ form.upi_id.value|default:'' }}{% endif %}" placeholder="school@upi">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">Currency</label>
+                <select name="currency" class="form-control">
+                  <option value="INR" {% if form.currency.value == "INR" %}selected{% endif %}>INR - Indian Rupee</option>
+                  <option value="USD" {% if form.currency.value == "USD" %}selected{% endif %}>USD - US Dollar</option>
+                  <option value="EUR" {% if form.currency.value == "EUR" %}selected{% endif %}>EUR - Euro</option>
+                  <option value="AED" {% if form.currency.value == "AED" %}selected{% endif %}>AED - UAE Dirham</option>
+                </select>
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">Timezone</label>
+                <input type="text" name="timezone" class="form-control" value="{% if form.timezone.value %}{{ form.timezone.value }}{% else %}Asia/Kolkata{% endif %}">
+              </div>
+            </div>
+            <div class="d-flex justify-content-between mt-24">
+              <button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev">Back</button>
+              <button type="button" class="btn btn-primary-600 radius-8 px-20 py-11 wizard-next">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup-panel" data-panel="4">
+        <div class="setup-card">
+          <div class="setup-card__head">
             <h6 class="mb-4">Address details</h6>
             <p class="text-neutral-600 text-sm mb-0">Select state and city, then add the full school address.</p>
           </div>
           <div class="setup-card__body">
             <div class="row gy-4">
-              <div class="col-lg-6"><label class="form-label">State<span class="required-mark">*</span></label><select name="state" id="schoolState" class="form-control" required><option value="">Select state</option></select></div>
-              <div class="col-lg-6"><label class="form-label">City<span class="required-mark">*</span></label><select name="city" id="schoolCity" class="form-control" required><option value="">Select city</option></select></div>
+              <div class="col-lg-6"><label class="form-label">State<span class="required-mark">*</span></label><select name="state" id="schoolState" class="form-control" data-selected="{% if form %}{{ form.state.value|default:'' }}{% endif %}" required><option value="">Select state</option></select></div>
+              <div class="col-lg-6"><label class="form-label">City<span class="required-mark">*</span></label><select name="city" id="schoolCity" class="form-control" data-selected="{% if form %}{{ form.city.value|default:'' }}{% endif %}" required><option value="">Select city</option></select></div>
               <div class="col-12"><label class="form-label">Address line 1<span class="required-mark">*</span></label><textarea name="address" class="form-control" rows="3" required>{% if form %}{{ form.address.value|default:'' }}{% endif %}</textarea></div>
               <div class="col-12"><label class="form-label">Address line 2</label><input type="text" name="address_line2" class="form-control" value="{% if form %}{{ form.address_line2.value|default:'' }}{% endif %}" placeholder="Landmark / area / near..."></div>
               <div class="col-lg-6"><label class="form-label">Pincode</label><input type="text" name="pincode" class="form-control" value="{% if form %}{{ form.pincode.value|default:'' }}{% endif %}" placeholder="Optional"></div>
             </div>
             <div class="d-flex flex-wrap justify-content-between gap-12 mt-24">
               <button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev">Back</button>
-              <div class="d-flex flex-wrap gap-12">
-                <a class="btn btn-outline-secondary radius-8 px-20 py-11" href="/schools/">Back to schools</a>
-                <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Save School</button>
-              </div>
+              <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Save School</button>
             </div>
           </div>
         </div>
       </section>
     </form>
   </div>
+</div>
 </div>
 {{ state_city_map|json_script:"school-state-city-map" }}
 {% endblock %}
@@ -236,6 +223,8 @@
     const stateSelect = document.getElementById("schoolState");
     const citySelect = document.getElementById("schoolCity");
     const stateCityMap = JSON.parse(document.getElementById("school-state-city-map").textContent);
+    const selectedState = stateSelect ? (stateSelect.dataset.selected || "") : "";
+    const selectedCity = citySelect ? (citySelect.dataset.selected || "") : "";
     let currentStep = 0;
 
     const nameInput = document.querySelector('input[name="name"]');
@@ -278,7 +267,16 @@
 
     function renderStep() {
       panels.forEach((panel, index) => panel.classList.toggle("active", index === currentStep));
-      steps.forEach((step, index) => step.classList.toggle("active", index === currentStep));
+      steps.forEach((step, index) => {
+        step.classList.toggle("active", index === currentStep);
+        if (index < currentStep) {
+          step.classList.add("completed");
+          step.querySelector(".step-circle").innerHTML = '<i class="ri-check-line"></i>';
+        } else {
+          step.classList.remove("completed");
+          step.querySelector(".step-circle").textContent = index + 1;
+        }
+      });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -317,18 +315,26 @@
       const option = document.createElement("option");
       option.value = state;
       option.textContent = state;
+      if (state === selectedState) option.selected = true;
       stateSelect.appendChild(option);
     });
 
-    stateSelect.addEventListener("change", function () {
+    function fillCities(selected) {
       citySelect.innerHTML = '<option value="">Select city</option>';
       (stateCityMap[stateSelect.value] || []).forEach((city) => {
         const option = document.createElement("option");
         option.value = city;
         option.textContent = city;
+        if (city === selected) option.selected = true;
         citySelect.appendChild(option);
       });
+    }
+
+    stateSelect.addEventListener("change", function () {
+      fillCities("");
     });
+
+    if (selectedState) fillCities(selectedCity);
 
     renderStep();
   });

@@ -1,64 +1,83 @@
 {% extends "base.html" %}
 
 {% block title %}RBAC Grants{% endblock %}
-{% block page_heading %}RBAC Grants{% endblock %}
-{% block page_copy %}Who changed user roles/school assignment/activation (from EntityChangeLog).{% endblock %}
-{% block page_eyebrow %}Settings{% endblock %}
+{% block page_heading %}RBAC User Grants{% endblock %}
+{% block breadcrumb_active %}RBAC Grants{% endblock %}
 
 {% block content %}
-  <section class="platform-shell mb-16">
-    <span class="platform-shell__eyebrow">RBAC Grants</span>
-    <h5 class="mb-2">User role and assignment changes</h5>
-    <p class="mb-0">Who changed user roles, school assignment, and activation.</p>
-  </section>
+<div class="mt-24">
+    <div class="row gy-4">
+        {% include "settings/_sidebar.html" %}
 
-  <div class="platform-panel mb-16">
-    <div class="platform-panel__head">
-      <div><h6>Search</h6><p>Filter by user id or text.</p></div>
-    </div>
-    <div class="platform-shell">
-      <form method="get" class="row gy-3 gx-3 align-items-end">
-        <div class="col-md-8">
-          <label class="form-label">Search</label>
-          <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="user id or text">
-        </div>
-        <div class="col-md-4 d-flex gap-10">
-          <button type="submit" class="btn btn-outline-secondary">Search</button>
-          <a href="/settings/rbac-grants/" class="btn btn-outline-secondary">Reset</a>
-          <a href="/settings/" class="btn btn-outline-secondary">Back</a>
-        </div>
-      </form>
-    </div>
-  </div>
+        <div class="col-xxl-9 col-lg-8">
+            <div class="row gy-4">
+                <div class="col-12">
+                    <div class="card h-100">
+                        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex align-items-center justify-content-between">
+                            <h6 class="text-lg fw-semibold mb-0">Search Grants</h6>
+                            <small class="text-neutral-400">Filter by user ID, actor, or change payload text.</small>
+                        </div>
+                    <div class="card-body p-24">
+                        <form method="get" class="row gy-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Search</label>
+                                <input type="text" name="q" class="form-control" value="{{ filters.q }}" placeholder="user id or text">
+                            </div>
+                            <div class="col-md-4 d-flex gap-12 justify-content-end">
+                                <a href="/settings/" class="btn btn-neutral-100 text-neutral-600 px-24 py-10 radius-8 fw-semibold">Back</a>
+                                <a href="/settings/rbac-grants/" class="btn btn-outline-secondary px-24 py-10 radius-8 fw-semibold">Reset</a>
+                                <button type="submit" class="btn btn-primary-600 px-24 py-10 radius-8 fw-semibold shadow-primary">Search</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-  <div class="platform-panel">
-    <div class="platform-panel__head">
-      <div><h6>Grant Events</h6><p>Latest assignment and activation changes.</p></div>
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Grant Events</h6>
+                        <span class="badge bg-primary-50 text-primary-600 border border-primary-100 px-12 py-4 radius-pill fw-medium">Latest updates</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table bordered-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>When</th>
+                                        <th>Actor</th>
+                                        <th>User ID</th>
+                                        <th>Changes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for e in logs %}
+                                        <tr>
+                                            <td class="px-24 py-16 text-muted text-sm">{{ e.created_at }}</td>
+                                            <td class="px-24 py-16 text-primary-light fw-medium">{% if e.actor %}{{ e.actor.username }}{% else %}-{% endif %}</td>
+                                            <td class="px-24 py-16">
+                                                <code class="bg-neutral-50 border border-neutral-100 radius-4 px-8 py-4 text-xs text-neutral-600 d-inline-block">{{ e.object_id }}</code>
+                                            </td>
+                                            <td class="px-24 py-16">
+                                                <code class="bg-neutral-50 border border-neutral-100 radius-4 px-8 py-4 text-xs text-neutral-600 d-inline-block text-truncate" style="max-width:300px;">{{ e.changes }}</code>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="p-48 text-center text-muted">
+                                                <iconify-icon icon="ri:inbox-2-line" class="text-4xl mb-12 d-block"></iconify-icon>
+                                                No grant events yet.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="table-responsive">
-      <table class="table align-middle sf-table">
-        <thead>
-          <tr>
-            <th>When</th>
-            <th>Actor</th>
-            <th>User ID</th>
-            <th>Changes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in logs %}
-            <tr>
-              <td class="text-muted text-sm">{{ e.created_at }}</td>
-              <td>{% if e.actor %}{{ e.actor.username }}{% else %}—{% endif %}</td>
-              <td><code>{{ e.object_id }}</code></td>
-              <td><code class="text-muted text-sm">{{ e.changes }}</code></td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="4" class="text-center text-muted">No grant events yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="text-muted text-sm mt-2">Showing up to 200 events.</div>
-  </div>
+</div>
+</div>
 {% endblock %}

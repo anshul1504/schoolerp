@@ -2,76 +2,97 @@
 
 {% block title %}RBAC Audit{% endblock %}
 {% block page_heading %}RBAC Audit{% endblock %}
-{% block page_copy %}History of role override changes (who changed what).{% endblock %}
-{% block page_eyebrow %}Settings{% endblock %}
+{% block breadcrumb_active %}RBAC Audit{% endblock %}
 
 {% block content %}
-  <section class="platform-shell mb-16">
-    <span class="platform-shell__eyebrow">RBAC Audit</span>
-    <h5 class="mb-2">Role override change history</h5>
-    <p class="mb-0">History of role override changes (who changed what).</p>
-  </section>
+<div class="mt-24">
+    <div class="row gy-4">
+        {% include "settings/_sidebar.html" %}
 
-  <div class="platform-panel mb-16">
-    <div class="platform-panel__head">
-      <div><h6>Filters</h6><p>Filter audit events by role and kind.</p></div>
-    </div>
-    <div class="platform-shell">
-      <form method="get" class="row gy-3 gx-3 align-items-end">
-        <div class="col-md-4">
-          <label class="form-label">Role</label>
-          <input type="text" name="role" class="form-control" value="{{ filters.role }}" placeholder="e.g. TEACHER">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Kind</label>
-          <select name="kind" class="form-select">
-            <option value="">All</option>
-            {% for value,label in kind_choices %}
-              <option value="{{ value }}" {% if filters.kind == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-4 d-flex gap-10">
-          <button type="submit" class="btn btn-outline-secondary">Filter</button>
-          <a href="/settings/rbac-audit/" class="btn btn-outline-secondary">Reset</a>
-          <a href="/settings/" class="btn btn-outline-secondary">Back</a>
-        </div>
-      </form>
-    </div>
-  </div>
+        <div class="col-xxl-9 col-lg-8">
+            <div class="row gy-4">
+                <div class="col-12">
+                    <div class="card h-100">
+                        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex align-items-center justify-content-between">
+                            <h6 class="text-lg fw-semibold mb-0">Filters</h6>
+                            <small class="text-neutral-400">Filter events by target role and change kind.</small>
+                        </div>
+                    <div class="card-body p-24">
+                        <form method="get" class="row gy-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Role</label>
+                                <input type="text" name="role" class="form-control" value="{{ filters.role }}" placeholder="e.g. TEACHER">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Kind</label>
+                                <select name="kind" class="form-select form-control">
+                                    <option value="">All</option>
+                                    {% for value,label in kind_choices %}
+                                        <option value="{{ value }}" {% if filters.kind == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex gap-12 justify-content-end">
+                                <a href="/settings/" class="btn btn-neutral-100 text-neutral-600 px-24 py-10 radius-8 fw-semibold">Back</a>
+                                <a href="/settings/rbac-audit/" class="btn btn-outline-secondary px-24 py-10 radius-8 fw-semibold">Reset</a>
+                                <button type="submit" class="btn btn-primary-600 px-24 py-10 radius-8 fw-semibold shadow-primary">Apply</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-  <div class="platform-panel">
-    <div class="platform-panel__head">
-      <div><h6>Audit Events</h6><p>Latest role override events.</p></div>
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Audit Events</h6>
+                        <span class="badge bg-primary-50 text-primary-600 border border-primary-100 px-12 py-4 radius-pill fw-medium">Latest 200 events</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table bordered-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>When</th>
+                                        <th>Actor</th>
+                                        <th>Role</th>
+                                        <th>Kind</th>
+                                        <th>Before</th>
+                                        <th>After</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for e in events %}
+                                        <tr>
+                                            <td class="px-24 py-16 text-muted text-sm">{{ e.created_at }}</td>
+                                            <td class="px-24 py-16 text-primary-light fw-medium">{% if e.actor %}{{ e.actor.username }}{% else %}-{% endif %}</td>
+                                            <td class="px-24 py-16">
+                                                <span class="badge bg-warning-50 text-warning-600 px-12 py-4 radius-pill border border-warning-100">{{ e.role }}</span>
+                                            </td>
+                                            <td class="px-24 py-16 text-muted text-sm">{{ e.get_kind_display }}</td>
+                                            <td class="px-24 py-16">
+                                                <code class="bg-neutral-50 border border-neutral-100 radius-4 px-8 py-4 text-xs text-neutral-600 d-inline-block text-truncate" style="max-width:150px;">{{ e.before }}</code>
+                                            </td>
+                                            <td class="px-24 py-16">
+                                                <code class="bg-neutral-50 border border-neutral-100 radius-4 px-8 py-4 text-xs text-neutral-600 d-inline-block text-truncate" style="max-width:150px;">{{ e.after }}</code>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="p-48 text-center text-muted">
+                                                <iconify-icon icon="ri:inbox-2-line" class="text-4xl mb-12 d-block"></iconify-icon>
+                                                No RBAC audit events yet.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="table-responsive">
-      <table class="table align-middle sf-table">
-        <thead>
-          <tr>
-            <th>When</th>
-            <th>Actor</th>
-            <th>Role</th>
-            <th>Kind</th>
-            <th>Before</th>
-            <th>After</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in events %}
-            <tr>
-              <td class="text-muted text-sm">{{ e.created_at }}</td>
-              <td>{% if e.actor %}{{ e.actor.username }}{% else %}—{% endif %}</td>
-              <td><span class="status-pill status-pill--warning">{{ e.role }}</span></td>
-              <td class="text-muted text-sm">{{ e.get_kind_display }}</td>
-              <td><code class="text-muted text-sm">{{ e.before }}</code></td>
-              <td><code class="text-muted text-sm">{{ e.after }}</code></td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="6" class="text-center text-muted">No RBAC audit events yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="text-muted text-sm mt-2">Showing latest 200 events.</div>
-  </div>
+</div>
+</div>
 {% endblock %}

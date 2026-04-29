@@ -11,11 +11,11 @@
   {% elif platform_settings.logo %}
     <link rel="icon" type="image/png" href="{{ platform_settings.logo.url }}">
   {% else %}
-    <link rel="icon" type="image/png" href="{% static 'demo/assets/images/favicon.png' %}" sizes="16x16">
+    <link rel="icon" type="image/png" href="{% static 'assets/images/favicon.png' %}" sizes="16x16">
   {% endif %}
-  <link rel="stylesheet" href="{% static 'demo/assets/css/remixicon.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'css/demo-style.css' %}?v=20260424-2">
+  <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/lib/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/style.css' %}?v=20260426-1">
   <style>
     :root {
       --auth-brand-900: #1677ff;
@@ -28,6 +28,7 @@
       --auth-border: rgba(2, 6, 23, 0.10);
       --auth-shadow: 0 30px 70px rgba(2, 6, 23, 0.18);
       --auth-radius: 22px;
+      --auth-font-weight-max: 600;
     }
 
     html, body { min-height: 100%; margin: 0; }
@@ -105,7 +106,7 @@
       border: 1px solid rgba(255,255,255,0.55);
       background: rgba(255,255,255,0.68);
       backdrop-filter: blur(10px);
-      font-weight: 900;
+      font-weight: var(--auth-font-weight-max);
       letter-spacing: -0.02em;
       color: rgba(11,18,32,0.92);
     }
@@ -124,7 +125,7 @@
 
     .auth-visual__title {
       margin-top: 22px;
-      font-weight: 900;
+      font-weight: var(--auth-font-weight-max);
       letter-spacing: -0.03em;
       font-size: 2rem;
       line-height: 1.1;
@@ -177,20 +178,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 900;
+      font-weight: var(--auth-font-weight-max);
       letter-spacing: -0.02em;
       color: var(--auth-ink);
       flex-shrink: 0;
     }
 
     .brand-text { display:flex; flex-direction: column; line-height: 1.1; min-width: 0; }
-    .brand-name { font-weight: 900; letter-spacing: -0.03em; color: var(--auth-ink); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+    .brand-name { font-weight: var(--auth-font-weight-max); letter-spacing: -0.03em; color: var(--auth-ink); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
     .brand-meta { font-size: 0.82rem; color: var(--auth-muted); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
 
-    .auth-title { font-weight: 900; letter-spacing: -0.03em; }
+    .auth-title { font-weight: var(--auth-font-weight-max); letter-spacing: -0.03em; }
     .auth-subtitle { color: var(--auth-muted); }
 
-    .form-label { font-weight: 800; color: rgba(15, 23, 42, 0.92); }
+    .form-label { font-weight: 600; color: rgba(15, 23, 42, 0.92); }
 
     .form-control, .form-select {
       border-radius: 14px;
@@ -215,8 +216,12 @@
     .btn {
       border-radius: 14px;
       padding-block: 12px;
-      font-weight: 900;
+      font-weight: var(--auth-font-weight-max);
       letter-spacing: -0.01em;
+    }
+
+    h1, h2, h3, h4, h5, h6, strong, b, .fw-bold, .fw-bolder, .fw-semibold {
+      font-weight: var(--auth-font-weight-max) !important;
     }
 
     .btn-primary {
@@ -271,7 +276,7 @@
           </div>
           <div class="auth-visual__image">
             {% block auth_visual_image %}
-              <img src="{% static 'demo/assets/images/thumbs/login-img.png' %}" alt="">
+              <img src="{% static 'assets/images/thumbs/login-img.png' %}" alt="">
             {% endblock %}
           </div>
         </aside>
@@ -309,7 +314,7 @@
     </div>
   </div>
 
-  <script src="{% static 'demo/assets/js/lib/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/js/lib/bootstrap.bundle.min.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

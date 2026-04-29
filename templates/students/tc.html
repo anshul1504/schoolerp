@@ -7,12 +7,12 @@
 {% block page_copy %}Issue transfer certificate in a cleaner workflow and keep the student lifecycle status fully traceable.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
   <div class="row gy-4">
     <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="tc" %}</div>
     <div class="col-xxl-6">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
             <div>
               <h6 class="mb-4">Transfer certificate form</h6>
@@ -22,10 +22,10 @@
           <div class="d-flex flex-wrap gap-10 mb-16">
             <a class="btn btn-outline-secondary btn-sm radius-8" href="/students/{{ student.slug }}/tc/requests/">Open TC Requests</a>
             {% if pending_tc_requests_count %}
-              <span class="student-pill warning">{{ pending_tc_requests_count }} pending request{{ pending_tc_requests_count|pluralize }}</span>
+              <span class="badge warning">{{ pending_tc_requests_count }} pending request{{ pending_tc_requests_count|pluralize }}</span>
             {% endif %}
           </div>
-          <div class="student-pill success mb-20">Auto TC No: {{ suggested_tc_number }}</div>
+          <div class="badge success mb-20">Auto TC No: {{ suggested_tc_number }}</div>
           <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="issue">
@@ -63,8 +63,8 @@
       </div>
     </div>
     <div class="col-xxl-6">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
             <div>
               <h6 class="mb-4">Current certificate status</h6>
@@ -90,3 +90,9 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

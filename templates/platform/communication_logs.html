@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Communication Logs{% endblock %}
+{% block page_heading %}Communication Logs{% endblock %}
+{% block page_copy %}Track message deliveries and retry failed communications.{% endblock %}
+{% block page_eyebrow %}Super Admin{% endblock %}
+
+{% block content %}
+  <section class="platform-shell mb-16">
+    <span class="platform-shell__eyebrow">Communication Logs</span>
+    <h5 class="mb-2">Delivery Tracking</h5>
+    <p class="mb-0">Track message deliveries, failures, and retry operations across campaigns.</p>
+  </section>
+
+  <section class="platform-kpi-grid">
+    <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-mail-send-line"></i></div><div><span>Total</span><strong>{{ stats.total }}</strong><small>Logged deliveries</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon text-success"><i class="ri-checkbox-circle-line"></i></div><div><span>Sent</span><strong>{{ stats.sent }}</strong><small>Successfully sent</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon text-danger"><i class="ri-error-warning-line"></i></div><div><span>Failed</span><strong>{{ stats.failed }}</strong><small>Failed to send</small></div></article>
+    <article class="platform-kpi"><div class="platform-kpi__icon text-warning"><i class="ri-loader-4-line"></i></div><div><span>Queued</span><strong>{{ stats.queued }}</strong><small>Pending delivery</small></div></article>
+  </section>
+
+  <div class="platform-panel">
+    <div class="platform-panel__head">
+      <div><h6>Delivery Logs</h6><p>Recent message delivery attempts.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle sf-table">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Channel</th>
+            <th>Recipient</th>
+            <th>Contact</th>
+            <th>Status</th>
+            <th>Attempt Count</th>
+            <th>Last Attempt</th>
+            <th>Error</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td><strong>{{ log.campaign.title }}</strong><br><small class="text-muted">{{ log.campaign.school.code }}</small></td>
+              <td>{{ log.channel }}</td>
+              <td>{{ log.recipient_label }}</td>
+              <td>{{ log.recipient_contact }}</td>
+              <td>
+                {% if log.status == 'SENT' %}
+                    <span class="badge status-pill--success">Sent</span>
+                {% elif log.status == 'FAILED' %}
+                    <span class="badge status-pill--danger">Failed</span>
+                {% elif log.status == 'QUEUED' %}
+                    <span class="badge status-pill--warning">Queued</span>
+                {% else %}
+                    <span class="badge status-pill--secondary">{{ log.status }}</span>
+                {% endif %}
+              </td>
+              <td>{{ log.attempt_count }}</td>
+              <td>{{ log.last_attempt_at|default:"-" }}</td>
+              <td class="text-danger small" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ log.error }}">{{ log.error|default:"-" }}</td>
+              <td>
+                {% if log.status == 'FAILED' %}
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="retry">
+                  <input type="hidden" name="log_id" value="{{ log.id }}">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Retry</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="9" class="text-center text-muted">No communication logs found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

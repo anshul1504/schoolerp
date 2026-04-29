@@ -7,15 +7,15 @@
 {% block page_copy %}Upload and review admission documents, certificates, and identity records from one organized workspace.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
 <div class="row gy-4">
   <div class="col-12">
     {% include "students/_student_nav.html" with student_nav_active="documents" %}
   </div>
   <div class="col-xxl-5">
-    <div class="doc-card">
-      <div class="doc-card__head"><h6 class="mb-4">Upload document</h6><p class="text-neutral-600 text-sm mb-0">Add a title and upload a file to keep the student record complete.</p></div>
-      <div class="doc-card__body">
+    <div class="card radius-12 border-neutral-200">
+      <div class="mb-0"><h6 class="mb-4">Upload document</h6><p class="text-neutral-600 text-sm mb-0">Add a title and upload a file to keep the student record complete.</p></div>
+      <div class="card-body">
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="row gy-4">
@@ -31,9 +31,9 @@
     </div>
   </div>
   <div class="col-xxl-7">
-    <div class="doc-card">
-      <div class="doc-card__head"><h6 class="mb-4">Uploaded documents</h6><p class="text-neutral-600 text-sm mb-0">Every uploaded file is listed here with quick open access.</p></div>
-      <div class="doc-card__body">
+    <div class="card radius-12 border-neutral-200">
+      <div class="mb-0"><h6 class="mb-4">Uploaded documents</h6><p class="text-neutral-600 text-sm mb-0">Every uploaded file is listed here with quick open access.</p></div>
+      <div class="card-body">
         {% if student.documents.all %}
           <div class="d-flex flex-column gap-12">
             {% for document in student.documents.all %}
@@ -59,3 +59,9 @@
 </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("schools", "0006_plan_features"),
     ]
@@ -13,12 +12,24 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="subscriptionplan",
             name="tier",
-            field=models.CharField(choices=[("SILVER", "Silver"), ("GOLD", "Gold"), ("PLATINUM", "Platinum")], default="SILVER", max_length=20),
+            field=models.CharField(
+                choices=[("SILVER", "Silver"), ("GOLD", "Gold"), ("PLATINUM", "Platinum")],
+                default="SILVER",
+                max_length=20,
+            ),
         ),
         migrations.AddField(
             model_name="subscriptionplan",
             name="billing_mode",
-            field=models.CharField(choices=[("FLAT", "Flat monthly"), ("PER_STUDENT", "Per student"), ("PER_500", "Per 500 students")], default="FLAT", max_length=20),
+            field=models.CharField(
+                choices=[
+                    ("FLAT", "Flat monthly"),
+                    ("PER_STUDENT", "Per student"),
+                    ("PER_500", "Per 500 students"),
+                ],
+                default="FLAT",
+                max_length=20,
+            ),
         ),
         migrations.AddField(
             model_name="subscriptionplan",
@@ -26,4 +37,3 @@ class Migration(migrations.Migration):
             field=models.DecimalField(decimal_places=2, default=0, max_digits=10),
         ),
     ]
-

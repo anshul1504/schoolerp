@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{{ title }}{% endblock %}
+{% block breadcrumb_active %}Alumni Form{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-1">
+            <div class="card-header bg-base py-16 px-24 border-bottom">
+                <h6 class="mb-0 fw-bold">Member Information</h6>
+            </div>
+            <div class="card-body p-24">
+                <form method="post" class="row gy-4">
+                    {% csrf_token %}
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Linked Student Profile</label>
+                        {{ form.student }}
+                        <small class="text-xxs text-secondary-light">Optional: Link to existing student record</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Full Name</label>
+                        {{ form.full_name }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-sm text-primary-light">Graduation Year</label>
+                        {{ form.graduation_year }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-sm text-primary-light">Batch / Stream</label>
+                        {{ form.batch }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-sm text-primary-light">Status</label>
+                        <div class="form-check mt-8">
+                            {{ form.is_verified }}
+                            <label class="form-check-label ms-8" for="{{ form.is_verified.id_for_label }}">Verified Profile</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 border-top pt-24 mt-24">
+                        <h6 class="text-sm fw-bold mb-16">Professional Details</h6>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Current Occupation</label>
+                        {{ form.current_occupation }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Organization / Company</label>
+                        {{ form.current_organization }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Location</label>
+                        {{ form.location }}
+                    </div>
+
+                    <div class="col-12 border-top pt-24 mt-24">
+                        <h6 class="text-sm fw-bold mb-16">Contact & Social</h6>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Email Address</label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-sm text-primary-light">Phone Number</label>
+                        {{ form.phone }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-sm text-primary-light">LinkedIn Profile URL</label>
+                        {{ form.linkedin_profile }}
+                    </div>
+
+                    <div class="col-12 mt-32 d-flex gap-12">
+                        <button type="submit" class="btn btn-primary-600 radius-8 px-24">Save Member Record</button>
+                        <a href="{% url 'alumni:alumni_list' %}" class="btn btn-outline-secondary-600 radius-8 px-24">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

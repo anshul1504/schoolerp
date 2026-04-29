@@ -3,7 +3,16 @@ from django.test import TestCase
 
 from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 
-from .models import CallLog, Enquiry, EnquiryFollowUp, MeetingRequest, MessageCampaign, MessageDeliveryLog, MessageTemplate, VisitorLog
+from .models import (
+    CallLog,
+    Enquiry,
+    EnquiryFollowUp,
+    MeetingRequest,
+    MessageCampaign,
+    MessageDeliveryLog,
+    MessageTemplate,
+    VisitorLog,
+)
 
 
 class FrontofficeModuleTests(TestCase):
@@ -55,7 +64,9 @@ class FrontofficeModuleTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Enquiry.objects.filter(student_name="Aarav Singh", school=self.school).exists())
+        self.assertTrue(
+            Enquiry.objects.filter(student_name="Aarav Singh", school=self.school).exists()
+        )
 
     def test_receptionist_can_log_visitor(self):
         self.client.force_login(self.receptionist)
@@ -69,7 +80,9 @@ class FrontofficeModuleTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(VisitorLog.objects.filter(visitor_name="Vendor Person", school=self.school).exists())
+        self.assertTrue(
+            VisitorLog.objects.filter(visitor_name="Vendor Person", school=self.school).exists()
+        )
 
     def test_receptionist_can_log_follow_up(self):
         enquiry = Enquiry.objects.create(
@@ -91,7 +104,9 @@ class FrontofficeModuleTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(EnquiryFollowUp.objects.filter(enquiry=enquiry, outcome="CALL_BACK").exists())
+        self.assertTrue(
+            EnquiryFollowUp.objects.filter(enquiry=enquiry, outcome="CALL_BACK").exists()
+        )
 
     def test_enquiry_convert_prefills_student_admission(self):
         enquiry = Enquiry.objects.create(
@@ -160,7 +175,9 @@ class FrontofficeModuleTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(MeetingRequest.objects.filter(school=self.school, guardian_name="Parent A").exists())
+        self.assertTrue(
+            MeetingRequest.objects.filter(school=self.school, guardian_name="Parent A").exists()
+        )
 
     def test_receptionist_can_create_template_and_campaign(self):
         self.client.force_login(self.receptionist)
@@ -191,7 +208,9 @@ class FrontofficeModuleTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(MessageCampaign.objects.filter(school=self.school, title="Campaign 1").exists())
+        self.assertTrue(
+            MessageCampaign.objects.filter(school=self.school, title="Campaign 1").exists()
+        )
 
     def test_receptionist_can_mark_delivery_read(self):
         campaign = MessageCampaign.objects.create(

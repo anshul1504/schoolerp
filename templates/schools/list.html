@@ -1,33 +1,34 @@
 {% extends 'base.html' %}
 
 {% block title %}Schools | School ERP{% endblock %}
-{% block page_eyebrow %}School Directory{% endblock %}
 {% block page_heading %}Managed schools{% endblock %}
-{% block page_copy %}Super Admin sees the full network. School Owner and Principal only see their assigned school records.{% endblock %}
+{% block breadcrumb_active %}Schools{% endblock %}
 
 {% block content %}
-<div class="sf-card">
-  <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Schools</h6>
-          <p>Search, filter, export, and manage school profiles.</p>
-        </div>
-      <div class="sf-actions">
+<div class="mt-24">
+<div class="card h-100">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="mb-0">
+      <h6 class="text-lg fw-semibold mb-0">Schools</h6>
+      <p class="text-sm text-secondary-light mb-0 mt-4">Search, filter, export, and manage school profiles.</p>
+    </div>
+      <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-secondary" href="/schools/export/csv/?q={{ filters.q }}&status={{ filters.status }}&state={{ filters.state }}">Export CSV</a>
         <a class="btn btn-outline-secondary" href="/schools/export/excel/?q={{ filters.q }}&status={{ filters.status }}&state={{ filters.state }}">Export Excel</a>
         {% if show_bulk_school_actions %}
           <button type="button" class="btn btn-outline-secondary" id="exportSelectedSchoolsCsvBtn" disabled>Export Selected (CSV)</button>
           <button type="button" class="btn btn-outline-secondary" id="exportSelectedSchoolsExcelBtn" disabled>Export Selected (Excel)</button>
         {% endif %}
-        {% if request.user.role == "SUPER_ADMIN" %}
+        {% if can_manage_schools %}
           <a class="btn btn-outline-secondary" href="/schools/import/">Bulk Import</a>
         {% endif %}
         {% if can_create_schools %}
           <a class="btn btn-primary-600 radius-8 px-20 py-11" href="/schools/create/">Add School</a>
         {% endif %}
       </div>
-    </div>
+  </div>
+
+  <div class="card-body p-24">
 
     <form method="get" class="sf-filters">
       <div class="row gy-3 gx-3 align-items-end">
@@ -45,7 +46,12 @@
         </div>
         <div class="col-lg-3">
           <label class="form-label">State</label>
-          <input type="text" name="state" value="{{ filters.state }}" class="form-control" placeholder="Optional">
+          <select name="state" class="form-control form-select">
+            <option value="">All States</option>
+            {% for s in state_choices %}
+              <option value="{{ s }}" {% if filters.state == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="col-lg-1 d-grid">
           <button type="submit" class="btn btn-outline-secondary">Go</button>
@@ -53,14 +59,39 @@
       </div>
     </form>
 
+    <div class="row gy-3 mt-1 mb-24">
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%); border: 1px solid var(--primary-200);">
+          <span class="text-sm fw-medium text-primary-600">Total Schools</span>
+          <h4 class="mb-4 mt-8 fw-bold text-primary-700">{{ stats.total }}</h4>
+          <small class="text-xs text-primary-500">In current filter scope</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%); border: 1px solid var(--success-200);">
+          <span class="text-sm fw-medium text-success-600">Active</span>
+          <h4 class="mb-4 mt-8 fw-bold text-success-700">{{ stats.active }}</h4>
+          <small class="text-xs text-success-500">Operational schools</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%); border: 1px solid var(--danger-200);">
+          <span class="text-sm fw-medium text-danger-600">Inactive</span>
+          <h4 class="mb-4 mt-8 fw-bold text-danger-700">{{ stats.inactive }}</h4>
+          <small class="text-xs text-danger-500">Suspended or disabled</small>
+        </div>
+      </div>
+    </div>
+
     {% if schools %}
       <div class="table-responsive">
-        <table class="table align-middle sf-table">
+        <table class="table bordered-table mb-0" id="dataTable" data-page-length="10">
           <thead>
             <tr>
+              <th>S.No</th>
               {% if show_bulk_school_actions %}
-                <th class="sf-th-52">
-                  <input type="checkbox" class="form-check-input" id="selectAllSchools" aria-label="Select all schools">
+                <th>
+                  <input type="checkbox" class="form-check-input cursor-pointer" id="selectAllSchools" aria-label="Select all schools">
                 </th>
               {% endif %}
               <th>School</th>
@@ -74,6 +105,7 @@
           <tbody>
             {% for school in schools %}
               <tr>
+                <td class="text-muted text-sm">{{ forloop.counter }}</td>
                 {% if show_bulk_school_actions %}
                   <td>
                     <input type="checkbox" class="form-check-input school-select" value="{{ school.id }}" aria-label="Select {{ school.name }}">
@@ -82,9 +114,9 @@
                 <td>
                   <div class="d-flex align-items-center gap-12">
                     {% if school.logo %}
-                      <span class="sf-avatar"><img src="{{ school.logo.url }}" alt="{{ school.name }}"></span>
+                      <span class="w-40-px h-40-px radius-8 bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center overflow-hidden"><img src="{{ school.logo.url }}" alt="{{ school.name }}" class="w-100 h-100 object-fit-cover"></span>
                     {% else %}
-                      <span class="sf-avatar sf-avatar--soft">{{ school.name|first|upper }}</span>
+                      <span class="w-40-px h-40-px radius-8 bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center sf-avatar--soft">{{ school.name|first|upper }}</span>
                     {% endif %}
                     <div>
                       <div class="fw-semibold">{{ school.name }}</div>
@@ -109,7 +141,7 @@
                   {% endif %}
                 </td>
                 <td class="text-end">
-                  <div class="d-inline-flex gap-2">
+                  <div class="school-actions">
                     <a class="btn btn-sm btn-outline-secondary" href="/schools/{{ school.id }}/">View</a>
                     {% if can_edit_school_profile %}
                       <a class="btn btn-sm btn-outline-primary" href="/schools/edit/{{ school.id }}/">Edit</a>
@@ -128,9 +160,13 @@
         </table>
       </div>
     {% else %}
-      <div class="sf-empty">No schools found.</div>
+      <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100">
+          <iconify-icon icon="ri:school-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+          <p class="text-neutral-500 fw-medium text-lg mb-0">No schools found.</p>
+      </div>
     {% endif %}
   </div>
+</div>
 </div>
 
 <script>

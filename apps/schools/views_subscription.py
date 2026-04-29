@@ -1,8 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from apps.core.ui import build_layout_context
 from apps.core.models import PlatformSettings
+from apps.core.ui import build_layout_context
 from apps.schools.feature_access import enabled_feature_codes_for_school
 from apps.schools.models import SchoolSubscription
 

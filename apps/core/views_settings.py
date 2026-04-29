@@ -1,21 +1,25 @@
+import smtplib
+import ssl
+from email.message import EmailMessage
+
+from django.conf import settings
 from django.contrib import messages
-from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.utils import timezone
-from django.conf import settings
 
-from apps.core.ui import build_layout_context
-from apps.core.permissions import permission_required, role_required
-from apps.core.models import PlatformSettings, RBACChangeEvent, RolePermissionsOverride
-from apps.core.models import RoleSectionsOverride
-from apps.core.models import TwoFactorPolicy
-from apps.core.models import EntityChangeLog
 from apps.accounts.models import User
 from apps.accounts.roles import grouped_role_choices
-from apps.core.ui import BASE_NAVIGATION
-from apps.core.permissions import DEFAULT_PERMISSIONS
-from apps.core.models import ActivityLog
+from apps.core.models import (
+    ActivityLog,
+    EntityChangeLog,
+    PlatformSettings,
+    RBACChangeEvent,
+    RolePermissionsOverride,
+    RoleSectionsOverride,
+    TwoFactorPolicy,
+)
+from apps.core.permissions import DEFAULT_PERMISSIONS, permission_required, role_required
+from apps.core.ui import BASE_NAVIGATION, build_layout_context
 from apps.core.upload_validation import DEFAULT_IMAGE_POLICY, UploadPolicy, validate_upload
 
 
@@ -56,12 +60,16 @@ def settings_branding(request):
 
     if request.method == "POST":
         settings_obj.product_name = (request.POST.get("product_name") or "").strip() or "SchoolFlow"
-        settings_obj.product_meta = (request.POST.get("product_meta") or "").strip() or "A product by The Webfix"
+        settings_obj.product_meta = (
+            request.POST.get("product_meta") or ""
+        ).strip() or "A product by The Webfix"
         settings_obj.support_email = (request.POST.get("support_email") or "").strip()
         logo = request.FILES.get("logo")
         if logo:
             policy = UploadPolicy(
-                max_bytes=int(getattr(settings, "MAX_PLATFORM_LOGO_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)),
+                max_bytes=int(
+                    getattr(settings, "MAX_PLATFORM_LOGO_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)
+                ),
                 allowed_extensions=DEFAULT_IMAGE_POLICY.allowed_extensions,
                 allowed_image_formats=DEFAULT_IMAGE_POLICY.allowed_image_formats,
             )
@@ -236,9 +244,15 @@ def settings_permissions_matrix(request):
             return redirect("/settings/permissions/?role=SUPER_ADMIN")
 
         before_obj = RolePermissionsOverride.objects.filter(role=role).first()
-        before = {"permissions": list(getattr(before_obj, "permissions", []) or [])} if before_obj else {}
+        before = (
+            {"permissions": list(getattr(before_obj, "permissions", []) or [])}
+            if before_obj
+            else {}
+        )
 
-        RolePermissionsOverride.objects.update_or_create(role=role, defaults={"permissions": selected})
+        RolePermissionsOverride.objects.update_or_create(
+            role=role, defaults={"permissions": selected}
+        )
 
         try:
             RBACChangeEvent.objects.create(
@@ -322,9 +336,40 @@ def settings_email_test(request):
         html_body = render_to_string("settings/email_test_email.html", {"to_email": to_email})
 
         try:
-            msg = EmailMultiAlternatives(subject=subject, body=text_body, to=[to_email])
-            msg.attach_alternative(html_body, "text/html")
-            msg.send(fail_silently=False)
+            msg = EmailMessage()
+            msg["Subject"] = subject
+            msg["From"] = settings.DEFAULT_FROM_EMAIL
+            msg["To"] = to_email
+            msg.set_content(text_body)
+            msg.add_alternative(html_body, subtype="html")
+
+            context = ssl.create_default_context()
+            helo_name = (getattr(settings, "EMAIL_HELO_NAME", "") or "thewebfix.in").strip()
+            if settings.EMAIL_USE_SSL:
+                with smtplib.SMTP_SSL(
+                    settings.EMAIL_HOST,
+                    int(settings.EMAIL_PORT),
+                    timeout=int(settings.EMAIL_TIMEOUT),
+                    context=context,
+                    local_hostname=helo_name,
+                ) as smtp:
+                    if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD:
+                        smtp.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                    smtp.send_message(msg)
+            else:
+                with smtplib.SMTP(
+                    settings.EMAIL_HOST,
+                    int(settings.EMAIL_PORT),
+                    timeout=int(settings.EMAIL_TIMEOUT),
+                    local_hostname=helo_name,
+                ) as smtp:
+                    smtp.ehlo()
+                    if settings.EMAIL_USE_TLS:
+                        smtp.starttls(context=context)
+                        smtp.ehlo()
+                    if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD:
+                        smtp.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                    smtp.send_message(msg)
             messages.success(request, f"Test email sent to {to_email}.")
         except Exception as exc:
             messages.error(request, f"Email send failed: {exc}")
@@ -398,7 +443,11 @@ def settings_rbac_user_grants(request):
     """
 
     q = (request.GET.get("q") or "").strip()
-    logs = EntityChangeLog.objects.select_related("actor").filter(entity="accounts.User", action="UPDATED").order_by("-created_at")[:500]
+    logs = (
+        EntityChangeLog.objects.select_related("actor")
+        .filter(entity="accounts.User", action="UPDATED")
+        .order_by("-created_at")[:500]
+    )
 
     rows = []
     for log in logs:

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ethics Review Queue | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Ethics Review Queue{% endblock %}
+{% block breadcrumb_active %}Ethics Queue{% endblock %}
+
+{% block heading_actions %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card h-100 radius-12 border-0 shadow-sm">
+            <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="mb-0">
+                    <h6 class="text-lg fw-semibold mb-0">Compliance Queue</h6>
+                    <p class="text-sm text-secondary-light mb-0 mt-4">Review and manage ethical clearance for research projects.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-primary-100 text-primary-600 px-12 py-6 radius-pill text-xs fw-bold">Live Monitoring</span>
+                </div>
+            </div>
+
+            <div class="card-body p-24">
+                <div class="table-responsive allow-dropdown">
+                    <table class="table bordered-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">#</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Project</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Reviewer</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-center">Status</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in reviews %}
+                            <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                <td class="text-sm text-secondary-light fw-medium">{{ forloop.counter|add:reviews.start_index|add:"-1" }}</td>
+                                <td>
+                                    <a href="{% url 'research:project_detail' review.project.pk %}" class="text-sm fw-bold text-primary-light hover-text-primary d-block mb-4">{{ review.project.title }}</a>
+                                    <span class="text-xs text-secondary-light fw-bold uppercase">ID: #RES-{{ review.project.pk|stringformat:"04d" }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-10">
+                                        <div class="w-36-px h-36-px bg-neutral-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center text-sm fw-bold shrink-0">
+                                            {{ review.reviewer.full_name|slice:":1"|default:"?" }}
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-sm fw-bold text-primary-light">{{ review.reviewer.full_name|default:"Not Assigned" }}</span>
+                                            <small class="text-secondary-light text-xs">Compliance Officer</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="px-12 py-4 radius-pill text-xs fw-bold
+                                        {% if review.status == 'APPROVED' %}bg-success-100 text-success-600
+                                        {% elif review.status == 'PENDING' %}bg-warning-100 text-warning-600
+                                        {% else %}bg-danger-100 text-danger-600{% endif %}">
+                                        {{ review.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-icon bg-neutral-100 radius-8 transition-all hover-bg-neutral-200" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-8" style="z-index: 1060;">
+                                            <li><button class="dropdown-item rounded py-8 px-16 d-flex align-items-center gap-8" data-bs-toggle="modal" data-bs-target="#editReviewModal{{ review.pk }}"><i class="ri-shield-flash-line text-primary-600"></i> Update Status</button></li>
+                                            <li><a class="dropdown-item rounded py-8 px-16 d-flex align-items-center gap-8" href="{% url 'research:project_detail' review.project.pk %}#ethics"><i class="ri-eye-line text-secondary-600"></i> View Project</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-80 text-secondary-light">No ethics reviews in queue.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if reviews.paginator.num_pages > 1 %}
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24">
+                    <span class="text-secondary-light text-sm">Showing {{ reviews.start_index }} to {{ reviews.end_index }} of {{ reviews.paginator.count }} entries</span>
+                    <ul class="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
+                        {% if reviews.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ reviews.previous_page_number }}">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for i in reviews.paginator.page_range %}
+                            {% if reviews.number == i %}
+                                <li class="page-item">
+                                    <a class="page-link bg-primary-600 text-white fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px" href="javascript:void(0)">{{ i }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if reviews.has_next %}
+                            <li class="page-item">
+                                <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ reviews.next_page_number }}">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals for Ethics Update -->
+{% for review in reviews %}
+<div class="modal fade" id="editReviewModal{{ review.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content radius-16 border-0 shadow-lg">
+            <div class="modal-header border-bottom border-neutral-100 py-16 px-24">
+                <h6 class="mb-0 fw-bold text-primary-light">Update Ethics Status</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'research:ethics_update' review.project.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <div class="modal-body p-24">
+                    <div class="mb-20">
+                        <label class="form-label fw-bold text-primary-light">Status</label>
+                        <select name="status" class="form-select border radius-8 py-10">
+                            <option value="PENDING" {% if review.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                            <option value="APPROVED" {% if review.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                            <option value="REJECTED" {% if review.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="mb-20">
+                        <label class="form-label fw-bold text-primary-light">Reviewer</label>
+                        <select name="reviewer" class="form-select border radius-8 py-10">
+                            <option value="">Select Reviewer</option>
+                            {% for staff in school_staff %}
+                            <option value="{{ staff.id }}" {% if review.reviewer.id == staff.id %}selected{% endif %}>{{ staff.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold text-primary-light">Compliance Comments</label>
+                        <textarea name="comments" class="form-control border radius-8 py-10" rows="4" placeholder="Enter review notes...">{{ review.comments }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-neutral-100 p-24">
+                    <button type="button" class="btn btn-outline-secondary radius-8 px-20 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-600 radius-8 px-24 fw-bold shadow-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

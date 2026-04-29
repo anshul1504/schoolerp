@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Leads{% endblock %}
+{% block page_heading %}Leads{% endblock %}
+{% block breadcrumb_active %}Leads{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <h6 class="text-lg fw-semibold mb-0">Lead Pipeline</h6>
+      <p class="text-sm text-secondary-light mb-0 mt-4">Filter, manage, and convert enquiry leads.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:lead_export_csv' %}?q={{ filters.q }}&stage={{ filters.stage }}&source={{ filters.source }}&followup={{ filters.followup }}">Export CSV</a>
+      <a class="btn btn-primary-600 radius-8 px-20 py-11" href="{% url 'digital_marketing:lead_create' %}">Create Lead</a>
+    </div>
+  </div>
+  <div class="card-body p-24">
+    <form method="get" class="mb-24">
+      <div class="row gy-3 gx-3 align-items-end">
+        <div class="col-lg-4"><label class="form-label">Search</label><input name="q" value="{{ filters.q }}" class="form-control" placeholder="Student/phone/email"></div>
+        <div class="col-lg-3"><label class="form-label">Stage</label><select name="stage" class="form-select"><option value="">All Stages</option>{% for code,label in stage_choices %}<option value="{{ code }}" {% if filters.stage == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-lg-2"><label class="form-label">Source</label><input name="source" value="{{ filters.source }}" class="form-control" placeholder="Instagram/Website"></div>
+        <div class="col-lg-2"><label class="form-label">Follow-up</label><select name="followup" class="form-select"><option value="">All</option><option value="today" {% if filters.followup == 'today' %}selected{% endif %}>Today</option><option value="overdue" {% if filters.followup == 'overdue' %}selected{% endif %}>Overdue</option></select></div>
+        <div class="col-lg-1"><button class="btn btn-primary-600 w-100">Apply</button></div>
+        <div class="col-lg-12"><a class="btn btn-outline-danger-600" href="{% url 'digital_marketing:lead_list' %}">Reset</a></div>
+      </div>
+    </form>
+    <div class="row gy-3 mt-1 mb-24">
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%); border: 1px solid var(--primary-200);">
+          <span class="text-sm fw-medium text-primary-600">Total Leads</span>
+          <h4 class="mb-4 mt-8 fw-bold text-primary-700">{{ stats.total }}</h4>
+          <small class="text-xs text-primary-500">Current filter scope</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%); border: 1px solid var(--success-200);">
+          <span class="text-sm fw-medium text-success-600">Converted</span>
+          <h4 class="mb-4 mt-8 fw-bold text-success-700">{{ stats.converted }}</h4>
+          <small class="text-xs text-success-500">Admissions won</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--warning-100) 0%, var(--warning-50) 100%); border: 1px solid var(--warning-200);">
+          <span class="text-sm fw-medium text-warning-600">Pipeline</span>
+          <h4 class="mb-4 mt-8 fw-bold text-warning-700">{{ stats.pipeline }}</h4>
+          <small class="text-xs text-warning-500">New + contacted + qualified</small>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%); border: 1px solid var(--success-200);">
+          <span class="text-sm fw-medium text-success-600">SLA Due Today</span>
+          <h4 class="mb-4 mt-8 fw-bold text-success-700">{{ stats.sla_today }}</h4>
+          <small class="text-xs text-success-500">Follow-up commitments for today</small>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%); border: 1px solid var(--danger-200);">
+          <span class="text-sm fw-medium text-danger-600">SLA Overdue</span>
+          <h4 class="mb-4 mt-8 fw-bold text-danger-700">{{ stats.sla_overdue }}</h4>
+          <small class="text-xs text-danger-500">Needs urgent intervention</small>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table bordered-table mb-0">
+        <thead><tr><th>#</th><th>Student</th><th>Phone</th><th>Stage</th><th>Source</th><th>Campaign</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>{% for l in leads %}<tr><td>{{ forloop.counter|add:leads.start_index|add:"-1" }}</td><td>{{ l.student_name }}</td><td>{{ l.phone }}</td><td><span class="badge bg-info-100 text-info-600">{{ l.get_stage_display }}</span></td><td>{{ l.source }}</td><td>{{ l.campaign|default:"-" }}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'digital_marketing:lead_edit' l.id %}">Edit</a> <form method="post" action="{% url 'digital_marketing:lead_delete' l.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete lead?')">Delete</button></form></td></tr>{% empty %}<tr><td colspan="7" class="text-center py-20">No leads found.</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% if leads.paginator.num_pages > 1 %}
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24">
+      <span class="text-secondary-light text-sm">Showing {{ leads.start_index }} to {{ leads.end_index }} of {{ leads.paginator.count }} entries</span>
+      <ul class="pagination d-flex gap-2 mb-0">
+        {% if leads.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ leads.previous_page_number }}&q={{ filters.q }}&stage={{ filters.stage }}&source={{ filters.source }}&followup={{ filters.followup }}">Prev</a></li>{% endif %}
+        <li class="page-item"><span class="page-link bg-primary-600 text-white">{{ leads.number }}</span></li>
+        {% if leads.has_next %}<li class="page-item"><a class="page-link" href="?page={{ leads.next_page_number }}&q={{ filters.q }}&stage={{ filters.stage }}&source={{ filters.source }}&followup={{ filters.followup }}">Next</a></li>{% endif %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

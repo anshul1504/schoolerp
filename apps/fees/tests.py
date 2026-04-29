@@ -1,11 +1,11 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from datetime import date
-
+from apps.core.models import EntityChangeLog
 from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 from apps.students.models import Student
-from apps.core.models import EntityChangeLog
 
 from .models import FeePayment, FeeStructure, StudentFeeLedger
 
@@ -49,15 +49,28 @@ class FeesModuleTests(TestCase):
             role="SCHOOL_OWNER",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
             SchoolSubscription.objects.update_or_create(
                 school=self.other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         self.student = Student.objects.create(
             school=self.school,
@@ -138,8 +151,22 @@ class FeesModuleTests(TestCase):
         self.assertTrue(FeePayment.objects.filter(ledger=ledger, amount="2500").exists())
 
     def test_fees_export_does_not_leak_cross_school_rows(self):
-        FeeStructure.objects.create(school=self.school, name="Tuition Fee", class_name="Class 5", amount="2500", frequency="MONTHLY", due_day=10)
-        FeeStructure.objects.create(school=self.other_school, name="Other Fee", class_name="Class 5", amount="999", frequency="MONTHLY", due_day=10)
+        FeeStructure.objects.create(
+            school=self.school,
+            name="Tuition Fee",
+            class_name="Class 5",
+            amount="2500",
+            frequency="MONTHLY",
+            due_day=10,
+        )
+        FeeStructure.objects.create(
+            school=self.other_school,
+            name="Other Fee",
+            class_name="Class 5",
+            amount="999",
+            frequency="MONTHLY",
+            due_day=10,
+        )
 
         ledger1 = StudentFeeLedger.objects.create(
             school=self.school,
@@ -163,7 +190,9 @@ class FeesModuleTests(TestCase):
         )
 
         self.client.force_login(self.accountant)
-        response = self.client.get(f"/fees/?school={self.other_school.id}&dataset=ledgers&export=csv")
+        response = self.client.get(
+            f"/fees/?school={self.other_school.id}&dataset=ledgers&export=csv"
+        )
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8", errors="ignore")
         self.assertIn(str(ledger1.id), body)
@@ -197,7 +226,9 @@ class FeesModuleTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(FeeStructure.objects.filter(name="Broken Fee", school=self.school).exists())
+        self.assertFalse(
+            FeeStructure.objects.filter(name="Broken Fee", school=self.school).exists()
+        )
 
     def test_create_due_rejects_non_numeric_amount_due(self):
         self.client.force_login(self.owner)
@@ -221,7 +252,9 @@ class FeesModuleTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(StudentFeeLedger.objects.filter(student=self.student, billing_month="Apr-2026").exists())
+        self.assertFalse(
+            StudentFeeLedger.objects.filter(student=self.student, billing_month="Apr-2026").exists()
+        )
 
 
 class FeesEntityChangeLogTests(TestCase):
@@ -239,12 +272,22 @@ class FeesEntityChangeLogTests(TestCase):
             is_active=True,
         )
         User = get_user_model()
-        self.accountant = User.objects.create_user(username="accountant_log", password="pass123", role="ACCOUNTANT", school=self.school)
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        self.accountant = User.objects.create_user(
+            username="accountant_log", password="pass123", role="ACCOUNTANT", school=self.school
+        )
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         self.student = Student.objects.create(
             school=self.school,
@@ -258,7 +301,14 @@ class FeesEntityChangeLogTests(TestCase):
             guardian_phone="9999999999",
             admission_date="2026-04-20",
         )
-        self.structure = FeeStructure.objects.create(school=self.school, name="Tuition", class_name="Class 1", amount="100.00", frequency="MONTHLY", due_day=10)
+        self.structure = FeeStructure.objects.create(
+            school=self.school,
+            name="Tuition",
+            class_name="Class 1",
+            amount="100.00",
+            frequency="MONTHLY",
+            due_day=10,
+        )
 
     def test_ledger_and_payment_logged(self):
         ledger = StudentFeeLedger.objects.create(
@@ -271,7 +321,11 @@ class FeesEntityChangeLogTests(TestCase):
             due_date="2026-04-10",
             status="DUE",
         )
-        self.assertTrue(EntityChangeLog.objects.filter(entity="fees.StudentFeeLedger", object_id=str(ledger.id), action="CREATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="fees.StudentFeeLedger", object_id=str(ledger.id), action="CREATED"
+            ).exists()
+        )
 
         payment = FeePayment.objects.create(
             ledger=ledger,
@@ -282,4 +336,8 @@ class FeesEntityChangeLogTests(TestCase):
             payment_mode="CASH",
             collected_by=self.accountant,
         )
-        self.assertTrue(EntityChangeLog.objects.filter(entity="fees.FeePayment", object_id=str(payment.id), action="CREATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="fees.FeePayment", object_id=str(payment.id), action="CREATED"
+            ).exists()
+        )

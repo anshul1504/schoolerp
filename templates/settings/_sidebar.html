@@ -1,0 +1,35 @@
+<div class="col-xxl-3 col-lg-4">
+    <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+            <h6 class="text-lg fw-semibold mb-0">Settings Menu</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="d-flex flex-column p-16 gap-8">
+                <a href="/settings/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if request.path == '/settings/' %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:settings-3-line" class="text-xl"></iconify-icon> Overview
+                </a>
+                <a href="/settings/branding/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/branding/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:palette-line" class="text-xl"></iconify-icon> Branding
+                </a>
+                <a href="/settings/role-matrix/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/role-matrix/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:shield-keyhole-line" class="text-xl"></iconify-icon> Role Matrix
+                </a>
+                <a href="/settings/permissions/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/permissions/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:lock-password-line" class="text-xl"></iconify-icon> Permissions
+                </a>
+                <a href="/settings/rbac-audit/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/rbac-audit/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:file-list-3-line" class="text-xl"></iconify-icon> RBAC Audit
+                </a>
+                <a href="/settings/rbac-grants/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/rbac-grants/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:user-settings-line" class="text-xl"></iconify-icon> User Grants
+                </a>
+                <a href="/settings/2fa/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/2fa/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:shield-check-line" class="text-xl"></iconify-icon> 2FA Policy
+                </a>
+                <a href="/settings/email-test/" class="d-flex align-items-center gap-12 px-16 py-12 radius-8 fw-medium {% if '/settings/email-test/' in request.path %}bg-primary-50 text-primary-600{% else %}text-secondary-light hover-bg-neutral-50 hover-text-primary-600{% endif %}">
+                    <iconify-icon icon="ri:mail-send-line" class="text-xl"></iconify-icon> Email Test
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

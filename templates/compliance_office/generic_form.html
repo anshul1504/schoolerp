@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | Compliance Office{% endblock %}
+{% block page_heading %}{% if is_edit %}Edit{% else %}Add{% endif %} {{ title }}{% endblock %}
+{% block breadcrumb_active %}{% if is_edit %}Edit{% else %}Add{% endif %}{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+      <h6 class="text-lg fw-semibold mb-0">{% if is_edit %}Update{% else %}Create new{% endif %} {{ title|lower }}</h6>
+      <p class="text-sm text-secondary-light mb-0 mt-4">Please fill in the required details carefully.</p>
+    </div>
+    <div class="card-body p-24">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row gy-4">
+          {% for field in form %}
+            <div class="col-lg-6">
+              {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check d-flex align-items-center gap-2 mt-4 pt-4">
+                  <input class="form-check-input mt-0" type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %}>
+                  <label class="form-check-label mb-0" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                  </label>
+                </div>
+                {% if field.help_text %}
+                  <div class="text-neutral-500 text-sm mt-1 ms-4 ps-2">{{ field.help_text }}</div>
+                {% endif %}
+              {% else %}
+                <label class="form-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                  {% if field.field.required %}<span class="required-mark text-danger">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="text-neutral-500 text-sm mt-6">{{ field.help_text }}</div>
+                {% endif %}
+              {% endif %}
+
+              {% if field.errors %}
+                <div class="text-danger text-sm mt-6">{{ field.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-end gap-12 mt-32 border-top border-neutral-100 pt-24">
+          <button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11" onclick="history.back()">Cancel</button>
+          <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">{% if is_edit %}Save Changes{% else %}Create Record{% endif %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control, .form-select {
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 4px var(--primary-50);
+  }
+  .required-mark {
+    margin-left: 4px;
+  }
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const inputs = document.querySelectorAll('.card-body input, .card-body select, .card-body textarea');
+    inputs.forEach(input => {
+      if(!input.classList.contains('form-check-input')) {
+         input.classList.add('form-control');
+      }
+      if(input.tagName === 'SELECT') {
+         input.classList.add('form-select');
+      }
+    });
+  });
+</script>
+{% endblock %}

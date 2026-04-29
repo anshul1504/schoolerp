@@ -21,7 +21,9 @@ def support_ticket_list(request):
     school_id = (request.GET.get("school_id") or "").strip()
 
     if q:
-        qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(requester_email__icontains=q))
+        qs = qs.filter(
+            Q(title__icontains=q) | Q(description__icontains=q) | Q(requester_email__icontains=q)
+        )
     if status in dict(SupportTicket.STATUS_CHOICES):
         qs = qs.filter(status=status)
     if priority in dict(SupportTicket.PRIORITY_CHOICES):
@@ -60,7 +62,9 @@ def support_ticket_create(request):
 
         if not title:
             messages.error(request, "Title is required.")
-        elif status not in dict(SupportTicket.STATUS_CHOICES) or priority not in dict(SupportTicket.PRIORITY_CHOICES):
+        elif status not in dict(SupportTicket.STATUS_CHOICES) or priority not in dict(
+            SupportTicket.PRIORITY_CHOICES
+        ):
             messages.error(request, "Invalid status/priority.")
         else:
             ticket = SupportTicket.objects.create(
@@ -74,7 +78,9 @@ def support_ticket_create(request):
                 requester_email=requester_email,
                 requester_phone=requester_phone,
             )
-            SupportTicketMessage.objects.create(ticket=ticket, author=request.user, body="Ticket created.", is_internal=True)
+            SupportTicketMessage.objects.create(
+                ticket=ticket, author=request.user, body="Ticket created.", is_internal=True
+            )
             messages.success(request, "Ticket created.")
             return redirect(f"/platform/support/{ticket.id}/")
 
@@ -94,7 +100,9 @@ def support_ticket_create(request):
 @role_required("SUPER_ADMIN")
 @permission_required("platform.view")
 def support_ticket_detail(request, id):
-    ticket = get_object_or_404(SupportTicket.objects.select_related("school", "created_by", "assigned_to"), id=id)
+    ticket = get_object_or_404(
+        SupportTicket.objects.select_related("school", "created_by", "assigned_to"), id=id
+    )
     messages_qs = ticket.messages.select_related("author").all()
 
     schools = School.objects.filter(is_active=True).order_by("name")
@@ -108,7 +116,9 @@ def support_ticket_detail(request, id):
             if not body:
                 messages.error(request, "Message body is required.")
             else:
-                SupportTicketMessage.objects.create(ticket=ticket, author=request.user, body=body, is_internal=is_internal)
+                SupportTicketMessage.objects.create(
+                    ticket=ticket, author=request.user, body=body, is_internal=is_internal
+                )
                 messages.success(request, "Message added.")
             return redirect(f"/platform/support/{ticket.id}/")
 
@@ -118,7 +128,9 @@ def support_ticket_detail(request, id):
             assigned_to_id = (request.POST.get("assigned_to_id") or "").strip()
             school_id = (request.POST.get("school_id") or "").strip()
 
-            if status not in dict(SupportTicket.STATUS_CHOICES) or priority not in dict(SupportTicket.PRIORITY_CHOICES):
+            if status not in dict(SupportTicket.STATUS_CHOICES) or priority not in dict(
+                SupportTicket.PRIORITY_CHOICES
+            ):
                 messages.error(request, "Invalid status/priority.")
                 return redirect(f"/platform/support/{ticket.id}/")
 
@@ -133,7 +145,9 @@ def support_ticket_detail(request, id):
             if status == "CLOSED" and ticket.closed_at is None:
                 ticket.closed_at = now
             ticket.save()
-            SupportTicketMessage.objects.create(ticket=ticket, author=request.user, body="Ticket updated.", is_internal=True)
+            SupportTicketMessage.objects.create(
+                ticket=ticket, author=request.user, body="Ticket updated.", is_internal=True
+            )
             messages.success(request, "Ticket updated.")
             return redirect(f"/platform/support/{ticket.id}/")
 
@@ -152,4 +166,3 @@ def support_ticket_detail(request, id):
         }
     )
     return render(request, "platform/support_ticket_detail.html", context)
-

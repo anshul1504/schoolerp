@@ -2,7 +2,6 @@ from django.core.cache import cache
 
 from apps.schools.models import SchoolSubscription
 
-
 MODULE_FEATURE_MAP = {
     "students": "STUDENTS",
     "academics": "ACADEMICS",
@@ -14,6 +13,8 @@ MODULE_FEATURE_MAP = {
     "frontoffice": "FRONTOFFICE",
     "admissions": "ADMISSIONS",
     "reports": "REPORTS",
+    "research": "RESEARCH",
+    "career_counseling": "CAREER_COUNSELING",
 }
 
 PATH_MODULE_PREFIXES = {
@@ -27,6 +28,8 @@ PATH_MODULE_PREFIXES = {
     "/frontoffice/": "frontoffice",
     "/admissions/": "admissions",
     "/reports/": "reports",
+    "/research/": "research",
+    "/career-counseling/": "career_counseling",
 }
 
 

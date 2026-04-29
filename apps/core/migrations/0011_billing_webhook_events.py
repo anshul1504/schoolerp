@@ -11,7 +11,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="BillingWebhookEvent",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("provider", models.CharField(default="GENERIC", max_length=40)),
                 ("event_id", models.CharField(max_length=120, unique=True)),
                 ("event_type", models.CharField(blank=True, max_length=80)),
@@ -27,4 +32,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

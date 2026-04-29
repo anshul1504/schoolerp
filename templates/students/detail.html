@@ -6,22 +6,214 @@
 {% block page_heading %}{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}{% endblock %}
 {% block page_copy %}Student profile with workflow, operations, documents, and school-facing quick actions in one place.{% endblock %}
 
+{% block extra_css %}
+<style>
+  .student-detail-v4 {
+    width: 100%;
+  }
+
+  .student-detail-v4__stack {
+    display: grid;
+    gap: 18px;
+  }
+
+  .student-detail-v4__hero {
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #117bc7 0%, #0a8fcd 100%);
+  }
+
+  .student-detail-v4__hero-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .student-detail-v4__identity {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .student-detail-v4 .profile-avatar {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+    border-radius: 14px;
+    font-size: 34px;
+  }
+
+  .student-detail-v4__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .student-detail-v4__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .student-detail-v4__actions form {
+    margin: 0;
+  }
+
+  .student-detail-v4__action-btn {
+    min-height: 108px;
+    min-width: 124px;
+    padding: 12px 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.02rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    border-radius: 12px;
+  }
+
+  .student-detail-v4__actions .btn-danger.student-detail-v4__delete-btn {
+    min-height: 48px;
+    min-width: 152px;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+
+  .student-detail-v4__actions .btn-warning {
+    background: #ffa62b;
+    border-color: #ffa62b;
+    color: #fff;
+  }
+
+  .student-detail-v4__actions .btn-light {
+    background: #f8fbff;
+    border-color: #f8fbff;
+    color: #0f172a;
+  }
+
+  .student-detail-v4__actions .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.8);
+    color: #ffffff;
+    background: transparent;
+  }
+
+  .student-detail-v4__actions .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+
+  .student-detail-v4__actions .btn-danger {
+    background: #ea580c;
+    border-color: #ea580c;
+    color: #fff;
+  }
+
+  .student-detail-v4__subnav {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .student-detail-v4__kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .student-detail-v4__kpi {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .student-detail-v4__kpi strong {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+    color: var(--neutral-600);
+  }
+
+  .student-detail-v4__kpi span {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--neutral-900);
+  }
+
+  .student-detail-v4__timeline {
+    display: grid;
+    gap: 10px;
+  }
+
+  .student-detail-v4__timeline .detail-item {
+    margin: 0;
+  }
+
+  @media (max-width: 1399px) {
+    .student-detail-v4__kpis {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 991px) {
+    .student-detail-v4__actions {
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .student-detail-v4__kpis {
+      grid-template-columns: 1fr;
+    }
+
+    .student-detail-v4 .profile-avatar {
+      width: 60px;
+      height: 60px;
+      min-width: 60px;
+      font-size: 30px;
+    }
+
+    .student-detail-v4__action-btn {
+      min-height: 46px;
+      min-width: 100%;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+
+    .student-detail-v4__actions .btn-danger.student-detail-v4__delete-btn {
+      min-height: 46px;
+      min-width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="student-page">
-  <div class="row gy-4">
-    <div class="col-12">
-      <div class="profile-hero">
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-4">
-          <div class="d-flex flex-wrap align-items-center gap-4">
+<div class="student-page students-v3 students-v4">
+  <div class="student-detail-v4">
+    <div class="student-detail-v4__stack">
+      <section class="student-detail-v4__hero">
+        <div class="student-detail-v4__hero-top">
+          <div class="student-detail-v4__identity">
             {% if student.photo %}
               <img src="{{ student.photo.url }}" alt="{{ student.first_name }}" class="profile-avatar">
             {% else %}
               <div class="profile-avatar">{{ student.first_name|first|upper }}</div>
             {% endif %}
             <div>
-              <h4 class="mb-2 text-white">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</h4>
-              <p class="mb-3 text-white-50">Admission No: {{ student.admission_no }}</p>
-              <div class="d-flex flex-wrap gap-2">
+              <h3 class="mb-1 text-white">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</h3>
+              <p class="mb-0 text-white-50">Admission No: {{ student.admission_no }}</p>
+              <div class="student-detail-v4__chips">
                 <span class="metric-chip">{{ student.class_name }} - {{ student.section }}</span>
                 <span class="metric-chip">{{ student.school.name }}</span>
                 <span class="metric-chip">{% if student.is_active %}Active{% else %}Inactive{% endif %}</span>
@@ -29,118 +221,109 @@
               </div>
             </div>
           </div>
-          <div class="d-flex flex-wrap gap-12">
-            <a class="btn btn-warning radius-8 px-20 py-11" href="/students/{{ student.slug }}/pdf/">Download PDF</a>
+
+          <div class="student-detail-v4__actions">
+            <a class="btn btn-warning student-detail-v4__action-btn" href="/students/{{ student.id }}/pdf/">Download PDF</a>
             {% if can_manage_students %}
-              <a class="btn btn-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/edit/">Edit Student</a>
-              <a class="btn btn-outline-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/documents/">Documents</a>
+              <a class="btn btn-light student-detail-v4__action-btn" href="/students/{{ student.id }}/edit/">Edit Student</a>
+              <a class="btn btn-outline-light student-detail-v4__action-btn" href="/students/{{ student.id }}/documents/">Documents</a>
             {% endif %}
             {% if can_promote_students %}
-              <a class="btn btn-outline-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/promotion/">Promote</a>
-              <a class="btn btn-outline-light radius-8 px-20 py-11" href="/students/{{ student.slug }}/tc/">Transfer Certificate</a>
+              <a class="btn btn-outline-light student-detail-v4__action-btn" href="/students/{{ student.id }}/promotion/">Promote</a>
+              <a class="btn btn-outline-light student-detail-v4__action-btn" href="/students/{{ student.id }}/tc/">Transfer Certificate</a>
             {% endif %}
             {% if can_delete_students %}
-              <form method="post" action="/students/{{ student.slug }}/delete/" onsubmit="return confirm('Delete {{ student.first_name }} {{ student.last_name }}? This cannot be undone.');">
+              <form method="post" action="/students/{{ student.id }}/delete/" onsubmit="return confirm('Delete {{ student.first_name }} {{ student.last_name }}? This cannot be undone.');">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger radius-8 px-20 py-11">Delete Student</button>
+                <button type="submit" class="btn btn-danger student-detail-v4__action-btn student-detail-v4__delete-btn">Delete Student</button>
               </form>
             {% endif %}
           </div>
         </div>
-        {% include "students/_student_nav.html" with student_nav_active="overview" %}
-      </div>
-    </div>
 
-    <div class="col-xxl-8">
-      <div class="row gy-4">
-        <div class="col-12">
-          <div class="info-card">
-            <div class="card-body">
-              <h6 class="section-title">Snapshot</h6>
-              <div class="student-snapshot-grid">
-                <div class="student-snapshot-card">
-                  <strong>Attendance</strong>
-                  <div class="value"><h5>{{ student_erp_summary.attendance_rate }}%</h5><span>{{ student_erp_summary.attendance_entries }} entries</span></div>
-                  <p>Presence rate based on recorded sessions.</p>
-                </div>
-                <div class="student-snapshot-card">
-                  <strong>Fees</strong>
-                  <div class="value"><h5>Rs {{ student_erp_summary.outstanding_due|floatformat:0 }}</h5><span>{{ student_erp_summary.paid_ledgers }} paid</span></div>
-                  <p>Outstanding due across fee ledgers.</p>
-                </div>
-                <div class="student-snapshot-card">
-                  <strong>Exams</strong>
-                  <div class="value"><h5>{{ student_erp_summary.average_marks }}</h5><span>{{ student_erp_summary.exam_marks_count }} marks</span></div>
-                  <p>Average marks in recorded subjects.</p>
-                </div>
-                <div class="student-snapshot-card">
-                  <strong>Notices</strong>
-                  <div class="value"><h5>{{ student_erp_summary.notice_count }}</h5><span>School-wide</span></div>
-                  <p>{% if student_erp_summary.latest_notice %}Latest: {{ student_erp_summary.latest_notice.title|truncatechars:36 }}{% else %}No notices published.{% endif %}</p>
-                </div>
-              </div>
-            </div>
+        <div class="student-detail-v4__subnav">
+          {% include "students/_student_nav.html" with student_nav_active="overview" %}
+        </div>
+      </section>
+
+      <section class="card radius-12 border-neutral-200">
+        <div class="card-body">
+          <h6 class="section-title">Service KPIs</h6>
+          <div class="student-detail-v4__kpis">
+            <div class="student-detail-v4__kpi"><strong>Pending TC Requests</strong><span>{{ pending_tc_requests_count }}</span></div>
+            <div class="student-detail-v4__kpi"><strong>Open Discipline Cases</strong><span>{{ discipline_open_count }}</span></div>
+            <div class="student-detail-v4__kpi"><strong>Health Records</strong><span>{{ health_record_count }}</span></div>
+            <div class="student-detail-v4__kpi"><strong>Pending Compliance</strong><span>{{ compliance_pending_count }}</span></div>
+            <div class="student-detail-v4__kpi"><strong>Communication Logs</strong><span>{{ communication_log_count }}</span></div>
           </div>
         </div>
+      </section>
 
-        <div class="col-12">
-          <div class="info-card">
-            <div class="card-body">
-              <h6 class="section-title">Workflow</h6>
-              <div class="workflow-grid mb-24">
-                {% for step in workflow_steps %}
-                  <div class="workflow-item {% if step.complete %}is-complete{% endif %}">
-                    <div class="student-workflow__top mb-10">
-                      <strong class="mb-0">{{ step.label }}</strong>
-                      <span class="workflow-status {% if step.complete %}is-complete{% else %}is-pending{% endif %}">{{ step.status }}</span>
-                    </div>
-                    <p class="text-neutral-600 text-sm mb-12">{{ step.description }}</p>
-                    <a href="{{ step.url }}" class="btn btn-outline-primary btn-sm radius-8">{{ step.action }}</a>
-                  </div>
-                {% endfor %}
-              </div>
-
-              <h6 class="section-title">Quick Actions</h6>
-              <div class="quick-action-grid">
-                {% if can_manage_students %}
-                  <a href="/students/{{ student.slug }}/edit/" class="quick-action-link"><strong class="d-block mb-4">Update Record</strong><span class="text-neutral-600 text-sm">Edit profile, class, family details, and uploads.</span></a>
-                  <a href="/students/{{ student.slug }}/documents/" class="quick-action-link"><strong class="d-block mb-4">Manage Documents</strong><span class="text-neutral-600 text-sm">Upload supporting files and keep the record complete.</span></a>
-                  <a href="/frontoffice/document-reminders/?required=basic" class="quick-action-link"><strong class="d-block mb-4">Send Reminder</strong><span class="text-neutral-600 text-sm">Open reminders for missing documents.</span></a>
-                {% endif %}
-                <a href="/students/id-cards/designer/?student_ids={{ student.id }}" class="quick-action-link"><strong class="d-block mb-4">Open Print Sheet</strong><span class="text-neutral-600 text-sm">Create an ID-card print set.</span></a>
-                {% if can_promote_students %}
-                  <a href="/students/{{ student.slug }}/promotion/" class="quick-action-link"><strong class="d-block mb-4">Promote Student</strong><span class="text-neutral-600 text-sm">Move to the next class with history intact.</span></a>
-                  <a href="/students/{{ student.slug }}/workflow/" class="quick-action-link"><strong class="d-block mb-4">Admission Workflow</strong><span class="text-neutral-600 text-sm">Track approvals and verification.</span></a>
-                  <a href="/students/{{ student.slug }}/history/" class="quick-action-link"><strong class="d-block mb-4">Profile History</strong><span class="text-neutral-600 text-sm">Review edits and class changes.</span></a>
-                {% endif %}
-                <a href="/students/{{ student.slug }}/pdf/" class="quick-action-link"><strong class="d-block mb-4">Export Summary</strong><span class="text-neutral-600 text-sm">Share a clean PDF profile.</span></a>
-              </div>
+      <section class="card radius-12 border-neutral-200">
+        <div class="card-body">
+          <h6 class="section-title">ERP Snapshot</h6>
+          <div class="student-snapshot-grid">
+            <div class="student-snapshot-card">
+              <strong>Attendance</strong>
+              <div class="value"><h5>{{ student_erp_summary.attendance_rate }}%</h5><span>{{ student_erp_summary.attendance_entries }} entries</span></div>
+              <p>Presence rate based on recorded sessions.</p>
+            </div>
+            <div class="student-snapshot-card">
+              <strong>Fees</strong>
+              <div class="value"><h5>Rs {{ student_erp_summary.outstanding_due|floatformat:0 }}</h5><span>{{ student_erp_summary.paid_ledgers }} paid</span></div>
+              <p>Outstanding due across fee ledgers.</p>
+            </div>
+            <div class="student-snapshot-card">
+              <strong>Exams</strong>
+              <div class="value"><h5>{{ student_erp_summary.average_marks }}</h5><span>{{ student_erp_summary.exam_marks_count }} marks</span></div>
+              <p>Average marks in recorded subjects.</p>
+            </div>
+            <div class="student-snapshot-card">
+              <strong>Notices</strong>
+              <div class="value"><h5>{{ student_erp_summary.notice_count }}</h5><span>School-wide</span></div>
+              <p>{% if student_erp_summary.latest_notice %}Latest: {{ student_erp_summary.latest_notice.title|truncatechars:36 }}{% else %}No notices published.{% endif %}</p>
             </div>
           </div>
+          <p class="text-neutral-600 text-sm mt-16 mb-0">Passwords are not displayed in ERP screens.</p>
         </div>
+      </section>
 
-        <div class="col-12">
-          <div class="info-card">
-            <div class="card-body">
-              <h6 class="section-title">Operations Control</h6>
-              <div class="detail-grid">
-                <div class="detail-item"><strong>Workflow Progress</strong><span>{{ student_workflow.completed }}/{{ student_workflow.total }} steps complete</span></div>
-                <div class="detail-item"><strong>Next Best Action</strong><span>{{ student_workflow.next_step }}</span></div>
-                <div class="detail-item"><strong>Admission File</strong><span>{{ documents_score_basic.present }}/{{ documents_score_basic.total }} required documents ({{ documents_score_basic.percent }}%)</span></div>
-                <div class="detail-item"><strong>Missing</strong><span>{% if missing_basic_documents %}{{ missing_basic_documents|join:", " }}{% else %}None{% endif %}</span></div>
-                <div class="detail-item"><strong>Digital Access</strong><span>{% if student_operations.account_ready %}Usernames ready{% else %}Account usernames pending{% endif %}</span></div>
-                <div class="detail-item"><strong>Transport</strong><span>{% if student_operations.transport_enabled %}Enabled{% else %}Not assigned{% endif %}</span></div>
-                <div class="detail-item"><strong>Hostel</strong><span>{% if student_operations.hostel_enabled %}Enabled{% else %}Not assigned{% endif %}</span></div>
-                <div class="detail-item"><strong>Medical</strong><span>{% if student_operations.medical_flag %}Support note present{% else %}No flagged medical support{% endif %}</span></div>
+      <section class="card radius-12 border-neutral-200">
+        <div class="card-body">
+          <h6 class="section-title">Student Workflow</h6>
+          <div class="workflow-grid mb-24">
+            {% for step in workflow_steps %}
+              <div class="workflow-item {% if step.complete %}is-complete{% endif %}">
+                <div class="student-workflow__top mb-10">
+                  <strong class="mb-0">{{ step.label }}</strong>
+                  <span class="workflow-status {% if step.complete %}is-complete{% else %}is-pending{% endif %}">{{ step.status }}</span>
+                </div>
+                <p class="text-neutral-600 text-sm mb-12">{{ step.description }}</p>
+                <a href="{{ step.url }}" class="btn btn-outline-primary btn-sm radius-8">{{ step.action }}</a>
               </div>
-            </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card radius-12 border-neutral-200">
+        <div class="card-body">
+          <h6 class="section-title">Operations Control</h6>
+          <div class="detail-grid">
+            <div class="detail-item"><strong>Workflow Progress</strong><span>{{ student_workflow.completed }}/{{ student_workflow.total }} steps complete</span></div>
+            <div class="detail-item"><strong>Next Best Action</strong><span>{{ student_workflow.next_step }}</span></div>
+            <div class="detail-item"><strong>Admission File</strong><span>{{ documents_score_basic.present }}/{{ documents_score_basic.total }} required documents ({{ documents_score_basic.percent }}%)</span></div>
+            <div class="detail-item"><strong>Missing</strong><span>{% if missing_basic_documents %}{{ missing_basic_documents|join:", " }}{% else %}None{% endif %}</span></div>
+            <div class="detail-item"><strong>Digital Access</strong><span>{% if student_operations.account_ready %}Usernames ready{% else %}Account usernames pending{% endif %}</span></div>
+            <div class="detail-item"><strong>Transport</strong><span>{% if student_operations.transport_enabled %}Enabled{% else %}Not assigned{% endif %}</span></div>
+            <div class="detail-item"><strong>Hostel</strong><span>{% if student_operations.hostel_enabled %}Enabled{% else %}Not assigned{% endif %}</span></div>
+            <div class="detail-item"><strong>Medical</strong><span>{% if student_operations.medical_flag %}Support note present{% else %}No flagged medical support{% endif %}</span></div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div class="col-xxl-4">
-      <div class="info-card h-100">
+      <section class="card radius-12 border-neutral-200">
         <div class="card-body">
           <h6 class="section-title">Core Profile</h6>
           <div class="detail-grid">
@@ -154,8 +337,28 @@
             <div class="detail-item"><strong>Religion</strong><span>{{ student.religion|default:"-" }}</span></div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section class="card radius-12 border-neutral-200">
+        <div class="card-body">
+          <h6 class="section-title">Audit Timeline</h6>
+          {% if student_history %}
+            <div class="student-detail-v4__timeline">
+              {% for event in student_history|slice:":8" %}
+                <div class="detail-item">
+                  <strong>{{ event.get_action_display|default:event.action }}</strong>
+                  <span>{{ event.message|default:"Activity recorded." }}{% if event.created_at %} | {{ event.created_at|date:"d M Y, h:i A" }}{% endif %}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-neutral-600 text-sm mb-0">No audit entries recorded yet.</p>
+          {% endif %}
+        </div>
+      </section>
     </div>
   </div>
 </div>
 {% endblock %}
+
+

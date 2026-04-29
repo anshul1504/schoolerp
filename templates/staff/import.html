@@ -6,14 +6,14 @@
 {% block page_copy %}Upload a CSV or XLSX file to create/update staff records. Preview comes first.{% endblock %}
 
 {% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
+  <div class="card radius-12 border-neutral-200 mb-24">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="mb-0">
           <h6>Staff Import</h6>
           <p>School-scoped import (selected school required).</p>
         </div>
-        <div class="sf-actions">
+        <div class="d-flex flex-wrap gap-2">
           <a class="btn btn-outline-secondary" href="/staff/">Back to Staff</a>
           {% if selected_school %}
             <a class="btn btn-outline-secondary" href="/staff/import/sample/csv/?school={{ selected_school.id }}">Download sample CSV</a>
@@ -40,8 +40,8 @@
         {% endif %}
       </form>
 
-      <div class="sf-card mt-3">
-        <div class="sf-card__body">
+      <div class="card radius-12 border-neutral-200 mt-3">
+        <div class="card-body">
           <div class="mb-3">
             <div class="fw-semibold mb-1">Expected headers</div>
             <div class="text-muted text-sm">{{ headers|join:", " }}</div>

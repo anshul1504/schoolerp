@@ -39,11 +39,11 @@
               <td>{{ row.score }}</td>
               <td>
                 {% if row.score < 50 %}
-                  <span class="status-pill status-pill--danger">Critical</span>
+                  <span class="badge status-pill--danger">Critical</span>
                 {% elif row.score < 80 %}
-                  <span class="status-pill status-pill--warning">Watch</span>
+                  <span class="badge status-pill--warning">Watch</span>
                 {% else %}
-                  <span class="status-pill status-pill--success">Healthy</span>
+                  <span class="badge status-pill--success">Healthy</span>
                 {% endif %}
               </td>
               <td>{% if row.issues %}{{ row.issues|join:", " }}{% else %}No major issues{% endif %}</td>

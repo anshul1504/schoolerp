@@ -3,17 +3,17 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 from apps.communication.models import Notice
 from apps.core.models import EntityChangeLog
+from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 
 from .models import (
     AdmissionWorkflowEvent,
     Student,
+    StudentClassChangeHistory,
     StudentCommunicationLog,
     StudentComplianceReminder,
     StudentDisciplineIncident,
-    StudentClassChangeHistory,
     StudentHealthRecord,
     StudentHistoryEvent,
     StudentProfileEditHistory,
@@ -62,15 +62,28 @@ class StudentAccessTests(TestCase):
             role="TEACHER",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
             SchoolSubscription.objects.update_or_create(
                 school=self.other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         self.student = Student.objects.create(
             school=self.school,
@@ -177,7 +190,11 @@ class StudentAccessTests(TestCase):
             StudentHistoryEvent.objects.filter(student=created_student, action="CREATED").exists()
         )
         self.assertRedirects(response, f"/students/{created_student.slug}/")
-        self.assertTrue(EntityChangeLog.objects.filter(entity="students.Student", object_id=str(created_student.id), action="CREATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="students.Student", object_id=str(created_student.id), action="CREATED"
+            ).exists()
+        )
 
     def test_student_detail_shows_audit_timeline_entries(self):
         StudentHistoryEvent.objects.create(
@@ -271,7 +288,11 @@ class StudentAccessTests(TestCase):
 
         self.assertRedirects(response, "/students/")
         self.assertFalse(Student.objects.filter(id=self.student.id).exists())
-        self.assertTrue(EntityChangeLog.objects.filter(entity="students.Student", object_id=str(self.student.id), action="DELETED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="students.Student", object_id=str(self.student.id), action="DELETED"
+            ).exists()
+        )
 
     def test_teacher_cannot_delete_student(self):
         self.client.force_login(self.teacher)
@@ -330,7 +351,9 @@ class StudentAccessTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.student.refresh_from_db()
         self.assertEqual(self.student.class_name, "Class 6")
-        self.assertTrue(StudentHistoryEvent.objects.filter(student=self.student, action="PROMOTED").exists())
+        self.assertTrue(
+            StudentHistoryEvent.objects.filter(student=self.student, action="PROMOTED").exists()
+        )
 
     def test_tc_issue_creates_history_event(self):
         self.client.force_login(self.principal)
@@ -346,13 +369,19 @@ class StudentAccessTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.student.refresh_from_db()
         self.assertFalse(self.student.is_active)
-        self.assertTrue(StudentHistoryEvent.objects.filter(student=self.student, action="TC_ISSUED").exists())
+        self.assertTrue(
+            StudentHistoryEvent.objects.filter(student=self.student, action="TC_ISSUED").exists()
+        )
 
     def test_student_workflow_page_can_create_event(self):
         self.client.force_login(self.principal)
         response = self.client.post(
             f"/students/{self.student.slug}/workflow/",
-            {"stage": "DOCUMENT_VERIFICATION", "status": "IN_PROGRESS", "note": "Docs under review"},
+            {
+                "stage": "DOCUMENT_VERIFICATION",
+                "status": "IN_PROGRESS",
+                "note": "Docs under review",
+            },
         )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(
@@ -400,7 +429,11 @@ class StudentAccessTests(TestCase):
 
         approve_response = self.client.post(
             f"/students/{self.student.slug}/tc/requests/",
-            {"request_id": str(tc_request.id), "decision": "APPROVED", "review_note": "Approved by principal"},
+            {
+                "request_id": str(tc_request.id),
+                "decision": "APPROVED",
+                "review_note": "Approved by principal",
+            },
         )
         self.assertEqual(approve_response.status_code, 302)
         tc_request.refresh_from_db()
@@ -410,10 +443,19 @@ class StudentAccessTests(TestCase):
         self.client.force_login(self.principal)
         response = self.client.post(
             f"/students/{self.student.slug}/discipline/",
-            {"title": "Class misconduct", "severity": "MEDIUM", "status": "OPEN", "incident_date": "2026-04-21"},
+            {
+                "title": "Class misconduct",
+                "severity": "MEDIUM",
+                "status": "OPEN",
+                "incident_date": "2026-04-21",
+            },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(StudentDisciplineIncident.objects.filter(student=self.student, title="Class misconduct").exists())
+        self.assertTrue(
+            StudentDisciplineIncident.objects.filter(
+                student=self.student, title="Class misconduct"
+            ).exists()
+        )
 
     def test_student_health_page_can_add_record(self):
         self.client.force_login(self.principal)
@@ -422,7 +464,11 @@ class StudentAccessTests(TestCase):
             {"title": "Annual checkup", "record_type": "CHECKUP", "record_date": "2026-04-21"},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(StudentHealthRecord.objects.filter(student=self.student, title="Annual checkup").exists())
+        self.assertTrue(
+            StudentHealthRecord.objects.filter(
+                student=self.student, title="Annual checkup"
+            ).exists()
+        )
 
     def test_student_compliance_page_can_add_reminder(self):
         self.client.force_login(self.principal)
@@ -431,7 +477,11 @@ class StudentAccessTests(TestCase):
             {"reminder_type": "Aadhar renewal", "status": "PENDING", "due_date": "2026-06-01"},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(StudentComplianceReminder.objects.filter(student=self.student, reminder_type="Aadhar renewal").exists())
+        self.assertTrue(
+            StudentComplianceReminder.objects.filter(
+                student=self.student, reminder_type="Aadhar renewal"
+            ).exists()
+        )
 
     def test_student_communication_logs_page_can_add_log(self):
         self.client.force_login(self.principal)
@@ -440,7 +490,9 @@ class StudentAccessTests(TestCase):
             {"channel": "CALL", "subject": "Parent call", "message": "Discussed attendance."},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(StudentCommunicationLog.objects.filter(student=self.student, channel="CALL").exists())
+        self.assertTrue(
+            StudentCommunicationLog.objects.filter(student=self.student, channel="CALL").exists()
+        )
 
     def test_student_list_paginates_results(self):
         for index in range(2, 15):
@@ -520,7 +572,9 @@ class StudentAccessTests(TestCase):
 
     def test_students_export_selected_does_not_leak_cross_school_rows(self):
         self.client.force_login(self.principal)
-        response = self.client.get(f"/students/?export=csv&student_ids={self.other_student.id},{self.student.id}")
+        response = self.client.get(
+            f"/students/?export=csv&student_ids={self.other_student.id},{self.student.id}"
+        )
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8", errors="ignore")
         self.assertIn(self.student.admission_no, body)

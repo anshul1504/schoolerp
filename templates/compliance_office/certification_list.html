@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Certifications | School ERP{% endblock %}
+{% block page_heading %}School Certifications{% endblock %}
+{% block breadcrumb_active %}Certifications{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Certifications List</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Manage school certifications and accreditations.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap" href="?q={{ filters.q }}&export=csv"><iconify-icon icon="ri:file-download-line" class="me-2 text-xl"></iconify-icon> Export CSV</a>
+        <a class="btn btn-primary-600 radius-8 px-20 py-11 d-inline-flex align-items-center text-nowrap" href="{% url 'compliance_office:certification_create' %}"><iconify-icon icon="ri:add-line" class="me-2 text-xl"></iconify-icon> Add Certification</a>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Search certifications...">
+          </div>
+          <div class="col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-600">Apply</button>
+            <a class="btn btn-outline-secondary" href="{% url 'compliance_office:certification_list' %}">Reset</a>
+          </div>
+        </div>
+      </form>
+
+      {% if certifications %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable">
+            <thead>
+              <tr>
+                <th>Certification Name</th>
+                <th>Issuing Authority</th>
+                <th>Issue Date</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in certifications %}
+                <tr>
+                  <td><span class="fw-medium text-neutral-700">{{ c.name }}</span></td>
+                  <td>{{ c.issuing_authority }}</td>
+                  <td>{{ c.issue_date|date:'d M Y' }}</td>
+                  <td>{{ c.expiry_date|date:'d M Y' }}</td>
+                  <td>
+                    {% if c.status == 'VALID' %}
+                        <span class="badge bg-success-50 text-success-600">{{ c.get_status_display }}</span>
+                    {% elif c.status == 'EXPIRING_SOON' %}
+                        <span class="badge bg-warning-50 text-warning-600">{{ c.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-danger-50 text-danger-600">{{ c.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                      <a class="btn btn-sm btn-info-600 d-inline-flex align-items-center gap-1 text-white" href="{% url 'compliance_office:certification_detail' c.id %}"><iconify-icon icon="ri:printer-line"></iconify-icon> Print PDF</a>
+                      <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="{% url 'compliance_office:certification_edit' c.id %}"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit</a>
+                      <form method="post" action="{% url 'compliance_office:certification_delete' c.id %}" class="d-inline" onsubmit="return confirm('Delete this certification?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"><iconify-icon icon="ri:delete-bin-line" class="me-1"></iconify-icon> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:medal-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No certifications found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

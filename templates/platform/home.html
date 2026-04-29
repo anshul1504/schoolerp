@@ -2,286 +2,174 @@
 {% load static %}
 
 {% block title %}Platform Command Center{% endblock %}
-{% block page_heading %}Platform Command Center{% endblock %}
-{% block page_copy %}Monitor schools, users, billing, support, security, and platform activity.{% endblock %}
-{% block page_eyebrow %}Super Admin{% endblock %}
 
 {% block content %}
   {{ charts|json_script:"platformDashboardData" }}
 
-  <section class="platform-hero mb-4">
-    <div>
-      <span class="platform-hero__eyebrow">Platform Overview</span>
-      <h5>Super Admin Dashboard</h5>
-      <p>Operational summary for onboarding, billing health, support workload, security events, and recent platform activity.</p>
-    </div>
-    <div class="platform-hero__actions">
-      <a class="btn btn-primary-600" href="/schools/create/"><i class="ri-school-line"></i>Add School</a>
-      <a class="btn btn-outline-primary" href="/users/invite/"><i class="ri-user-add-line"></i>Invite User</a>
-      <a class="btn btn-outline-secondary" href="/super-admin/"><i class="ri-dashboard-2-line"></i>Hub</a>
-      <a class="btn btn-outline-secondary" href="/settings/permissions/"><i class="ri-shield-keyhole-line"></i>Permissions</a>
-    </div>
-  </section>
-
-  <section class="platform-kpi-grid">
-    <article class="platform-kpi">
-      <div class="platform-kpi__icon"><i class="ri-school-line"></i></div>
-      <div>
-        <span>Schools</span>
-        <strong>{{ kpis.schools_total }}</strong>
-        <small>{{ kpis.schools_active }} active, {{ kpis.schools_inactive }} inactive</small>
-      </div>
-    </article>
-    <article class="platform-kpi">
-      <div class="platform-kpi__icon"><i class="ri-team-line"></i></div>
-      <div>
-        <span>Users</span>
-        <strong>{{ kpis.users_total }}</strong>
-        <small>{{ kpis.users_active }} active accounts</small>
-      </div>
-    </article>
-    <article class="platform-kpi">
-      <div class="platform-kpi__icon"><i class="ri-link-m"></i></div>
-      <div>
-        <span>Pending Invites</span>
-        <strong>{{ kpis.invites_pending }}</strong>
-        <small>Awaiting activation</small>
-      </div>
-    </article>
-    <article class="platform-kpi">
-      <div class="platform-kpi__icon"><i class="ri-vip-crown-line"></i></div>
-      <div>
-        <span>Subscriptions</span>
-        <strong>{{ kpis.subscriptions_active }}</strong>
-        <small>{{ kpis.subscriptions_past_due }} past due</small>
-      </div>
-    </article>
-    <article class="platform-kpi">
-      <div class="platform-kpi__icon"><i class="ri-customer-service-2-line"></i></div>
-      <div>
-        <span>Open Support</span>
-        <strong>{{ kpis.open_support }}</strong>
-        <small>Tickets needing attention</small>
-      </div>
-    </article>
-    <article class="platform-kpi">
-      <div class="platform-kpi__icon"><i class="ri-alert-line"></i></div>
-      <div>
-        <span>Security 24h</span>
-        <strong>{{ kpis.security_failures_24h }}</strong>
-        <small>Failed or risky events</small>
-      </div>
-    </article>
-    <article class="platform-kpi platform-kpi--wide">
-      <div class="platform-kpi__icon"><i class="ri-money-rupee-circle-line"></i></div>
-      <div>
-        <span>Paid Revenue</span>
-        <strong>₹{{ kpis.paid_total }}</strong>
-        <small>Paid subscription invoices</small>
-      </div>
-    </article>
-    <article class="platform-kpi platform-kpi--wide">
-      <div class="platform-kpi__icon"><i class="ri-file-warning-line"></i></div>
-      <div>
-        <span>Outstanding</span>
-        <strong>₹{{ kpis.outstanding_total }}</strong>
-        <small>Draft and issued invoices</small>
-      </div>
-    </article>
-  </section>
-
-  <section class="platform-grid platform-grid--charts">
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Growth Trend</h6>
-          <p>Schools and users added over the last 6 months.</p>
-        </div>
-      </div>
-      <div id="platformGrowthChart" class="platform-chart"></div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Subscriptions</h6>
-          <p>Current status split.</p>
-        </div>
-        <a href="/billing/schools/">Open</a>
-      </div>
-      <div id="platformSubscriptionChart" class="platform-chart platform-chart--donut"></div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Support Load</h6>
-          <p>Ticket status distribution.</p>
-        </div>
-        <a href="/platform/support/">Open</a>
-      </div>
-      <div id="platformSupportChart" class="platform-chart platform-chart--donut"></div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Activity Mix</h6>
-          <p>Recent request method volume.</p>
-        </div>
-        <a href="/activity/">Open</a>
-      </div>
-      <div id="platformActivityChart" class="platform-chart"></div>
-    </article>
-  </section>
-
-  <section class="platform-grid">
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Recent Schools</h6>
-          <p>Newest institutions on the platform.</p>
-        </div>
-        <a href="/schools/">Open</a>
-      </div>
-      <div class="platform-list">
-        {% for school in recent_schools %}
-          <a class="platform-row" href="/schools/{{ school.id }}/">
-            <span class="platform-row__icon"><i class="ri-school-line"></i></span>
-            <span>
-              <strong>{{ school.name }}</strong>
-              <small>{{ school.code }} · {{ school.city|default:"-" }}</small>
-            </span>
-            {% if school.is_active %}<em class="status-pill status-pill--success">Active</em>{% else %}<em class="status-pill">Inactive</em>{% endif %}
-          </a>
-        {% empty %}
-          <div class="platform-empty">No schools yet.</div>
-        {% endfor %}
-      </div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Recent Users</h6>
-          <p>Latest accounts and roles.</p>
-        </div>
-        <a href="/users/">Open</a>
-      </div>
-      <div class="platform-list">
-        {% for user in recent_users %}
-          <a class="platform-row" href="/users/{{ user.id }}/edit/">
-            <span class="platform-row__avatar">{{ user.username|slice:":1"|upper }}</span>
-            <span>
-              <strong>{{ user.get_full_name|default:user.username }}</strong>
-              <small>{{ user.get_role_display }} · {% if user.school %}{{ user.school.name }}{% else %}Platform{% endif %}</small>
-            </span>
-            {% if user.is_active %}<em class="status-pill status-pill--success">Active</em>{% else %}<em class="status-pill">Inactive</em>{% endif %}
-          </a>
-        {% empty %}
-          <div class="platform-empty">No users yet.</div>
-        {% endfor %}
-      </div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Billing Watch</h6>
-          <p>Latest subscription invoices.</p>
-        </div>
-        <a href="/billing/invoices/">Open</a>
-      </div>
-      <div class="platform-list">
-        {% for invoice in recent_invoices %}
-          <a class="platform-row" href="/billing/invoices/{{ invoice.id }}/">
-            <span class="platform-row__icon"><i class="ri-bill-line"></i></span>
-            <span>
-              <strong>{{ invoice.school.name }}</strong>
-              <small>{{ invoice.plan.name }} · ₹{{ invoice.total_amount }}</small>
-            </span>
-            <em class="status-pill {% if invoice.status == 'PAID' %}status-pill--success{% elif invoice.status == 'ISSUED' %}status-pill--warning{% endif %}">{{ invoice.get_status_display }}</em>
-          </a>
-        {% empty %}
-          <div class="platform-empty">No invoices yet.</div>
-        {% endfor %}
-      </div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Support Queue</h6>
-          <p>Tickets recently updated.</p>
-        </div>
-        <a href="/platform/support/">Open</a>
-      </div>
-      <div class="platform-list">
-        {% for ticket in support_tickets %}
-          <a class="platform-row" href="/platform/support/{{ ticket.id }}/">
-            <span class="platform-row__icon"><i class="ri-customer-service-2-line"></i></span>
-            <span>
-              <strong>{{ ticket.title }}</strong>
-              <small>{% if ticket.school %}{{ ticket.school.name }}{% else %}Platform{% endif %} · {{ ticket.get_priority_display }}</small>
-            </span>
-            <em class="status-pill {% if ticket.status == 'RESOLVED' or ticket.status == 'CLOSED' %}status-pill--success{% elif ticket.status == 'IN_PROGRESS' %}status-pill--warning{% endif %}">{{ ticket.get_status_display }}</em>
-          </a>
-        {% empty %}
-          <div class="platform-empty">No support tickets yet.</div>
-        {% endfor %}
-      </div>
-    </article>
-  </section>
-
-  <section class="platform-grid platform-grid--bottom">
-    <article class="platform-panel platform-panel--span-2">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Recent Activity</h6>
-          <p>Latest platform audit entries.</p>
-        </div>
-        <a href="/activity/">Open</a>
-      </div>
-      <div class="platform-timeline">
-        {% for log in recent_activity %}
-          <div class="platform-timeline__item">
-            <span></span>
-            <div>
-              <strong>{% if log.actor %}{{ log.actor.username }}{% else %}System{% endif %}</strong>
-              <p><code>{{ log.method|default:"-" }}</code> {{ log.path|default:log.action }}{% if log.school %} · {{ log.school.name }}{% endif %}</p>
-              <small>{{ log.created_at }}</small>
+  <div class="card mb-4 bg-primary-600 border-0 radius-12 overflow-hidden shadow-sm">
+    <div class="card-body p-4">
+        <div class="row align-items-center gy-3">
+            <div class="col-lg-8">
+                <span class="badge bg-white text-primary-600 mb-2 px-3">Platform Overview</span>
+                <h4 class="mb-1 text-white fw-bold">Super Admin Dashboard</h4>
+                <p class="mb-0 text-white opacity-75 text-sm">Operational summary for onboarding, billing health, support workload, and security events.</p>
             </div>
-          </div>
-        {% empty %}
-          <div class="platform-empty">No activity yet.</div>
-        {% endfor %}
-      </div>
-    </article>
-
-    <article class="platform-panel">
-      <div class="platform-panel__head">
-        <div>
-          <h6>Security Events</h6>
-          <p>Recent authentication signals.</p>
+            <div class="col-lg-4 text-lg-end">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <a class="btn btn-white text-primary-600 fw-bold radius-8" href="/schools/create/"><i class="ri-school-line me-1"></i>Add School</a>
+                    <a class="btn btn-primary-700 text-white fw-bold radius-8 border-0" href="/users/invite/"><i class="ri-user-add-line me-1"></i>Invite User</a>
+                </div>
+            </div>
         </div>
-        <a href="/platform/security/">Open</a>
-      </div>
-      <div class="platform-list">
-        {% for event in security_events %}
-          <div class="platform-row">
-            <span class="platform-row__icon"><i class="ri-shield-flash-line"></i></span>
-            <span>
-              <strong>{{ event.get_event_display }}</strong>
-              <small>{{ event.username|default:"Unknown" }} · {{ event.created_at }}</small>
-            </span>
-            {% if event.success %}<em class="status-pill status-pill--success">OK</em>{% else %}<em class="status-pill status-pill--danger">Risk</em>{% endif %}
-          </div>
-        {% empty %}
-          <div class="platform-empty">No security events yet.</div>
-        {% endfor %}
-      </div>
-    </article>
-  </section>
+    </div>
+  </div>
+
+  <div class="row gy-4 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="card radius-12 border-neutral-200 h-100">
+            <div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="radius-8 bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                    <i class="ri-school-line fs-4"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-secondary-light fw-bold text-uppercase mb-0">Schools</p>
+                    <h4 class="mb-0">{{ kpis.schools_total }}</h4>
+                    <p class="text-xs text-secondary-light mb-0">{{ kpis.schools_active }} active</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="card radius-12 border-neutral-200 h-100">
+            <div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="radius-8 bg-success-50 text-success-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                    <i class="ri-team-line fs-4"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-secondary-light fw-bold text-uppercase mb-0">Users</p>
+                    <h4 class="mb-0">{{ kpis.users_total }}</h4>
+                    <p class="text-xs text-secondary-light mb-0">{{ kpis.users_active }} active</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="card radius-12 border-neutral-200 h-100">
+            <div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="radius-8 bg-warning-50 text-warning-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                    <i class="ri-customer-service-2-line fs-4"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-secondary-light fw-bold text-uppercase mb-0">Support</p>
+                    <h4 class="mb-0">{{ kpis.open_support }}</h4>
+                    <p class="text-xs text-secondary-light mb-0">Open tickets</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="card radius-12 border-neutral-200 h-100">
+            <div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="radius-8 bg-danger-50 text-danger-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                    <i class="ri-money-rupee-circle-line fs-4"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-secondary-light fw-bold text-uppercase mb-0">Revenue</p>
+                    <h4 class="mb-0">₹{{ kpis.paid_total }}</h4>
+                    <p class="text-xs text-secondary-light mb-0">Paid subs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="row gy-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100 radius-12 border-neutral-200">
+            <div class="card-header bg-transparent border-bottom border-neutral-200 py-3 px-4">
+                <h6 class="mb-0">Growth Trend</h6>
+                <p class="text-xs text-secondary-light mb-0">Schools and users added over the last 6 months.</p>
+            </div>
+            <div class="card-body p-4">
+                <div id="platformGrowthChart" style="height: 310px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100 radius-12 border-neutral-200">
+            <div class="card-header bg-transparent border-bottom border-neutral-200 py-3 px-4">
+                <h6 class="mb-0">Subscriptions</h6>
+                <p class="text-xs text-secondary-light mb-0">Current status split.</p>
+            </div>
+            <div class="card-body p-4">
+                <div id="platformSubscriptionChart" style="height: 270px;"></div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="row gy-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100 radius-12 border-neutral-200">
+            <div class="card-header d-flex justify-content-between align-items-center py-3 px-4 border-bottom bg-transparent">
+                <h6 class="mb-0">Recent Schools</h6>
+                <a href="/schools/" class="text-sm text-primary-600 font-semibold">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for school in recent_schools %}
+                      <a href="/schools/{{ school.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-4 border-0 border-bottom border-neutral-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="radius-8 bg-neutral-100 text-neutral-600 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="ri-school-line"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold">{{ school.name }}</div>
+                                <div class="text-xs text-secondary-light">{{ school.code }} · {{ school.city|default:"-" }}</div>
+                            </div>
+                        </div>
+                        <span class="badge {% if school.is_active %}bg-success-50 text-success-600{% else %}bg-neutral-50 text-neutral-600{% endif %}">
+                            {% if school.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                      </a>
+                    {% empty %}
+                      <div class="text-center py-5 text-secondary-light">No schools yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100 radius-12 border-neutral-200">
+            <div class="card-header d-flex justify-content-between align-items-center py-3 px-4 border-bottom bg-transparent">
+                <h6 class="mb-0">Support Queue</h6>
+                <a href="/platform/support/" class="text-sm text-primary-600 font-semibold">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for ticket in support_tickets %}
+                      <a href="/platform/support/{{ ticket.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-4 border-0 border-bottom border-neutral-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="radius-8 bg-warning-50 text-warning-600 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="ri-customer-service-2-line"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold">{{ ticket.title }}</div>
+                                <div class="text-xs text-secondary-light">{% if ticket.school %}{{ ticket.school.name }}{% else %}Platform{% endif %} · {{ ticket.get_priority_display }}</div>
+                            </div>
+                        </div>
+                        <span class="badge {% if ticket.status == 'RESOLVED' or ticket.status == 'CLOSED' %}bg-success-50 text-success-600{% elif ticket.status == 'IN_PROGRESS' %}bg-warning-50 text-warning-600{% else %}bg-primary-50 text-primary-600{% endif %}">
+                            {{ ticket.get_status_display }}
+                        </span>
+                      </a>
+                    {% empty %}
+                      <div class="text-center py-5 text-secondary-light">No tickets yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -289,15 +177,11 @@
     document.addEventListener("DOMContentLoaded", function () {
       const dataEl = document.getElementById("platformDashboardData");
       const data = dataEl ? JSON.parse(dataEl.textContent) : {};
-      const blue = "#0288d1";
-      const sky = "#29b6f6";
-      const indigo = "#3f51b5";
-      const pale = "#e1f5fe";
-      const grid = "#e2e8f0";
-
-      function hasValues(values) {
-        return Array.isArray(values) && values.some((value) => Number(value) > 0);
-      }
+      const primary = "#487FFF";
+      const secondary = "#94A3B8";
+      const success = "#45B369";
+      const warning = "#FF9F29";
+      const danger = "#EF4A00";
 
       if (window.ApexCharts && document.querySelector("#platformGrowthChart")) {
         new ApexCharts(document.querySelector("#platformGrowthChart"), {
@@ -306,50 +190,26 @@
             { name: "Schools", data: data.school_growth || [] },
             { name: "Users", data: data.user_growth || [] }
           ],
-          colors: [blue, indigo],
+          colors: [primary, "#818cf8"],
           dataLabels: { enabled: false },
           stroke: { curve: "smooth", width: 3 },
           fill: { type: "gradient", gradient: { shadeIntensity: 0.2, opacityFrom: 0.24, opacityTo: 0.04 } },
           xaxis: { categories: data.months || [], axisBorder: { show: false }, axisTicks: { show: false } },
-          yaxis: { labels: { formatter: (value) => Math.round(value) } },
-          grid: { borderColor: grid, strokeDashArray: 4 },
+          grid: { borderColor: "#e2e8f0", strokeDashArray: 4 },
           legend: { position: "top", horizontalAlign: "right" },
         }).render();
       }
 
-      function renderDonut(selector, labels, values, fallbackLabel) {
-        const el = document.querySelector(selector);
-        if (!window.ApexCharts || !el) return;
-        const series = hasValues(values) ? values : [1];
-        const chartLabels = hasValues(values) ? labels : [fallbackLabel];
-        new ApexCharts(el, {
+      if (window.ApexCharts && document.querySelector("#platformSubscriptionChart")) {
+        new ApexCharts(document.querySelector("#platformSubscriptionChart"), {
           chart: { type: "donut", height: 270, toolbar: { show: false }, fontFamily: "inherit" },
-          series,
-          labels: chartLabels,
-          colors: [blue, sky, indigo, "#90caf9", "#5c6bc0"],
+          series: data.subscription_status_values || [1],
+          labels: data.subscription_status_labels || ["No data"],
+          colors: [primary, success, warning, danger, secondary],
           legend: { position: "bottom" },
           dataLabels: { enabled: false },
-          plotOptions: { pie: { donut: { size: "68%" } } },
+          plotOptions: { pie: { donut: { size: "75%" } } },
           stroke: { width: 0 },
-        }).render();
-      }
-
-      renderDonut("#platformSubscriptionChart", data.subscription_status_labels || [], data.subscription_status_values || [], "No subscriptions");
-      renderDonut("#platformSupportChart", data.support_status_labels || [], data.support_status_values || [], "No tickets");
-
-      if (window.ApexCharts && document.querySelector("#platformActivityChart")) {
-        const values = hasValues(data.activity_method_values) ? data.activity_method_values : [0];
-        const labels = hasValues(data.activity_method_values) ? data.activity_method_labels : ["No activity"];
-        new ApexCharts(document.querySelector("#platformActivityChart"), {
-          chart: { type: "bar", height: 270, toolbar: { show: false }, fontFamily: "inherit" },
-          series: [{ name: "Requests", data: values }],
-          colors: [blue],
-          plotOptions: { bar: { borderRadius: 7, columnWidth: "42%" } },
-          dataLabels: { enabled: false },
-          xaxis: { categories: labels, axisBorder: { show: false }, axisTicks: { show: false } },
-          yaxis: { labels: { formatter: (value) => Math.round(value) } },
-          grid: { borderColor: grid, strokeDashArray: 4 },
-          tooltip: { theme: "light" },
         }).render();
       }
     });

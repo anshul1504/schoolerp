@@ -2,54 +2,57 @@
 
 {% block title %}Create Coupon{% endblock %}
 {% block page_heading %}Create Coupon{% endblock %}
-{% block page_copy %}Use this coupon code on invoice creation to apply discounts.{% endblock %}
-{% block page_eyebrow %}Billing{% endblock %}
+{% block breadcrumb_active %}Billing / Coupons / Create{% endblock %}
 
 {% block content %}
-  <div class="sf-card">
-    <div class="sf-card__body">
-      <form method="post" class="row gy-3">
+  <div class="card h-100 p-0 radius-12">
+    <div class="card-body p-24">
+      <form method="post" class="row gy-4">
         {% csrf_token %}
         <div class="col-md-4">
-          <label class="form-label">Code *</label>
-          <input class="form-control" name="code" placeholder="E.g. LAUNCH50" required>
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Code <span class="text-danger-600">*</span></label>
+          <input class="form-control radius-8" name="code" placeholder="e.g. LAUNCH50" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Discount Type</label>
-          <select class="form-select" name="discount_type">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Discount Type</label>
+          <select class="form-control radius-8 form-select" name="discount_type">
             {% for value,label in discount_type_choices %}
               <option value="{{ value }}">{{ label }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Value</label>
-          <input type="number" step="0.01" class="form-control" name="value" value="0">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Value</label>
+          <input type="number" step="0.01" class="form-control radius-8" name="value" value="0">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Starts On</label>
-          <input type="date" class="form-control" name="starts_on">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Starts On</label>
+          <input type="date" class="form-control radius-8" name="starts_on">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Ends On</label>
-          <input type="date" class="form-control" name="ends_on">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Ends On</label>
+          <input type="date" class="form-control radius-8" name="ends_on">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Max Uses (0 = unlimited)</label>
-          <input type="number" class="form-control" name="max_uses" value="0" min="0">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Max Uses</label>
+          <input type="number" class="form-control radius-8" name="max_uses" value="0" min="0">
+          <div class="text-secondary-light text-sm mt-1">Set to 0 for unlimited uses.</div>
         </div>
-        <div class="col-md-12">
-          <div class="form-check mt-2">
+        <div class="col-md-12 mt-24">
+          <div class="form-check style-check d-flex align-items-center mt-2">
             <input class="form-check-input" type="checkbox" id="activeCheck" name="is_active" checked>
-            <label class="form-check-label" for="activeCheck">Active</label>
+            <label class="form-check-label" for="activeCheck">Coupon is active</label>
           </div>
         </div>
-        <div class="col-12 d-flex gap-10">
-          <button type="submit" class="btn btn-primary">Create</button>
-          <a href="/billing/coupons/" class="btn btn-outline-secondary">Cancel</a>
+        <div class="col-12 mt-32 d-flex gap-16">
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+            <iconify-icon icon="ri:save-line"></iconify-icon> Create Coupon
+          </button>
+          <a href="/billing/coupons/" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <iconify-icon icon="ri:close-line"></iconify-icon> Cancel
+          </a>
         </div>
       </form>
     </div>
   </div>
 {% endblock %}
-

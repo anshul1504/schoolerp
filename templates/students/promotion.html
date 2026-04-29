@@ -7,19 +7,19 @@
 {% block page_copy %}Move the student to the next class and section while preserving a polished promotion timeline.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
   <div class="row gy-4">
     <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="promotion" %}</div>
     <div class="col-xxl-6">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
             <div>
               <h6 class="mb-4">Promotion form</h6>
               <p class="text-neutral-600 text-sm mb-0">Review current placement and assign the next class and section.</p>
             </div>
           </div>
-          <div class="student-pill success mb-20">Suggested next class: {{ suggested_next_class }}</div>
+          <div class="badge success mb-20">Suggested next class: {{ suggested_next_class }}</div>
           <form method="post">
             {% csrf_token %}
             <div class="row gy-4">
@@ -53,8 +53,8 @@
       </div>
     </div>
     <div class="col-xxl-6">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-20">
             <div>
               <h6 class="mb-4">Promotion history</h6>
@@ -80,3 +80,9 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

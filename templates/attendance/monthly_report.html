@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Monthly Attendance Report | School ERP{% endblock %}
+{% block page_eyebrow %}Attendance Analytics{% endblock %}
+{% block page_heading %}Monthly Summary{% endblock %}
+{% block page_copy %}A complete overview of class attendance for the selected month.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-card {
+    border: 1px solid #dbe4ee;
+    border-radius: 22px;
+    background: #ffffff;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+  }
+
+  .report-table-container {
+    overflow-x: auto;
+  }
+
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .report-table th, .report-table td {
+    padding: 8px 6px;
+    border: 1px solid #eef2f7;
+    text-align: center;
+  }
+
+  .report-table th {
+    background: #f8fbff;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .report-table td.student-name {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: #fff;
+    min-width: 150px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .status-PRESENT { background-color: #10b981; }
+  .status-ABSENT { background-color: #ef4444; }
+  .status-LATE { background-color: #f59e0b; }
+  .status-LEAVE { background-color: #3b82f6; }
+  .status-EMPTY { background-color: #e2e8f0; }
+
+  .summary-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="report-card p-24">
+      <form method="get" class="row gy-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Class</label>
+          <select name="academic_class" class="form-control" required>
+            <option value="">Select class</option>
+            {% for ac in academic_classes %}
+              <option value="{{ ac.id }}" {% if selected_class and selected_class.id == ac.id %}selected{% endif %}>{{ ac.name }} - {{ ac.section }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Month</label>
+          <select name="month" class="form-control">
+            {% for m_val, m_name in months %}
+              <option value="{{ m_val }}" {% if month == m_val %}selected{% endif %}>{{ m_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Year</label>
+          <select name="year" class="form-control">
+            {% for y in years %}
+              <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary-600 w-100">Generate Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if selected_class %}
+  <div class="col-12">
+    <div class="report-card">
+      <div class="p-24 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">{{ selected_class.name }} - {{ selected_class.section }} | {{ month_name }} {{ year }}</h6>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">Print PDF</button>
+        </div>
+      </div>
+      <div class="report-table-container">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th class="student-name">Student</th>
+              {% for d in days %}
+                <th>{{ d }}</th>
+              {% endfor %}
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in report_data %}
+              <tr>
+                <td class="student-name">{{ row.student.first_name }} {{ row.student.last_name }}</td>
+                {% for status in row.days %}
+                  <td>
+                    {% if status == 'PRESENT' %}
+                      <span class="status-dot status-PRESENT" title="Present"></span>
+                    {% elif status == 'ABSENT' %}
+                      <span class="status-dot status-ABSENT" title="Absent"></span>
+                    {% elif status == 'LATE' %}
+                      <span class="status-dot status-LATE" title="Late"></span>
+                    {% elif status == 'LEAVE' %}
+                      <span class="status-dot status-LEAVE" title="Leave"></span>
+                    {% else %}
+                      <span class="status-dot status-EMPTY"></span>
+                    {% endif %}
+                  </td>
+                {% endfor %}
+                <td>
+                  <span class="summary-badge {% if row.attendance_percentage > 75 %}bg-success-100 text-success-600{% else %}bg-danger-100 text-danger-600{% endif %}">
+                    {{ row.attendance_percentage|floatformat:0 }}%
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="p-24 border-top">
+        <div class="d-flex flex-wrap gap-4 text-sm">
+            <div class="d-flex align-items-center gap-1"><span class="status-dot status-PRESENT"></span> Present</div>
+            <div class="d-flex align-items-center gap-1"><span class="status-dot status-ABSENT"></span> Absent</div>
+            <div class="d-flex align-items-center gap-1"><span class="status-dot status-LATE"></span> Late</div>
+            <div class="d-flex align-items-center gap-1"><span class="status-dot status-LEAVE"></span> Leave</div>
+            <div class="d-flex align-items-center gap-1"><span class="status-dot status-EMPTY"></span> No Session</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

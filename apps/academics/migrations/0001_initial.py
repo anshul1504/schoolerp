@@ -6,63 +6,135 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('schools', '0003_school_student_capacity_school_allowed_campuses'),
+        ("schools", "0003_school_student_capacity_school_allowed_campuses"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AcademicClass',
+            name="AcademicClass",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('section', models.CharField(max_length=50)),
-                ('room_name', models.CharField(blank=True, max_length=100)),
-                ('capacity', models.PositiveIntegerField(default=40)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('class_teacher', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='homeroom_classes', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='academic_classes', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("section", models.CharField(max_length=50)),
+                ("room_name", models.CharField(blank=True, max_length=100)),
+                ("capacity", models.PositiveIntegerField(default=40)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "class_teacher",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="homeroom_classes",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="academic_classes",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['name', 'section'],
-                'unique_together': {('school', 'name', 'section')},
+                "ordering": ["name", "section"],
+                "unique_together": {("school", "name", "section")},
             },
         ),
         migrations.CreateModel(
-            name='AcademicSubject',
+            name="AcademicSubject",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=120)),
-                ('code', models.CharField(blank=True, max_length=30)),
-                ('is_optional', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('academic_class', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subjects', to='academics.academicclass')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='academic_subjects', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=120)),
+                ("code", models.CharField(blank=True, max_length=30)),
+                ("is_optional", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "academic_class",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="subjects",
+                        to="academics.academicclass",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="academic_subjects",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['name'],
-                'unique_together': {('academic_class', 'name')},
+                "ordering": ["name"],
+                "unique_together": {("academic_class", "name")},
             },
         ),
         migrations.CreateModel(
-            name='TeacherAllocation',
+            name="TeacherAllocation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('is_class_lead', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('academic_class', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='teacher_allocations', to='academics.academicclass')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='teacher_allocations', to='schools.school')),
-                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='teacher_allocations', to='academics.academicsubject')),
-                ('teacher', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='teaching_allocations', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("is_class_lead", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "academic_class",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="teacher_allocations",
+                        to="academics.academicclass",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="teacher_allocations",
+                        to="schools.school",
+                    ),
+                ),
+                (
+                    "subject",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="teacher_allocations",
+                        to="academics.academicsubject",
+                    ),
+                ),
+                (
+                    "teacher",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="teaching_allocations",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['academic_class__name', 'subject__name'],
-                'unique_together': {('teacher', 'academic_class', 'subject')},
+                "ordering": ["academic_class__name", "subject__name"],
+                "unique_together": {("teacher", "academic_class", "subject")},
             },
         ),
     ]

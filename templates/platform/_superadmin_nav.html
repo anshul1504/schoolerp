@@ -58,6 +58,14 @@
       <i class="ri-money-rupee-circle-line"></i>
       <span><strong>Fee Reconciliation</strong><small>Collections & Refunds</small></span>
     </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/lab/' %}is-active{% endif %}" href="/super-admin/lab/">
+      <i class="ri-flask-line"></i>
+      <span><strong>Lab Operations</strong><small>Rooms & Equipment</small></span>
+    </a>
+    <a class="sa-nav__item {% if request.path == '/super-admin/communication-logs/' %}is-active{% endif %}" href="/super-admin/communication-logs/">
+      <i class="ri-message-3-line"></i>
+      <span><strong>Communication Logs</strong><small>Delivery Tracking</small></span>
+    </a>
     <a class="sa-nav__item {% if request.path == '/platform/security/' %}is-active{% endif %}" href="/platform/security/">
       <i class="ri-shield-flash-line"></i>
       <span><strong>Security</strong><small>Auth Signals</small></span>

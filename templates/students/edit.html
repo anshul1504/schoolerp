@@ -6,10 +6,53 @@
 {% block page_heading %}Edit {{ student.first_name }} {{ student.last_name }}{% endblock %}
 {% block page_copy %}Update the full student record using the same guided flow as admission so editing stays easy and organized.{% endblock %}
 
+{% block extra_css %}
+<style>
+  .student-edit-shell {
+    width: 100%;
+  }
+  .student-edit-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .student-edit-topbar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .student-edit-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+  @media (max-width: 767px) {
+    .student-edit-topbar__actions {
+      width: 100%;
+    }
+    .student-edit-btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="student-page">
-<div class="platform-panel">
-  <div class="platform-panel__body">
+<div class="student-page students-v3 students-v4">
+<div class="student-edit-shell">
+<div class="card radius-12 border-neutral-200">
+  <div class="card-body">
+    <div class="student-edit-topbar">
+      <div class="student-edit-topbar__actions">
+        <a class="btn btn-outline-secondary student-edit-btn" href="/students/{{ student.slug }}/">Back to profile</a>
+        <a class="btn btn-outline-primary student-edit-btn" href="/students/{{ student.id }}/documents/">Open documents</a>
+      </div>
+    </div>
     {% include "students/_student_nav.html" with student_nav_active="edit" %}
     <form method="post" enctype="multipart/form-data" class="wizard-shell" id="studentEditWizard">
       {% csrf_token %}
@@ -205,12 +248,12 @@
                 </div>
               </div>
             </div>
-            <div class="d-flex flex-wrap justify-content-between gap-12 mt-24"><button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev">Back</button><div class="d-flex flex-wrap gap-12"><a class="btn btn-outline-secondary radius-8 px-20 py-11" href="/students/{{ student.slug }}/">Back to profile</a><button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11">Update Student</button></div></div>
+            <div class="d-flex flex-wrap justify-content-between gap-12 mt-24"><button type="button" class="btn btn-outline-secondary radius-8 px-20 py-11 wizard-prev student-edit-btn">Back</button><div class="d-flex flex-wrap gap-12"><a class="btn btn-outline-secondary radius-8 px-20 py-11 student-edit-btn" href="/students/{{ student.slug }}/">Back to profile</a><button type="submit" class="btn btn-primary-600 radius-8 px-20 py-11 student-edit-btn">Update Student</button></div></div>
           </div>
         </div>
       </section>
     </form>
-  </div>
+</div>
 </div>
 </div>
 {% endblock %}
@@ -236,3 +279,9 @@
   });
 </script>
 {% endblock %}
+
+
+
+
+
+

@@ -7,11 +7,11 @@
 {% block page_copy %}Track pending compliance items and reminder status for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
 <div class="row gy-4">
   <div class="col-12">{% include "students/_student_nav.html" with student_nav_active="compliance" %}</div>
   <div class="col-xl-5">
-    <div class="platform-panel"><div class="platform-panel__body">
+    <div class="card radius-12 border-neutral-200"><div class="card-body">
       <h6 class="mb-14">Add Reminder</h6>
       {% if can_manage_students %}
       <form method="post" class="row gy-3">
@@ -26,7 +26,7 @@
     </div></div>
   </div>
   <div class="col-xl-7">
-    <div class="platform-panel"><div class="platform-panel__body">
+    <div class="card radius-12 border-neutral-200"><div class="card-body">
       <h6 class="mb-14">Compliance Queue</h6>
       {% if reminders %}
         <div class="table-responsive">
@@ -36,7 +36,7 @@
               {% for item in reminders %}
                 <tr>
                   <td>{{ item.reminder_type }}</td>
-                  <td><span class="student-pill">{{ item.get_status_display }}</span></td>
+                  <td><span class="badge">{{ item.get_status_display }}</span></td>
                   <td>{{ item.due_date|default:"-" }}</td>
                   <td>{{ item.note|default:"-" }}</td>
                 </tr>
@@ -50,3 +50,9 @@
 </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

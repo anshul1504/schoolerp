@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Policy Detail | School ERP{% endblock %}
+{% block page_heading %}{{ policy.title }}{% endblock %}
+{% block breadcrumb_active %}Policy Detail{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="row gy-4">
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body p-24">
+          <div class="text-center mb-24">
+            <span class="w-80-px h-80-px rounded-circle bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center text-3xl mx-auto mb-16">
+              <iconify-icon icon="ri:file-shield-2-line"></iconify-icon>
+            </span>
+            <h5 class="fw-bold">{{ policy.title }}</h5>
+            <span class="badge {% if policy.status == 'ACTIVE' %}bg-success-50 text-success-600{% else %}bg-warning-50 text-warning-600{% endif %} px-16 py-8 mt-8 text-sm">
+              {{ policy.get_status_display }}
+            </span>
+          </div>
+
+          <ul class="list-group list-group-flush border-top border-neutral-100">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-12">
+              <span class="text-neutral-500 fw-medium">Category</span>
+              <span class="text-neutral-700 fw-semibold">{{ policy.category }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-12">
+              <span class="text-neutral-500 fw-medium">Effective Date</span>
+              <span class="text-neutral-700 fw-semibold">{{ policy.effective_date|date:'d M Y' }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-12">
+              <span class="text-neutral-500 fw-medium">Next Review</span>
+              <span class="text-neutral-700 fw-semibold">{{ policy.review_date|date:'d M Y'|default:'Not set' }}</span>
+            </li>
+          </ul>
+
+          <div class="mt-24 d-flex gap-2">
+            <a href="{% url 'compliance_office:policy_edit' policy.id %}" class="btn btn-outline-primary w-100"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit Policy</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card mb-24">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+          <h6 class="text-lg fw-semibold mb-0">Policy Description</h6>
+        </div>
+        <div class="card-body p-24">
+          <p class="text-neutral-700" style="white-space: pre-line;">{{ policy.description }}</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+          <h6 class="text-lg fw-semibold mb-0">Related Inspections & Audits</h6>
+          <a href="{% url 'compliance_office:inspection_create' %}" class="btn btn-sm btn-primary-600">New Audit</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0 table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-24">Date</th>
+                  <th>Inspector</th>
+                  <th>Findings</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in inspections %}
+                  <tr>
+                    <td class="ps-24 fw-medium text-neutral-700">{{ i.inspection_date|date:'d M Y' }}</td>
+                    <td>{{ i.inspector_name }}</td>
+                    <td><span class="text-neutral-500 text-sm" title="{{ i.findings }}">{{ i.findings|truncatechars:30|default:'None' }}</span></td>
+                    <td>
+                      <span class="badge bg-primary-50 text-primary-600">{{ i.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4" class="text-center py-4 text-neutral-500">No audits related to this policy.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

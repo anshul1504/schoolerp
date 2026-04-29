@@ -6,13 +6,14 @@
 {% block page_copy %}Configure your school SMTP and WhatsApp provider to send notices, reminders, and receptionist campaigns.{% endblock %}
 
 {% block content %}
+<section class="schools-page">
 <div class="row gy-4">
   <div class="col-xl-7">
     <div class="card">
       <div class="card-body p-24">
         <h6 class="mb-14">SMTP (Email Sending)</h6>
         {% if form and form.errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger radius-8">
             <strong>Please fix the highlighted errors and try again.</strong>
           </div>
         {% endif %}
@@ -26,8 +27,8 @@
             <div class="text-neutral-500 text-sm mt-6">If enabled, front office campaigns and meeting emails will use this SMTP instead of platform default.</div>
           </div>
 
-          <div class="col-md-6"><label class="form-label">SMTP Host</label><input type="text" name="smtp_host" class="form-control" value="{{ comm.smtp_host }}"></div>
-          <div class="col-md-3"><label class="form-label">Port</label><input type="number" name="smtp_port" class="form-control" value="{{ comm.smtp_port }}"></div>
+          <div class="col-md-6"><label class="form-label text-primary-light text-sm fw-semibold">SMTP Host</label><input type="text" name="smtp_host" class="form-control radius-8" value="{{ comm.smtp_host }}"></div>
+          <div class="col-md-3"><label class="form-label text-primary-light text-sm fw-semibold">Port</label><input type="number" name="smtp_port" class="form-control radius-8" value="{{ comm.smtp_port }}"></div>
           <div class="col-md-3">
             <label class="form-label">Security</label>
             <div class="d-flex gap-12">
@@ -42,10 +43,10 @@
             </div>
           </div>
 
-          <div class="col-md-6"><label class="form-label">Username</label><input type="text" name="smtp_username" class="form-control" value="{{ comm.smtp_username }}"></div>
-          <div class="col-md-6"><label class="form-label">Password</label><input type="password" name="smtp_password" class="form-control" placeholder="{% if comm.smtp_password %}Saved (enter to replace){% else %}Enter password{% endif %}"></div>
-          <div class="col-md-6"><label class="form-label">From Email</label><input type="email" name="smtp_from_email" class="form-control" value="{{ comm.smtp_from_email }}" placeholder="Optional (defaults to username)"></div>
-          <div class="col-md-6"><label class="form-label">From Name</label><input type="text" name="smtp_from_name" class="form-control" value="{{ comm.smtp_from_name }}" placeholder="School Name"></div>
+          <div class="col-md-6"><label class="form-label text-primary-light text-sm fw-semibold">Username</label><input type="text" name="smtp_username" class="form-control radius-8" value="{{ comm.smtp_username }}"></div>
+          <div class="col-md-6"><label class="form-label text-primary-light text-sm fw-semibold">Password</label><input type="password" name="smtp_password" class="form-control radius-8" placeholder="{% if comm.smtp_password %}Saved (enter to replace){% else %}Enter password{% endif %}"></div>
+          <div class="col-md-6"><label class="form-label text-primary-light text-sm fw-semibold">From Email</label><input type="email" name="smtp_from_email" class="form-control radius-8" value="{{ comm.smtp_from_email }}" placeholder="Optional (defaults to username)"></div>
+          <div class="col-md-6"><label class="form-label text-primary-light text-sm fw-semibold">From Name</label><input type="text" name="smtp_from_name" class="form-control radius-8" value="{{ comm.smtp_from_name }}" placeholder="School Name"></div>
 
           <div class="col-12 d-flex flex-wrap justify-content-between gap-12">
             <a href="/schools/{{ school.id }}/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
@@ -62,8 +63,8 @@
         <form method="post" class="row gy-3">
           {% csrf_token %}
           <input type="hidden" name="action" value="test_email">
-          <div class="col-md-8"><label class="form-label">To Email</label><input type="email" name="to_email" class="form-control" placeholder="you@example.com" required></div>
-          <div class="col-md-4 d-grid"><button type="submit" class="btn btn-outline-primary mt-28">Send Test</button></div>
+          <div class="col-md-8"><label class="form-label text-primary-light text-sm fw-semibold">To Email</label><input type="email" name="to_email" class="form-control radius-8" placeholder="you@example.com" required></div>
+          <div class="col-md-4 d-grid"><button type="submit" class="btn btn-outline-primary-600 radius-8 mt-28">Send Test</button></div>
         </form>
       </div>
     </div>
@@ -83,11 +84,11 @@
             <div class="text-neutral-500 text-sm mt-6">This enables WhatsApp sending once provider integration is wired. For now we will show status and store keys safely in DB.</div>
           </div>
 
-          <div class="col-12"><label class="form-label">Provider</label><select name="whatsapp_provider" class="form-control">{% for value,label in whatsapp_provider_choices %}<option value="{{ value }}" {% if comm.whatsapp_provider == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-          <div class="col-12"><label class="form-label">Sender Label</label><input type="text" name="whatsapp_sender" class="form-control" value="{{ comm.whatsapp_sender }}" placeholder="SchoolFlow / Your brand"></div>
-          <div class="col-12"><label class="form-label">Access Token / API Key</label><input type="password" name="whatsapp_access_token" class="form-control" value="{{ comm.whatsapp_access_token }}"></div>
-          <div class="col-12"><label class="form-label">Phone Number ID</label><input type="text" name="whatsapp_phone_number_id" class="form-control" value="{{ comm.whatsapp_phone_number_id }}"></div>
-          <div class="col-12"><label class="form-label">Webhook Secret</label><input type="password" name="whatsapp_webhook_secret" class="form-control" value="{{ comm.whatsapp_webhook_secret }}"></div>
+          <div class="col-12"><label class="form-label text-primary-light text-sm fw-semibold">Provider</label><select name="whatsapp_provider" class="form-control radius-8">{% for value,label in whatsapp_provider_choices %}<option value="{{ value }}" {% if comm.whatsapp_provider == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label text-primary-light text-sm fw-semibold">Sender Label</label><input type="text" name="whatsapp_sender" class="form-control radius-8" value="{{ comm.whatsapp_sender }}" placeholder="SchoolFlow / Your brand"></div>
+          <div class="col-12"><label class="form-label text-primary-light text-sm fw-semibold">Access Token / API Key</label><input type="password" name="whatsapp_access_token" class="form-control radius-8" placeholder="{% if comm.whatsapp_access_token %}Saved (enter to replace){% else %}Enter token{% endif %}"></div>
+          <div class="col-12"><label class="form-label text-primary-light text-sm fw-semibold">Phone Number ID</label><input type="text" name="whatsapp_phone_number_id" class="form-control radius-8" value="{{ comm.whatsapp_phone_number_id }}"></div>
+          <div class="col-12"><label class="form-label text-primary-light text-sm fw-semibold">Webhook Secret</label><input type="password" name="whatsapp_webhook_secret" class="form-control radius-8" placeholder="{% if comm.whatsapp_webhook_secret %}Saved (enter to replace){% else %}Enter secret{% endif %}"></div>
           <div class="col-12 text-neutral-500 text-sm">
             Notes: For Meta Cloud API you typically need a permanent access token + phone number ID. Keep tokens private; rotate if leaked.
           </div>
@@ -104,4 +105,5 @@
     </div>
   </div>
 </div>
+</section>
 {% endblock %}

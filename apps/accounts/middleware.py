@@ -30,4 +30,3 @@ class IdleLogoutMiddleware:
                 request.session["last_activity_at"] = now
 
         return self.get_response(request)
-

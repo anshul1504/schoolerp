@@ -7,15 +7,18 @@
 {% block page_copy %}Complete admission in guided steps so the form feels shorter, clearer, and easier to fill.{% endblock %}
 
 {% block content %}
-<div class="student-page">
-<div class="platform-panel">
-  <div class="platform-panel__body">
+<div class="student-page students-v3 students-v4">
+<div class="card radius-12 border-neutral-200">
+  <div class="card-body">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
       <div>
         <h6 class="mb-4">Student add form</h6>
         <p class="text-neutral-600 text-sm mb-0">Fill one section at a time. Required fields are marked clearly.</p>
       </div>
-      <span class="badge bg-primary-50 text-primary-600 px-16 py-8 radius-8">Next Admission No: {{ next_admission_no }}</span>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <a class="btn btn-outline-secondary btn-sm" href="/students/">Back to list</a>
+        <span class="badge bg-primary-50 text-primary-600 px-16 py-8 radius-8">Next Admission No: {{ next_admission_no }}</span>
+      </div>
     </div>
 
     <form method="post" enctype="multipart/form-data" class="wizard-shell" id="studentAdmissionWizard">
@@ -39,7 +42,7 @@
           </div>
           <div class="wizard-card__body">
             <div class="row gy-4">
-              {% if request.user.role == 'SUPER_ADMIN' %}
+              {% if can_choose_school %}
                 <div class="col-lg-6"><label class="form-label">School<span class="required-mark">*</span></label><select name="school" class="form-control" required><option value="">Select school</option>{% for school in school_options %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}</select></div>
               {% endif %}
               <div class="col-lg-6"><label class="form-label">Admission number</label><input type="text" name="admission_no" class="form-control" value="{{ prefill.admission_no|default:next_admission_no }}" readonly><div class="form-text">Format: ADM/Academic-Year/Month/Number</div></div>
@@ -402,3 +405,9 @@
   });
 </script>
 {% endblock %}
+
+
+
+
+
+

@@ -2,8 +2,8 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from apps.core.change_log import record_change
-from .models import FeePayment, StudentFeeLedger
 
+from .models import FeePayment, StudentFeeLedger
 
 LEDGER_FIELDS = [
     "school_id",
@@ -29,7 +29,9 @@ def _ledger_pre_save(sender, instance: StudentFeeLedger, **kwargs):
 @receiver(post_save, sender=StudentFeeLedger)
 def _ledger_post_save(sender, instance: StudentFeeLedger, created: bool, **kwargs):
     if created:
-        record_change(entity="fees.StudentFeeLedger", object_id=instance.pk, action="CREATED", changes={})
+        record_change(
+            entity="fees.StudentFeeLedger", object_id=instance.pk, action="CREATED", changes={}
+        )
         return
     before = getattr(instance, "_changelog_before", None) or {}
     after = {field: getattr(instance, field) for field in LEDGER_FIELDS}
@@ -38,12 +40,16 @@ def _ledger_post_save(sender, instance: StudentFeeLedger, created: bool, **kwarg
         if before.get(field) != after.get(field):
             changes[field] = {"before": before.get(field), "after": after.get(field)}
     if changes:
-        record_change(entity="fees.StudentFeeLedger", object_id=instance.pk, action="UPDATED", changes=changes)
+        record_change(
+            entity="fees.StudentFeeLedger", object_id=instance.pk, action="UPDATED", changes=changes
+        )
 
 
 @receiver(post_delete, sender=StudentFeeLedger)
 def _ledger_post_delete(sender, instance: StudentFeeLedger, **kwargs):
-    record_change(entity="fees.StudentFeeLedger", object_id=instance.pk, action="DELETED", changes={})
+    record_change(
+        entity="fees.StudentFeeLedger", object_id=instance.pk, action="DELETED", changes={}
+    )
 
 
 PAYMENT_FIELDS = [
@@ -79,10 +85,11 @@ def _payment_post_save(sender, instance: FeePayment, created: bool, **kwargs):
         if before.get(field) != after.get(field):
             changes[field] = {"before": before.get(field), "after": after.get(field)}
     if changes:
-        record_change(entity="fees.FeePayment", object_id=instance.pk, action="UPDATED", changes=changes)
+        record_change(
+            entity="fees.FeePayment", object_id=instance.pk, action="UPDATED", changes=changes
+        )
 
 
 @receiver(post_delete, sender=FeePayment)
 def _payment_post_delete(sender, instance: FeePayment, **kwargs):
     record_change(entity="fees.FeePayment", object_id=instance.pk, action="DELETED", changes={})
-

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Student Portfolio | {{ student.full_name }}{% endblock %}
+
+{% block page_heading %}Student Career Portfolio{% endblock %}
+{% block breadcrumb_active %}Portfolio{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="row gy-4">
+        <!-- Sidebar: Student Overview -->
+        <div class="col-xl-4">
+            <div class="card radius-16 border-0 shadow-1 overflow-hidden h-100">
+                <div class="card-body p-0">
+                    <div class="p-32 text-center bg-primary-600">
+                        <div class="mb-16 position-relative d-inline-block">
+                            {% if student.avatar %}
+                                <img src="{{ student.avatar.url }}" class="w-120-px h-120-px rounded-circle object-fit-cover border border-white border-4 shadow-sm">
+                            {% else %}
+                                <div class="w-120-px h-120-px bg-white text-primary-600 rounded-circle d-flex align-items-center justify-content-center text-4xl fw-bold border border-white border-4 shadow-sm mx-auto">
+                                    {{ student.full_name|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="text-white mb-4 fw-bold">{{ student.full_name }}</h5>
+                        <p class="text-white text-opacity-75 mb-0 text-sm">Class: {{ student.class_room.name }} | Section: {{ student.section.name }}</p>
+                    </div>
+                    <div class="p-24">
+                        <div class="d-flex flex-column gap-16">
+                            <div class="d-flex align-items-center justify-content-between p-12 radius-8 bg-neutral-50 border border-neutral-100">
+                                <span class="text-xs text-neutral-500 fw-bold text-uppercase">Student ID</span>
+                                <span class="text-sm fw-bold text-primary-light">#{{ student.student_id|default:student.pk }}</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between p-12 radius-8 bg-neutral-50 border border-neutral-100">
+                                <span class="text-xs text-neutral-500 fw-bold text-uppercase">Email</span>
+                                <span class="text-sm fw-bold text-primary-light">{{ student.email|default:"N/A" }}</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between p-12 radius-8 bg-neutral-50 border border-neutral-100">
+                                <span class="text-xs text-neutral-500 fw-bold text-uppercase">Profile Completion</span>
+                                <span class="text-xs fw-bold {% if profile.is_complete %}text-success-600{% else %}text-warning-600{% endif %}">
+                                    {% if profile.is_complete %}COMPLETE{% else %}ACTION REQUIRED{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-32">
+                            <h6 class="text-xs fw-bold text-neutral-400 text-uppercase mb-16">Quick Actions</h6>
+                            <div class="d-grid gap-12">
+                                <a href="{% url 'career_counseling:application_add' %}?student={{ student.pk }}" class="btn btn-sm btn-primary-600 radius-8">
+                                    <i class="ri-add-line me-4"></i> New University App
+                                </a>
+                                <a href="{% url 'career_counseling:session_add' %}?student={{ student.pk }}" class="btn btn-sm btn-outline-primary-600 radius-8">
+                                    <i class="ri-calendar-event-line me-4"></i> Schedule Session
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main: Portfolio Details -->
+        <div class="col-xl-8">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-0 px-24 border-bottom border-neutral-100">
+                    <ul class="nav nav-tabs border-0 gap-24" id="portfolioTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-20 px-0 border-0 text-sm fw-bold" id="bio-tab" data-bs-toggle="tab" data-bs-target="#bio" type="button" role="tab">Interests & Bio</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-20 px-0 border-0 text-sm fw-bold" id="apps-tab" data-bs-toggle="tab" data-bs-target="#apps" type="button" role="tab">Applications ({{ applications.count }})</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-20 px-0 border-0 text-sm fw-bold" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#sessions" type="button" role="tab">Counseling Log ({{ sessions.count }})</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-20 px-0 border-0 text-sm fw-bold" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab">Update Profile</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-24">
+                    <div class="tab-content" id="portfolioTabContent">
+                        <!-- Interests & Bio -->
+                        <div class="tab-pane fade show active" id="bio" role="tabpanel">
+                            <div class="mb-32">
+                                <h6 class="text-md fw-bold mb-12">Career Interests</h6>
+                                <div class="p-16 radius-12 bg-neutral-50 border border-neutral-100">
+                                    <p class="text-sm text-secondary-light mb-0">{{ profile.interests|default:"No career interests defined yet."|linebreaks }}</p>
+                                </div>
+                            </div>
+                            <div class="mb-32">
+                                <h6 class="text-md fw-bold mb-12">Academic Strengths</h6>
+                                <div class="p-16 radius-12 bg-neutral-50 border border-neutral-100">
+                                    <p class="text-sm text-secondary-light mb-0">{{ profile.strengths|default:"Academic strengths not recorded."|linebreaks }}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="text-md fw-bold mb-12">Counselor's Initial Assessment</h6>
+                                <div class="p-16 radius-12 bg-neutral-50 border border-neutral-100">
+                                    <p class="text-sm text-secondary-light mb-0">{{ profile.assessment_notes|default:"No assessment notes available."|linebreaks }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Applications -->
+                        <div class="tab-pane fade" id="apps" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table border-0 mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-12 px-0 text-xs fw-bold text-secondary-light text-uppercase">University</th>
+                                            <th class="py-12 px-0 text-xs fw-bold text-secondary-light text-uppercase text-center">Status</th>
+                                            <th class="py-12 px-0 text-xs fw-bold text-secondary-light text-uppercase text-end">Applied On</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for app in applications %}
+                                        <tr>
+                                            <td class="py-12 px-0">
+                                                <span class="text-sm fw-bold text-primary-light d-block">{{ app.university.name }}</span>
+                                                <span class="text-xxs text-neutral-500">{{ app.course_name }}</span>
+                                            </td>
+                                            <td class="py-12 px-0 text-center">
+                                                <span class="px-8 py-2 radius-pill text-xxs fw-bold
+                                                    {% if app.status == 'ACCEPTED' %}bg-success-100 text-success-600
+                                                    {% elif app.status == 'REJECTED' %}bg-danger-100 text-danger-600
+                                                    {% elif app.status == 'WAITLISTED' %}bg-warning-100 text-warning-600
+                                                    {% else %}bg-primary-100 text-primary-600{% endif %}">
+                                                    {{ app.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td class="py-12 px-0 text-end">
+                                                <span class="text-sm text-secondary-light">{{ app.applied_on|date:"d M, Y" }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="3" class="text-center py-24 text-neutral-400 text-sm">No applications recorded.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Sessions -->
+                        <div class="tab-pane fade" id="sessions" role="tabpanel">
+                            <div class="d-flex flex-column gap-16">
+                                {% for session in sessions %}
+                                <div class="p-16 radius-12 border border-neutral-100 hover-bg-neutral-50 transition-all">
+                                    <div class="d-flex align-items-center justify-content-between mb-8">
+                                        <span class="text-xs fw-bold text-primary-600 bg-primary-50 px-8 py-2 radius-4">{{ session.get_session_type_display }}</span>
+                                        <span class="text-xxs text-neutral-400">{{ session.scheduled_at|date:"d M, Y | h:i A" }}</span>
+                                    </div>
+                                    <h6 class="text-sm mb-4">{{ session.summary|truncatechars:100|default:"No summary provided." }}</h6>
+                                    <div class="d-flex align-items-center justify-content-between mt-12 pt-12 border-top border-neutral-100 border-dashed">
+                                        <span class="text-xxs text-neutral-500">Duration: {{ session.duration_minutes }} mins</span>
+                                        <a href="{% url 'career_counseling:session_edit' session.pk %}" class="text-xs fw-bold text-primary-600">View Details</a>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-center text-neutral-400 py-24 text-sm">No counseling sessions logged.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Edit Profile Form -->
+                        <div class="tab-pane fade" id="edit" role="tabpanel">
+                            <form method="post" class="row gy-3">
+                                {% csrf_token %}
+                                <div class="col-12">
+                                    <label class="form-label text-xs fw-bold text-neutral-500 text-uppercase">Career Interests & Goals</label>
+                                    {{ form.interests }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-xs fw-bold text-neutral-500 text-uppercase">Academic Strengths</label>
+                                    {{ form.strengths }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-xs fw-bold text-neutral-500 text-uppercase">Assessment Notes</label>
+                                    {{ form.assessment_notes }}
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mt-12">
+                                        {{ form.is_complete }}
+                                        <label class="form-check-label text-sm" for="{{ form.is_complete.id_for_label }}">Mark Profile as Complete</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-24">
+                                    <button type="submit" class="btn btn-primary-600 radius-8 px-24">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

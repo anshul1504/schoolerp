@@ -1,5 +1,5 @@
-from django.db import migrations, models
 import django.db.models.deletion
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -12,7 +12,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="AcademicYear",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("name", models.CharField(help_text="Example: 2026-2027", max_length=40)),
                 ("start_date", models.DateField()),
                 ("end_date", models.DateField()),
@@ -20,7 +25,11 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (
                     "school",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="academic_years", to="schools.school"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="academic_years",
+                        to="schools.school",
+                    ),
                 ),
             ],
             options={
@@ -29,4 +38,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

@@ -2,9 +2,9 @@ from decimal import Decimal
 
 from django.shortcuts import render
 
-from apps.core.permissions import permission_required
 from apps.academics.models import AcademicClass
 from apps.attendance.models import AttendanceSession, StudentAttendance
+from apps.core.permissions import permission_required
 from apps.core.tenancy import allowed_school_ids_for_user
 from apps.core.ui import build_layout_context
 from apps.exams.models import Exam, ExamMark
@@ -61,13 +61,23 @@ def reports_overview(request):
     attendance_present = attendance_entries.filter(status="PRESENT").count()
     attendance_total = attendance_entries.count()
     attendance_rate = int((attendance_present / attendance_total) * 100) if attendance_total else 0
-    outstanding = sum(max((ledger.amount_due - ledger.amount_paid), Decimal("0")) for ledger in ledgers)
+    outstanding = sum(
+        max((ledger.amount_due - ledger.amount_paid), Decimal("0")) for ledger in ledgers
+    )
 
     metrics = [
         {"label": "Schools", "value": schools.count(), "copy": "Active school scope"},
         {"label": "Students", "value": total_students, "copy": f"{active_students} active records"},
-        {"label": "Attendance", "value": f"{attendance_rate}%", "copy": f"{attendance_sessions.count()} marked sessions"},
-        {"label": "Outstanding Fees", "value": f"Rs {outstanding}", "copy": f"{payments.count()} collections recorded"},
+        {
+            "label": "Attendance",
+            "value": f"{attendance_rate}%",
+            "copy": f"{attendance_sessions.count()} marked sessions",
+        },
+        {
+            "label": "Outstanding Fees",
+            "value": f"Rs {outstanding}",
+            "copy": f"{payments.count()} collections recorded",
+        },
         {"label": "Exams", "value": exams.count(), "copy": f"{exam_marks.count()} marks entered"},
         {"label": "Classes", "value": classes.count(), "copy": "Academic structure configured"},
     ]

@@ -38,7 +38,7 @@
           {% for row in projects %}
             <tr>
               <td><strong>{{ row.school.name }}</strong><br><span class="text-muted text-sm">{{ row.school.code }}</span></td>
-              <td><span class="status-pill {% if row.project.status == 'DONE' %}status-pill--success{% elif row.project.status == 'BLOCKED' %}status-pill--danger{% elif row.project.status == 'IN_PROGRESS' %}status-pill--warning{% endif %}">{{ row.project.get_status_display }}</span></td>
+              <td><span class="badge {% if row.project.status == 'DONE' %}status-pill--success{% elif row.project.status == 'BLOCKED' %}status-pill--danger{% elif row.project.status == 'IN_PROGRESS' %}status-pill--warning{% endif %}">{{ row.project.get_status_display }}</span></td>
               <td>{{ row.total }}</td>
               <td>{{ row.done }}</td>
               <td>{{ row.done_pct }}%</td>

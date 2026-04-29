@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Career Counseling Dashboard | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Career Counseling Workspace{% endblock %}
+{% block breadcrumb_active %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <!-- Quick Stats Section -->
+    <div class="row gy-4 mb-24">
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card radius-12 border-0 shadow-1 transition-all hover-translate-y-2">
+                <div class="card-body p-24">
+                    <div class="d-flex align-items-center justify-content-between mb-16">
+                        <div class="w-48-px h-48-px bg-primary-100 text-primary-600 rounded-circle d-flex justify-content-center align-items-center">
+                            <i class="ri-user-follow-line text-2xl"></i>
+                        </div>
+                        <span class="text-xs fw-bold text-success-600 bg-success-100 px-8 py-2 radius-pill">Active</span>
+                    </div>
+                    <span class="text-secondary-light fw-medium text-sm">Total Students</span>
+                    <h3 class="mb-0 mt-4 fw-bold">{{ total_students|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card radius-12 border-0 shadow-1 transition-all hover-translate-y-2">
+                <div class="card-body p-24">
+                    <div class="d-flex align-items-center justify-content-between mb-16">
+                        <div class="w-48-px h-48-px bg-success-100 text-success-600 rounded-circle d-flex justify-content-center align-items-center">
+                            <i class="ri-article-line text-2xl"></i>
+                        </div>
+                        <span class="text-xs fw-bold text-primary-600 bg-primary-100 px-8 py-2 radius-pill">Tracked</span>
+                    </div>
+                    <span class="text-secondary-light fw-medium text-sm">Applications Sent</span>
+                    <h3 class="mb-0 mt-4 fw-bold">{{ total_applications|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card radius-12 border-0 shadow-1 transition-all hover-translate-y-2">
+                <div class="card-body p-24">
+                    <div class="d-flex align-items-center justify-content-between mb-16">
+                        <div class="w-48-px h-48-px bg-info-100 text-info-600 rounded-circle d-flex justify-content-center align-items-center">
+                            <i class="ri-chat-voice-line text-2xl"></i>
+                        </div>
+                        <span class="text-xs fw-bold text-info-600 bg-info-100 px-8 py-2 radius-pill">Completed</span>
+                    </div>
+                    <span class="text-secondary-light fw-medium text-sm">Counseled Students</span>
+                    <h3 class="mb-0 mt-4 fw-bold">{{ counseled_students|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card radius-12 border-0 shadow-1 transition-all hover-translate-y-2">
+                <div class="card-body p-24">
+                    <div class="d-flex align-items-center justify-content-between mb-16">
+                        <div class="w-48-px h-48-px bg-warning-100 text-warning-600 rounded-circle d-flex justify-content-center align-items-center">
+                            <i class="ri-award-line text-2xl"></i>
+                        </div>
+                        <span class="text-xs fw-bold text-success-600 bg-success-100 px-8 py-2 radius-pill">Success</span>
+                    </div>
+                    <span class="text-secondary-light fw-medium text-sm">Accepted Offers</span>
+                    <h3 class="mb-0 mt-4 fw-bold">{{ accepted_offers|default:"0" }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row gy-4 mb-24">
+        <!-- Application Status Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100">
+                    <h6 class="mb-0 fw-bold">Application Pipeline</h6>
+                </div>
+                <div class="card-body p-24">
+                    <div id="appStatusChart" style="min-height: 280px;"></div>
+                    <div class="mt-24">
+                        <h6 class="text-xs fw-bold text-neutral-400 text-uppercase mb-12">Action Items</h6>
+                        <div class="d-flex flex-column gap-12">
+                            {% for app in upcoming_deadlines %}
+                            <div class="d-flex align-items-center justify-content-between p-12 radius-8 bg-neutral-50 border border-neutral-100">
+                                <div class="d-flex align-items-center gap-10">
+                                    <div class="w-8-px h-8-px rounded-circle bg-danger-600"></div>
+                                    <div>
+                                        <p class="text-xs fw-bold text-primary-light mb-0">{{ app.university.name }}</p>
+                                        <span class="text-xxs text-neutral-500">{{ app.student.full_name }}</span>
+                                    </div>
+                                </div>
+                                <span class="text-xxs fw-bold text-danger-600">{{ app.deadline|date:"d M" }}</span>
+                            </div>
+                            {% empty %}
+                            <p class="text-xs text-neutral-400">No urgent deadlines.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Career Interests Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100 d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold">Student Career Interests</h6>
+                </div>
+                <div class="card-body p-24">
+                    <div id="interestsChart" style="min-height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row gy-4">
+        <!-- Today's Sessions -->
+        <div class="col-xl-7">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100 d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold">Today's Counseling Sessions</h6>
+                    <a href="{% url 'career_counseling:session_list' %}" class="text-sm fw-bold text-primary-600">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table border-0 mb-0">
+                            <thead class="bg-neutral-100 dark-bg-neutral-800">
+                                <tr>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Student</th>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-center">Time</th>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-center">Mode</th>
+                                    <th class="py-12 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in today_sessions %}
+                                <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                    <td class="py-12 px-24">
+                                        <div class="d-flex align-items-center gap-10">
+                                            <div class="w-32-px h-32-px bg-primary-600 text-white rounded-circle d-flex align-items-center justify-content-center text-xs fw-bold">
+                                                {{ session.student.full_name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <span class="text-sm fw-bold text-primary-light d-block">{{ session.student.full_name }}</span>
+                                                <span class="text-xxs text-neutral-500">{{ session.get_session_type_display }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-12 px-24 text-center">
+                                        <span class="text-sm fw-bold text-primary-600">{{ session.scheduled_at|date:"h:i A" }}</span>
+                                    </td>
+                                    <td class="py-12 px-24 text-center">
+                                        <span class="px-8 py-2 radius-pill text-xxs fw-bold {% if session.mode == 'ONLINE' %}bg-info-100 text-info-600{% else %}bg-neutral-100 text-neutral-600{% endif %}">
+                                            {{ session.get_mode_display }}
+                                        </span>
+                                    </td>
+                                    <td class="py-12 px-24 text-end">
+                                        <div class="dropdown">
+                                            <button class="text-secondary-light" type="button" data-bs-toggle="dropdown">
+                                                <i class="ri-more-2-fill"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end border shadow-sm">
+                                                <li><a class="dropdown-item py-8 px-16 d-flex align-items-center gap-8" href="{% url 'career_counseling:student_detail' session.student.pk %}"><i class="ri-user-line"></i> View Profile</a></li>
+                                                <li><a class="dropdown-item py-8 px-16 d-flex align-items-center gap-8 text-primary-600" href="{% url 'career_counseling:session_edit' session.pk %}"><i class="ri-edit-line"></i> Manage Session</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-48 text-secondary-light">
+                                        No sessions scheduled for today.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Events -->
+        <div class="col-xl-5">
+            <div class="card radius-16 border-0 shadow-1 h-100">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100 d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold">Career Events</h6>
+                    <a href="{% url 'career_counseling:event_list' %}" class="text-sm fw-bold text-primary-600">View All</a>
+                </div>
+                <div class="card-body p-24">
+                    <div class="d-flex flex-column gap-16">
+                        {% for event in upcoming_events %}
+                        <div class="d-flex align-items-start gap-12 p-16 radius-12 border border-neutral-100 hover-bg-neutral-50 transition-all">
+                            <div class="w-48-px h-48-px bg-warning-100 text-warning-600 radius-12 d-flex flex-column align-items-center justify-content-center">
+                                <span class="fw-bold text-sm">{{ event.date|date:"d" }}</span>
+                                <span class="text-xxs text-uppercase">{{ event.date|date:"M" }}</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="text-sm fw-bold mb-4">{{ event.title }}</h6>
+                                <div class="d-flex align-items-center gap-12">
+                                    <span class="text-xxs text-neutral-500"><i class="ri-map-pin-line me-2"></i>{{ event.location|truncatechars:20 }}</span>
+                                    <span class="text-xxs text-neutral-500"><i class="ri-time-line me-2"></i>{{ event.time }}</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'career_counseling:event_detail' event.pk %}" class="btn btn-icon btn-sm btn-outline-neutral-200 radius-8"><i class="ri-arrow-right-s-line"></i></a>
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-secondary-light py-24">No upcoming events.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/js/lib/apexcharts.min.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+
+    // App Status Chart
+    const appStatusOptions = {
+        series: chartData.app_status.map(i => i.count),
+        labels: chartData.app_status.map(i => i.status),
+        chart: { type: 'donut', height: 280, sparkline: { enabled: true } },
+        colors: ['#487FFF', '#45B369', '#FF9F29', '#EF4A00', '#94A3B8'],
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '75%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            formatter: function (w) { return w.globals.seriesTotals.reduce((a, b) => a + b, 0) }
+                        }
+                    }
+                }
+            }
+        },
+        legend: { position: 'bottom', horizontalAlign: 'center' }
+    };
+    new ApexCharts(document.querySelector("#appStatusChart"), appStatusOptions).render();
+
+    // Interests Chart
+    const interestsOptions = {
+        series: [{
+            name: 'Count',
+            data: chartData.interests.map(i => i.count)
+        }],
+        chart: { type: 'bar', height: 350, toolbar: { show: false } },
+        plotOptions: { bar: { borderRadius: 8, columnWidth: '40%', distributed: true } },
+        colors: ['#487FFF', '#45B369', '#FF9F29', '#EF4A00', '#94A3B8', '#7C3AED'],
+        xaxis: { categories: chartData.interests.map(i => i.label), axisBorder: { show: false } },
+        grid: { borderColor: '#F1F5F9', strokeDashArray: 4 }
+    };
+    new ApexCharts(document.querySelector("#interestsChart"), interestsOptions).render();
+});
+</script>
+{% endblock %}

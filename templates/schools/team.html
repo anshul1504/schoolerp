@@ -2,11 +2,11 @@
 
 {% block title %}School Team{% endblock %}
 {% block page_heading %}School Team{% endblock %}
-{% block page_copy %}Invite teachers, receptionist, and staff for this school. Users activate via a one-time link.{% endblock %}
-{% block page_eyebrow %}Schools{% endblock %}
+{% block breadcrumb_active %}Team{% endblock %}
 
 {% block content %}
-  <div class="card mb-4">
+<div class="mt-24">
+  <div class="card mb-24">
     <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
       <div>
         <h6 class="mb-2">{{ school.name }}</h6>
@@ -18,13 +18,17 @@
         <a href="#invite" class="btn btn-primary-600">Invite</a>
       </div>
     </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row gy-4">
+  <div class="row gy-4 mb-24">
     <div class="col-xl-5">
       <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+          <h6 class="text-lg fw-semibold mb-0">Invite Member</h6>
+        </div>
         <div class="card-body p-24" id="invite">
-          <h6 class="mb-4">Invite Member</h6>
           <p class="text-neutral-600 text-sm mb-16">Create an inactive user and generate an activation link (7 days).</p>
           <div class="d-flex flex-wrap gap-10 mb-16">
             <a class="btn btn-sm btn-outline-primary" href="/schools/{{ school.id }}/team/?role=TEACHER#invite">Invite Teacher</a>
@@ -71,12 +75,15 @@
 
     <div class="col-xl-7">
       <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24">
+          <h6 class="text-lg fw-semibold mb-0">Members</h6>
+        </div>
         <div class="card-body p-24">
-          <h6 class="mb-14">Members</h6>
           <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table bordered-table mb-0">
               <thead>
                 <tr>
+                  <th>S.No</th>
                   <th>User</th>
                   <th>Role</th>
                   <th>Status</th>
@@ -85,6 +92,7 @@
               <tbody>
                 {% for u in members %}
                   <tr>
+                    <td class="text-muted text-sm">{{ forloop.counter }}</td>
                     <td>
                       <strong>{{ u.get_full_name|default:u.username }}</strong>
                       <div class="text-neutral-500 text-sm">{{ u.email|default:"-" }}</div>
@@ -99,7 +107,7 @@
                     </td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="3" class="text-neutral-500 text-sm">No members yet.</td></tr>
+                  <tr><td colspan="4" class="text-neutral-500 text-sm">No members yet.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -109,22 +117,22 @@
     </div>
   </div>
 
-  <div class="card mt-4">
-    <div class="card-body p-24">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-12 mb-16">
-        <div>
-          <h6 class="mb-2">Pending Invitations</h6>
-          <div class="text-neutral-600 text-sm">Copy activation links if email sending is not configured.</div>
-        </div>
-        {% if can_view_all_invitations %}
-          <a href="/users/invitations/" class="btn btn-outline-secondary">All Invitations</a>
-        {% endif %}
+  <div class="card">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
+      <div>
+        <h6 class="text-lg fw-semibold mb-0">Pending Invitations</h6>
       </div>
-
+      {% if can_view_all_invitations %}
+        <a href="/users/invitations/" class="btn btn-outline-secondary">All Invitations</a>
+      {% endif %}
+    </div>
+    <div class="card-body p-24">
+      <div class="text-neutral-600 text-sm mb-16">Copy activation links if email sending is not configured.</div>
       <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table bordered-table mb-0">
           <thead>
             <tr>
+              <th>S.No</th>
               <th>User</th>
               <th>Expires</th>
               <th>Status</th>
@@ -135,6 +143,7 @@
           <tbody>
             {% for invite in invitations %}
               <tr>
+                <td class="text-muted text-sm">{{ forloop.counter }}</td>
                 <td>
                   <strong>{{ invite.obj.user.get_full_name|default:invite.obj.user.username }}</strong>
                   <div class="text-neutral-500 text-sm">{{ invite.obj.user.get_role_display }}</div>
@@ -172,13 +181,14 @@
                 </td>
               </tr>
             {% empty %}
-              <tr><td colspan="5" class="text-neutral-500 text-sm">No invitations yet.</td></tr>
+              <tr><td colspan="6" class="text-neutral-500 text-sm">No invitations yet.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
   </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

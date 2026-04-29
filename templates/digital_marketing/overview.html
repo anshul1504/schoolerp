@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Digital Marketing Hub{% endblock %}
+{% block page_heading %}Digital Marketing Command Center{% endblock %}
+{% block breadcrumb_active %}Digital Marketing{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+  <div class="col-12">
+    <div class="row g-3 dm-top-kpi-row">
+      <div class="col-xxl-3 col-lg-6 col-md-6">
+        <a href="{% url 'digital_marketing:social_post_list' %}?status=IN_REVIEW" class="text-decoration-none d-block">
+          <div class="card dm-top-kpi-card dm-top-kpi-card--warning">
+            <div class="card-body">
+              <div class="dm-top-kpi-card__label">Pending Approval</div>
+              <h3 class="dm-top-kpi-card__value">{{ pending_review_posts }}</h3>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xxl-3 col-lg-6 col-md-6">
+        <a href="{% url 'digital_marketing:social_post_list' %}?status=FAILED" class="text-decoration-none d-block">
+          <div class="card dm-top-kpi-card dm-top-kpi-card--danger">
+            <div class="card-body">
+              <div class="dm-top-kpi-card__label">Failed Posts</div>
+              <h3 class="dm-top-kpi-card__value">{{ failed_posts_count }}</h3>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xxl-3 col-lg-6 col-md-6">
+        <a href="{% url 'digital_marketing:lead_list' %}?followup=today" class="text-decoration-none d-block">
+          <div class="card dm-top-kpi-card dm-top-kpi-card--success">
+            <div class="card-body">
+              <div class="dm-top-kpi-card__label">Follow-ups Today</div>
+              <h3 class="dm-top-kpi-card__value">{{ followups_today }}</h3>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xxl-3 col-lg-6 col-md-6">
+        <a href="{% url 'digital_marketing:lead_list' %}?followup=overdue" class="text-decoration-none d-block">
+          <div class="card dm-top-kpi-card dm-top-kpi-card--primary">
+            <div class="card-body">
+              <div class="dm-top-kpi-card__label">Overdue Follow-ups</div>
+              <h3 class="dm-top-kpi-card__value">{{ overdue_followups }}</h3>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="row gy-4">
+      {% include 'includes/dashboard_components.html' with label='Campaigns' value=total_campaigns trend='Active: '|add:active_campaigns|stringformat:'s' icon='ri-megaphone-line' color_class='bg-primary-600' gradient_class='gradient-bg-end-1' %}
+      {% include 'includes/dashboard_components.html' with label='Leads' value=total_leads trend='Converted: '|add:converted_leads|stringformat:'s' icon='ri-user-search-line' color_class='bg-success-600' gradient_class='gradient-bg-end-2' %}
+      {% include 'includes/dashboard_components.html' with label='CPL' value=cpl trend='Budget Utilization: '|add:budget_utilization|stringformat:'s' icon='ri-funds-line' color_class='bg-warning-600' gradient_class='gradient-bg-end-3' %}
+      {% include 'includes/dashboard_components.html' with label='Social Posts' value=total_social_posts trend='Scheduled: '|add:scheduled_social_posts|stringformat:'s' icon='ri-share-forward-line' color_class='bg-info-600' gradient_class='gradient-bg-end-4' %}
+    </div>
+  </div>
+
+  <div class="col-xxl-8">
+    <div class="card h-100 shadow-1 radius-8 border-0">
+      <div class="card-body p-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between px-20 py-16 border-bottom border-neutral-200">
+          <h6 class="text-lg mb-0">Lead & Campaign Analytics</h6>
+        </div>
+        <div class="p-20"><div id="campaignLeadChart"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xxl-4 col-lg-6">
+    <div class="card h-100 shadow-1 radius-8 border-0">
+      <div class="card-body p-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between px-20 py-16 border-bottom border-neutral-200">
+          <h6 class="text-lg mb-0">Operations Shortcuts</h6>
+        </div>
+        <div class="p-20">
+          <div class="row g-3">
+            <div class="col-md-6"><a class="btn btn-outline-secondary w-100" href="{% url 'digital_marketing:campaign_list' %}">Campaigns</a></div>
+            <div class="col-md-6"><a class="btn btn-outline-secondary w-100" href="{% url 'digital_marketing:lead_list' %}">Leads</a></div>
+            <div class="col-md-6"><a class="btn btn-outline-secondary w-100" href="{% url 'digital_marketing:social_post_list' %}">Social Posts</a></div>
+            <div class="col-md-6"><a class="btn btn-outline-secondary w-100" href="{% url 'digital_marketing:website_integration_list' %}">Website Forms</a></div>
+            <div class="col-md-6"><a class="btn btn-outline-secondary w-100" href="{% url 'digital_marketing:seo_list' %}">SEO Tracker</a></div>
+            <div class="col-md-6"><a class="btn btn-primary-600 w-100" href="{% url 'digital_marketing:advanced_report_csv' %}">Download Report</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xxl-4 col-lg-6">
+    <div class="card h-100 shadow-1 radius-8 border-0">
+      <div class="card-body p-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between px-20 py-16 border-bottom border-neutral-200">
+          <h6 class="text-lg mb-0">Lead Stage Split</h6>
+        </div>
+        <div class="p-20"><div id="leadStageChart"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xxl-8 col-lg-12">
+    <div class="card h-100 shadow-1 radius-8 border-0">
+      <div class="card-body p-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between px-20 py-16 border-bottom border-neutral-200">
+          <h6 class="text-lg mb-0">Platform Health</h6>
+        </div>
+        <div class="p-20">
+          <div class="row g-3">
+          {% for p in platform_health %}
+          <div class="col-md-3 col-sm-6">
+            <div class="d-flex align-items-center justify-content-between p-10 radius-8 border border-neutral-100">
+              <span class="text-sm fw-semibold">{{ p.name }}</span>
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'digital_marketing:social_hub' %}">Manage</a>
+            </div>
+          </div>
+          {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const stageData = {{ lead_stage_chart_json|safe }};
+    const campaignData = {{ campaign_lead_chart_json|safe }};
+    if (window.ApexCharts) {
+      new ApexCharts(document.querySelector("#leadStageChart"), { chart: { type: "donut", height: 320 }, labels: stageData.labels, series: stageData.series }).render();
+      new ApexCharts(document.querySelector("#campaignLeadChart"), { chart: { type: "bar", height: 320, toolbar: { show: false } }, xaxis: { categories: campaignData.labels }, series: [{ name: "Leads", data: campaignData.series }] }).render();
+    }
+  })();
+</script>
+{% endblock %}

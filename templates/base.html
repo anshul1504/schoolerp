@@ -1,279 +1,635 @@
-﻿{% load static %}
+{% load static %}
+<!-- meta tags and other links -->
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}School ERP{% endblock %}</title>
-  {% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school and request.user.school.logo %}
-    <link rel="icon" type="image/png" href="{{ request.user.school.logo.url }}">
-  {% elif tenant_school and tenant_school.logo %}
-    <link rel="icon" type="image/png" href="{{ tenant_school.logo.url }}">
-  {% elif platform_settings.favicon %}
-    <link rel="icon" type="image/png" href="{{ platform_settings.favicon.url }}">
-  {% elif platform_settings.logo %}
-    <link rel="icon" type="image/png" href="{{ platform_settings.logo.url }}">
-  {% else %}
-    <link rel="icon" type="image/png" href="{% static 'demo/assets/images/favicon.png' %}" sizes="16x16">
-  {% endif %}
-  <link rel="stylesheet" href="{% static 'demo/assets/css/remixicon.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/apexcharts.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/dataTables.min.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/flatpickr.min.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/full-calendar.css' %}">
-  <link rel="stylesheet" href="{% static 'demo/assets/css/lib/calendar.css' %}">
-  <link rel="stylesheet" href="{% static 'css/demo-style.css' %}?v=20260425-1">
-  <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=20260425-1">
-  <link rel="stylesheet" href="{% static 'css/schoolflow.css' %}?v=20260425-1">
-  <link rel="stylesheet" href="{% static 'css/shell.css' %}?v=20260425-1">
-  <style>
-    :root {
-      --sf-theme-primary: {% if platform_settings.theme_primary %}{{ platform_settings.theme_primary }}{% else %}#0288d1{% endif %};
-      --sf-theme-secondary: {% if platform_settings.theme_secondary %}{{ platform_settings.theme_secondary }}{% else %}#3f51b5{% endif %};
-    }
-  </style>
-  {% block extra_css %}{% endblock %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title -->
+    <title>{% block title %}School ERP{% endblock %}</title>
+    {% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school and request.user.school.logo %}
+      <link rel="icon" type="image/png" href="{{ request.user.school.logo.url }}">
+    {% elif tenant_school and tenant_school.logo %}
+      <link rel="icon" type="image/png" href="{{ tenant_school.logo.url }}">
+    {% elif platform_settings.favicon %}
+      <link rel="icon" type="image/png" href="{{ platform_settings.favicon.url }}">
+    {% else %}
+      <link rel="icon" type="image/png" href="{% static 'assets/images/favicon.png' %}" sizes="16x16">
+    {% endif %}
+
+    <!-- remix icon font css  -->
+    <link rel="stylesheet" href="{% static 'assets/css/remixicon.css' %}">
+    <!-- BootStrap css -->
+    <link rel="stylesheet" href="{% static 'assets/css/lib/bootstrap.min.css' %}">
+    <!-- Apex Chart css -->
+    <link rel="stylesheet" href="{% static 'assets/css/lib/apexcharts.css' %}">
+    <!-- Data Table css -->
+    <link rel="stylesheet" href="{% static 'assets/css/lib/dataTables.min.css' %}">
+    <!-- Date picker css -->
+    <link rel="stylesheet" href="{% static 'assets/css/lib/flatpickr.min.css' %}">
+    <!-- Calendar css -->
+    <link rel="stylesheet" href="{% static 'assets/css/lib/full-calendar.css' %}">
+    <!-- calendar -->
+    <link rel="stylesheet" href="{% static 'assets/css/lib/calendar.css' %}">
+    <!-- main css -->
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
+
 <body>
-  <div class="body-overlay"></div>
-  <aside class="sidebar" aria-label="Primary navigation">
-    <button type="button" class="sidebar-close-btn shell-sidebar-close-btn" aria-label="Close sidebar">
-      <iconify-icon icon="radix-icons:cross-2"></iconify-icon>
+
+    <!-- Theme Customization Structure Start -->
+    <div class="body-overlay"></div>
+
+    <button type="button"
+        class="theme-customization__button w-48-px h-48-px bg-primary-600 text-white rounded-circle d-flex justify-content-center align-items-center position-fixed end-0 bottom-0 mb-40 me-40 text-2xxl bg-hover-primary-700"
+        aria-label="Theme Customization Button">
+        <i class="ri-settings-3-line animate-spin"></i>
     </button>
-    <div class="sidebar-shell">
-      <div class="sidebar-logo d-flex align-items-center justify-content-between">
-        <a href="{% url 'dashboard' %}" class="brand-link">
-          <span class="brand-icon">
-            {% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school and request.user.school.logo %}
-              <img src="{{ request.user.school.logo.url }}" alt="{{ request.user.school.name }}">
-            {% elif tenant_school and tenant_school.logo %}
-              <img src="{{ tenant_school.logo.url }}" alt="{{ tenant_school.name }}">
-            {% elif platform_settings.logo %}
-              <img src="{{ platform_settings.logo.url }}" alt="{{ platform_settings.product_name|default:'SchoolFlow' }}">
-            {% else %}
-              <i class="ri-school-line"></i>
-            {% endif %}
-          </span>
-          <span class="brand-copy">
-            <span class="brand-copy__title" title="{% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school %}{{ request.user.school.name }}{% elif tenant_school %}{{ tenant_school.name }}{% else %}{{ platform_settings.product_name|default:"SchoolFlow" }}{% endif %}">
-              {% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school %}
-                {{ request.user.school.name }}
-              {% elif tenant_school %}
-                {{ tenant_school.name }}
-              {% else %}
-                {{ platform_settings.product_name|default:"SchoolFlow" }}
-              {% endif %}
-            </span>
-            <span class="brand-copy__meta">
-              {% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school %}
-                School Workspace
-              {% else %}
-                {{ platform_settings.product_meta|default:"A product by The Webfix" }}
-              {% endif %}
-            </span>
-          </span>
-        </a>
-      </div>
-
-      <div class="sidebar-menu-area">
-        <ul class="sidebar-menu" id="sidebar-menu">
-          {% for item in navigation %}
-            <li class="sidebar-item {% if item.key == 'students' %}has-submenu{% endif %} {% if item.key == 'frontoffice' %}frontoffice-menu{% endif %} {% if item.active %}submenu-open{% endif %}" data-sidebar-item="{{ item.key }}">
-              <div class="sidebar-item-row">
-                <a href="{{ item.url }}" class="{% if item.active %}active-page{% endif %}" data-label="{{ item.label }}" title="{{ item.label }}">
-                  <i class="{{ item.icon }}"></i>
-                  <span>{{ item.label }}</span>
-                </a>
-                {% if item.key == 'students' %}
-                  <button type="button" class="sidebar-dropdown-toggle" aria-label="Toggle {{ item.label }} menu" aria-expanded="{% if item.active %}true{% else %}false{% endif %}">
-                    <i class="ri-arrow-down-s-line"></i>
-                  </button>
-                {% endif %}
-              </div>
-              {% if item.key == 'students' %}
-                <div class="sidebar-subitem">
-                  <a href="/students/" class="{% if request.path == '/students/' %}active-page{% endif %}"><i class="ri-eye-line"></i><span>View Students</span></a>
-                  {% if ui_capabilities.can_manage_students %}
-                    <a href="/students/create/" class="{% if request.path|slice:':16' == '/students/create' %}active-page{% endif %}"><i class="ri-user-add-line"></i><span>Add Student</span></a>
-                    <a href="/students/import/" class="{% if request.path|slice:':16' == '/students/import' %}active-page{% endif %}"><i class="ri-file-upload-line"></i><span>Import</span></a>
-                  {% endif %}
-                </div>
-              {% endif %}
-              {% if item.key == 'frontoffice' %}
-                <div class="sidebar-subitem">
-                  {% with path=request.path %}
-                    <a href="/frontoffice/" class="{% if path == '/frontoffice/' or path == '/dashboard/' %}active-page{% endif %}"><i class="ri-dashboard-line"></i><span>Reception Desk</span></a>
-                    <a href="/frontoffice/search/" class="{% if path|slice:':19' == '/frontoffice/search' %}active-page{% endif %}"><i class="ri-search-line"></i><span>Quick Search</span></a>
-                    <a href="/frontoffice/enquiries/" class="{% if path|slice:':22' == '/frontoffice/enquiries' %}active-page{% endif %}"><i class="ri-user-search-line"></i><span>Enquiries</span></a>
-                    <a href="/frontoffice/follow-ups/" class="{% if path|slice:':23' == '/frontoffice/follow-ups' %}active-page{% endif %}"><i class="ri-phone-line"></i><span>Follow-ups</span></a>
-                    <a href="/frontoffice/calls/" class="{% if path|slice:':18' == '/frontoffice/calls' %}active-page{% endif %}"><i class="ri-phone-line"></i><span>Calls</span></a>
-                    <a href="/frontoffice/visitors/" class="{% if path|slice:':21' == '/frontoffice/visitors' %}active-page{% endif %}"><i class="ri-walk-line"></i><span>Visitors</span></a>
-                    <a href="/frontoffice/meetings/" class="{% if path|slice:':21' == '/frontoffice/meetings' %}active-page{% endif %}"><i class="ri-calendar-event-line"></i><span>Meetings</span></a>
-                    <a href="/admissions/" class="{% if path|slice:':11' == '/admissions' %}active-page{% endif %}"><i class="ri-file-list-2-line"></i><span>Admissions</span></a>
-                    <a href="/students/" class="{% if path|slice:':10' == '/students/' %}active-page{% endif %}"><i class="ri-graduation-cap-line"></i><span>Students</span></a>
-                    <a href="/frontoffice/messages/" class="{% if path|slice:':21' == '/frontoffice/messages' %}active-page{% endif %}"><i class="ri-send-plane-line"></i><span>Messages</span></a>
-                    <a href="/frontoffice/document-reminders/" class="{% if path|slice:':31' == '/frontoffice/document-reminders' %}active-page{% endif %}"><i class="ri-folder-warning-line"></i><span>Documents</span></a>
-                    <a href="/frontoffice/reports/daily/" class="{% if path|slice:':26' == '/frontoffice/reports/daily' %}active-page{% endif %}"><i class="ri-file-chart-line"></i><span>Daily Report</span></a>
-                  {% endwith %}
-                </div>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="sidebar-footer__avatar">
-          {% if request.user.avatar %}
-            <img src="{{ request.user.avatar.url }}" alt="Avatar">
-          {% else %}
-            {% if request.user.get_full_name %}
-              {{ request.user.get_full_name|slice:":1"|upper }}
-            {% else %}
-              {{ request.user.username|slice:":1"|upper }}
-            {% endif %}
-          {% endif %}
-        </div>
-        <div class="sidebar-footer__meta">
-          <div class="sidebar-footer__name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="sidebar-footer__school">{% if request.user.school %}{{ request.user.school.name }}{% else %}Platform Access{% endif %}</div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="dashboard-main">
-    <div class="navbar-header">
-      <div class="topbar-shell">
-        <div class="topbar-left">
-          <button type="button" class="shell-icon-btn shell-sidebar-mobile-toggle d-xl-none" aria-label="Open sidebar">
-            <iconify-icon icon="heroicons:bars-3-solid" class="icon"></iconify-icon>
-          </button>
-          <button type="button" class="shell-icon-btn shell-sidebar-toggle d-none d-xl-inline-flex" aria-label="Toggle sidebar">
-            <i class="ri-menu-fold-line"></i>
-          </button>
-          <div class="topbar-copy">
-            <h6>{% block page_heading %}Dashboard{% endblock %}</h6>
-            <p>{% block page_copy %}Centralized role-based school dashboard.{% endblock %}</p>
-          </div>
-        </div>
-
-        <div class="topbar-center d-none d-lg-flex">
-          <div class="shell-search" role="search">
-            <i class="ri-search-line"></i>
-            <input type="search" placeholder="{% if request.user.role == 'RECEPTIONIST' %}Search students, enquiries, phone...{% elif request.user.role == 'SCHOOL_OWNER' %}Search students, admissions, fees...{% elif request.user.role == 'ADMIN' %}Search students, admissions, fees...{% else %}Search students, users, receipts...{% endif %}" aria-label="Search">
-          </div>
-        </div>
-
-        <div class="topbar-right">
-          <div class="dropdown">
-            <button type="button" class="topbar-user-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open user menu">
-              <span class="topbar-user-btn__avatar">
-                {% if request.user.avatar %}
-                  <img src="{{ request.user.avatar.url }}" alt="">
-                {% else %}
-                  {% if request.user.get_full_name %}
-                    {{ request.user.get_full_name|slice:":1"|upper }}
-                  {% else %}
-                    {{ request.user.username|slice:":1"|upper }}
-                  {% endif %}
-                {% endif %}
-              </span>
-              <span class="topbar-user-btn__meta d-none d-xxl-flex">
-                <span>{{ request.user.get_full_name|default:request.user.username }}</span>
-                <small>{{ role_config.label }}</small>
-              </span>
-              <i class="ri-arrow-down-s-line d-none d-sm-inline-flex"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end topbar-dropdown">
-              <li><span class="dropdown-item d-flex align-items-center gap-2"><i class="ri-shield-user-line"></i>{{ role_config.label }}</span></li>
-              <li><span class="dropdown-item d-flex align-items-center gap-2"><i class="ri-user-3-line"></i>{{ request.user.get_full_name|default:request.user.username }}</span></li>
-              <li><span class="dropdown-item d-flex align-items-center gap-2"><i class="ri-building-line"></i>{% if request.user.school %}{{ request.user.school.name }}{% else %}Platform Access{% endif %}</span></li>
-              <li><a href="/profile/" class="dropdown-item d-flex align-items-center gap-2"><i class="ri-user-settings-line"></i>My Profile</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a href="{% url 'logout' %}" class="dropdown-item d-flex align-items-center gap-2"><i class="ri-logout-box-r-line"></i>Log Out</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dashboard-main-body">
-      <div class="shell-page-intro">
-        <div>
-          <span class="shell-page-intro__label">{% block page_eyebrow %}Control Panel{% endblock %}</span>
-          <h6>{% block page_intro_heading %}Workspace Overview{% endblock %}</h6>
-          <p>{{ role_config.welcome }}</p>
-        </div>
-        <div class="shell-page-intro__actions">
-          <span><i class="ri-shield-check-line"></i>{{ role_config.label }}</span>
-        </div>
-      </div>
-
-      {% if request.session.impersonate_original_user_id_v1 %}
-        <div class="mb-24">
-          <div class="alert alert-warning d-flex align-items-center justify-content-between gap-2 flex-wrap">
+    <div class="theme-customization-sidebar w-100 bg-base h-100vh overflow-y-auto position-fixed end-0 top-0">
+        <div class="d-flex align-items-center gap-3 py-16 px-24 justify-content-between border-bottom">
             <div>
-              <strong>Impersonation active:</strong> You are logged in as <strong>{{ request.user.username }}</strong>.
+                <h6 class="text-sm dark:text-white">Theme Settings</h6>
+                <p class="text-xs mb-0 text-neutral-500 dark:text-neutral-200">Customize and preview instantly</p>
             </div>
-            <form method="post" action="/users/impersonate/stop/" class="m-0">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-dark">Stop impersonation</button>
-            </form>
-          </div>
+            <button data-slot="button"
+                class="theme-customization-sidebar__close text-neutral-900 bg-transparent text-hover-primary-600 d-flex text-xl">
+                <i class="ri-close-fill"></i>
+            </button>
         </div>
-      {% endif %}
 
-      {% if platform_announcement %}
-        <div class="mb-24">
-          <div class="alert {% if platform_announcement.severity == 'DANGER' %}alert-danger{% elif platform_announcement.severity == 'WARNING' %}alert-warning{% elif platform_announcement.severity == 'SUCCESS' %}alert-success{% else %}alert-info{% endif %}">
-            <strong>{{ platform_announcement.title }}</strong>
-            <div class="mt-1">{{ platform_announcement.message }}</div>
-          </div>
-        </div>
-      {% endif %}
+        <div class="d-flex flex-column gap-48 p-24 overflow-y-auto flex-grow-1">
 
-      {% if messages %}
-        <div class="mb-24">
-          {% for message in messages %}
-            <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'info' %}alert-info{% elif message.tags == 'warning' %}alert-warning{% else %}alert-danger{% endif %} mb-2">
-              {{ message }}
+            <div class="theme-setting-item">
+                <h6 class="fw-medium text-primary-light text-md mb-3">Theme Mode</h6>
+                <div class="d-grid grid-cols-3 gap-3 dark-light-mode">
+                    <button type="button"
+                        class="theme-btn theme-setting-item__btn d-flex align-items-center justify-content-center h-64-px rounded-3 text-xl active"
+                        data-theme="light" aria-label="light">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button type="button"
+                        class="theme-btn theme-setting-item__btn d-flex align-items-center justify-content-center h-64-px rounded-3 text-xl"
+                        data-theme="dark" aria-label="dark">
+                        <i class="ri-moon-line"></i>
+                    </button>
+                    <button type="button"
+                        class="theme-btn theme-setting-item__btn d-flex align-items-center justify-content-center h-64-px rounded-3 text-xl"
+                        data-theme="system" aria-label="system">
+                        <i class="ri-computer-line"></i>
+                    </button>
+                </div>
             </div>
-          {% endfor %}
+
+            <div class="theme-setting-item">
+                <h6 class="fw-medium text-primary-light text-md mb-3">Color Schema</h6>
+                <div class="d-grid grid-cols-3 gap-3">
+                    <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="base" aria-label="Base">
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #475569;"></span>
+                        <span class="fw-medium mt-1" style="color: #475569;">Slate</span>
+                    </button>
+                    <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="blue" aria-label="Blue">
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #487FFF;"></span>
+                        <span class="fw-medium mt-1" style="color: #487FFF;">Blue</span>
+                    </button>
+                    <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="green" aria-label="Green">
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #10b981;"></span>
+                        <span class="fw-medium mt-1" style="color: #10b981;">Green</span>
+                    </button>
+                    <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="purple" aria-label="Purple">
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #8b5cf6;"></span>
+                        <span class="fw-medium mt-1" style="color: #8b5cf6;">Purple</span>
+                    </button>
+                    <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="orange" aria-label="Orange">
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #f59e0b;"></span>
+                        <span class="fw-medium mt-1" style="color: #f59e0b;">Orange</span>
+                    </button>
+                </div>
+            </div>
+
         </div>
-      {% endif %}
-
-      {% if request.user.is_authenticated and request.user.role == "SUPER_ADMIN" and current_section == "platform" %}
-        {% include "platform/_superadmin_nav.html" %}
-      {% endif %}
-
-      {% block content %}{% endblock %}
     </div>
+    <!-- Theme Customization Structure End -->
 
-    <footer class="d-footer">
-      <div class="footer-shell">
-        <p>&copy; 2026 {{ platform_settings.product_name|default:"SchoolFlow" }}. All rights reserved.</p>
-        <div class="footer-meta">
-          <span class="footer-pill">{{ role_config.label }}</span>
-          <a href="/profile/">Profile</a>
-          <a href="{% url 'logout' %}">Logout</a>
+    <div class="overlay bg-black bg-opacity-50 w-100 h-100 position-fixed z-9 visibility-hidden opacity-0 duration-300">
+    </div>
+    <aside class="sidebar">
+        <button type="button" class="sidebar-close-btn">
+            <iconify-icon icon="radix-icons:cross-2"></iconify-icon>
+        </button>
+        <div class="">
+            <div class="sidebar-logo d-flex align-items-center justify-content-between">
+                <a href="{% url 'dashboard' %}" class="d-flex align-items-center gap-2">
+                    {% if request.user.is_authenticated and request.user.role != "SUPER_ADMIN" and request.user.school and request.user.school.logo %}
+                      <img src="{{ request.user.school.logo.url }}" alt="site logo" class="logo-icon">
+                      <div class="logo-text d-flex flex-column">
+                        <span class="school-name text-primary-light">{{ request.user.school.name }}</span>
+                        <span class="text-xs text-secondary-light">School ERP</span>
+                      </div>
+                    {% elif tenant_school and tenant_school.logo %}
+                      <img src="{{ tenant_school.logo.url }}" alt="site logo" class="logo-icon">
+                      <div class="logo-text d-flex flex-column">
+                        <span class="school-name text-primary-light">{{ tenant_school.name }}</span>
+                        <span class="text-xs text-secondary-light">School ERP</span>
+                      </div>
+                    {% elif platform_settings.logo %}
+                      <img src="{{ platform_settings.logo.url }}" alt="site logo" class="logo-icon w-auto" style="max-height: 40px; max-width: 40px; object-fit: contain;">
+                      <div class="logo-text d-flex flex-column">
+                        <span class="school-name text-primary-light">{{ platform_settings.product_name|default:"SchoolFlow" }}</span>
+                        <span class="text-xs text-secondary-light">{{ platform_settings.product_meta|default:"School ERP" }}</span>
+                      </div>
+                    {% else %}
+                      <img src="{% static 'assets/images/logo-icon.png' %}" alt="site logo" class="logo-icon">
+                      <div class="logo-text d-flex flex-column">
+                        <span class="school-name text-primary-light">{{ platform_settings.product_name|default:"SchoolFlow" }}</span>
+                        <span class="text-xs text-secondary-light">{{ platform_settings.product_meta|default:"School ERP" }}</span>
+                      </div>
+                    {% endif %}
+                </a>
+                <button type="button" class="sidebar-toggle text-neutral-500 d-flex">
+                    <i class="ri-contract-left-line"></i>
+                </button>
+            </div>
         </div>
-      </div>
-    </footer>
-  </main>
 
-  <script src="{% static 'demo/assets/js/lib/jquery-3.7.1.min.js' %}"></script>
-  <script src="{% static 'demo/assets/js/lib/bootstrap.bundle.min.js' %}"></script>
-  <script src="{% static 'demo/assets/js/lib/apexcharts.min.js' %}"></script>
-  <script src="{% static 'demo/assets/js/lib/iconify-icon.min.js' %}"></script>
-  <script src="{% static 'demo/assets/js/lib/dataTables.min.js' %}"></script>
-  <script src="{% static 'demo/assets/js/lib/jquery-ui.min.js' %}"></script>
-  <script src="{% static 'demo/assets/js/app.js' %}"></script>
-  <script src="{% static 'js/schoolflow.js' %}?v=20260424-1"></script>
-  {% block extra_js %}{% endblock %}
+        <div class="sidebar-menu-area">
+            <ul class="sidebar-menu" id="sidebar-menu">
+                {% if request.user.role == "SUPER_ADMIN" %}
+                    <li class="sidebar-menu-group-title">PLATFORM CONTROL</li>
+                    <li>
+                        <a href="{% url 'digital_marketing:overview' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'overview' %}class="active"{% endif %}>
+                            <i class="ri-dashboard-3-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/schools/" {% if current_section == 'schools' %}class="active"{% endif %}>
+                            <i class="ri-school-line"></i>
+                            <span>Institutions</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-group-title">GOVERNANCE</li>
+                    <li>
+                        <a href="/users/" {% if current_section == 'users' %}class="active"{% endif %}>
+                            <i class="ri-shield-user-line"></i>
+                            <span>Users & Roles</span>
+                        </a>
+                    </li>
+                {% elif request.user.role == 'RESEARCH_COORDINATOR' %}
+                    <li class="sidebar-menu-group-title">RESEARCH</li>
+                    <li>
+                        <a href="{% url 'research:overview' %}" {% if current_section == 'research' and request.resolver_match.url_name == 'overview' %}class="active"{% endif %}>
+                            <i class="ri-dashboard-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-group-title">PROJECTS</li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if current_section == 'research' and 'project' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-microscope-line"></i>
+                            <span>Research Projects</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'research:project_list' %}" {% if request.resolver_match.url_name == 'project_list' %}class="active"{% endif %}><i class="ri-circle-fill circle-icon w-auto"></i> All Projects</a></li>
+                            <li><a href="{% url 'research:project_create' %}" {% if request.resolver_match.url_name == 'project_create' %}class="active"{% endif %}><i class="ri-circle-fill circle-icon w-auto"></i> Add New Project</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'research:grant_list' %}" {% if request.resolver_match.url_name == 'grant_list' %}class="active"{% endif %}>
+                            <i class="ri-hand-coin-line"></i>
+                            <span>Grants &amp; Funding</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'research:paper_list' %}" {% if request.resolver_match.url_name == 'paper_list' %}class="active"{% endif %}>
+                            <i class="ri-article-line"></i>
+                            <span>Publications</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-group-title">COMPLIANCE</li>
+                    <li>
+                        <a href="{% url 'research:ethics_queue' %}" {% if request.resolver_match.url_name == 'ethics_queue' %}class="active"{% endif %}>
+                            <i class="ri-shield-check-line"></i>
+                            <span>Ethics Review</span>
+                        </a>
+                    </li>
+                {% elif request.user.role == 'CAREER_COUNSELOR' %}
+                    <li class="sidebar-menu-group-title">CAREER SERVICES</li>
+                    <li>
+                        <a href="{% url 'career_counseling:overview' %}" {% if current_section == 'career_counseling' and request.resolver_match.url_name == 'overview' %}class="active"{% endif %}>
+                            <i class="ri-dashboard-fill"></i>
+                            <span>Counseling Hub</span>
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if current_section == 'career_counseling' and 'student' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-user-star-line"></i>
+                            <span>Student Portfolio</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'career_counseling:student_list' %}"><i class="ri-circle-fill circle-icon w-auto"></i> Student List</a></li>
+                        </ul>
+                    </li>
+                {% elif request.user.role == 'ALUMNI_MANAGER' %}
+                    <li class="sidebar-menu-group-title">ALUMNI RELATIONS</li>
+                    <li>
+                        <a href="{% url 'alumni:dashboard' %}" {% if request.resolver_match.view_name == 'alumni:dashboard' %}class="active"{% endif %}>
+                            <i class="ri-dashboard-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if 'alumni_list' in request.resolver_match.view_name or 'alumni_detail' in request.resolver_match.view_name or 'alumni_edit' in request.resolver_match.view_name or 'alumni_create' in request.resolver_match.view_name %}active{% endif %}">
+                            <i class="ri-group-line"></i>
+                            <span>Members & Records</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'alumni:alumni_list' %}" class="{% if 'alumni_list' in request.resolver_match.view_name or 'alumni_detail' in request.resolver_match.view_name or 'alumni_edit' in request.resolver_match.view_name %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Alumni Directory</a></li>
+                            <li><a href="{% url 'alumni:alumni_create' %}" class="{% if request.resolver_match.view_name == 'alumni:alumni_create' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Add New Member</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if 'event' in request.resolver_match.view_name or 'story' in request.resolver_match.view_name %}active{% endif %}">
+                            <i class="ri-heart-pulse-line"></i>
+                            <span>Engagement Hub</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'alumni:event_list' %}" class="{% if 'event' in request.resolver_match.view_name %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Events & Reunions</a></li>
+                            <li><a href="{% url 'alumni:success_stories' %}" class="{% if 'story' in request.resolver_match.view_name %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Success Stories</a></li>
+                        </ul>
+                    </li>
+                {% elif request.user.role == 'DIGITAL_MARKETING_MANAGER' %}
+                    <li class="sidebar-menu-group-title">DIGITAL MARKETING</li>
+                    <li>
+                        <a href="{% url 'digital_marketing:overview' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'overview' %}class="active"{% endif %}>
+                            <i class="ri-line-chart-line"></i>
+                            <span>Performance Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:campaign_list' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'campaign_list' %}class="active"{% endif %}>
+                            <i class="ri-megaphone-line"></i>
+                            <span>Campaigns</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:lead_list' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'lead_list' %}class="active"{% endif %}>
+                            <i class="ri-user-search-line"></i>
+                            <span>Lead Enquiries</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:social_hub' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'social_hub' %}class="active"{% endif %}>
+                            <i class="ri-share-forward-line"></i>
+                            <span>Social Hub</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:social_post_list' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'social_post_list' %}class="active"{% endif %}>
+                            <i class="ri-calendar-schedule-line"></i>
+                            <span>Social Posts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:social_calendar' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'social_calendar' %}class="active"{% endif %}>
+                            <i class="ri-calendar-2-line"></i>
+                            <span>Social Calendar</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:website_integration_list' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'website_integration_list' %}class="active"{% endif %}>
+                            <i class="ri-links-line"></i>
+                            <span>Website Integrations</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:seo_list' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'seo_list' %}class="active"{% endif %}>
+                            <i class="ri-search-eye-line"></i>
+                            <span>SEO Tracker</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:advanced_report_csv' %}">
+                            <i class="ri-file-chart-line"></i>
+                            <span>Download Report</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:roi_analytics' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'roi_analytics' %}class="active"{% endif %}>
+                            <i class="ri-bar-chart-box-line"></i>
+                            <span>ROI Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:report_schedule_list' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'report_schedule_list' %}class="active"{% endif %}>
+                            <i class="ri-time-line"></i>
+                            <span>Report Schedules</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'digital_marketing:integration_settings' %}" {% if request.resolver_match.namespace == 'digital_marketing' and request.resolver_match.url_name == 'integration_settings' %}class="active"{% endif %}>
+                            <i class="ri-settings-3-line"></i>
+                            <span>Integration Settings</span>
+                        </a>
+                    </li>
+                {% elif request.user.role == 'SECURITY_OFFICER' %}
+                    <li class="sidebar-menu-group-title">SECURITY OFFICE</li>
+                    <li>
+                        <a href="{% url 'security_office:overview' %}" {% if request.resolver_match.namespace == 'security_office' and request.resolver_match.url_name == 'overview' %}class="active"{% endif %}>
+                            <i class="ri-dashboard-fill"></i>
+                            <span>Security Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'security_office:incident_list' %}" {% if request.resolver_match.namespace == 'security_office' and 'incident' in request.resolver_match.url_name %}class="active"{% endif %}>
+                            <i class="ri-alarm-warning-line"></i>
+                            <span>Incidents &amp; Reports</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-group-title">ENTRY &amp; EXIT</li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if request.resolver_match.namespace == 'security_office' and 'gate_pass' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-pass-valid-line"></i>
+                            <span>Gate Passes</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'security_office:gate_pass_list' %}" class="{% if request.resolver_match.url_name == 'gate_pass_list' or request.resolver_match.url_name == 'gate_pass_edit' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> All Gate Passes</a></li>
+                            <li><a href="{% url 'security_office:gate_pass_create' %}" class="{% if request.resolver_match.url_name == 'gate_pass_create' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Issue Gate Pass</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if request.resolver_match.namespace == 'security_office' and 'visitor' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-user-location-line"></i>
+                            <span>Visitor Register</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'security_office:visitor_list' %}" class="{% if request.resolver_match.url_name == 'visitor_list' or request.resolver_match.url_name == 'visitor_edit' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Visitor Logs</a></li>
+                            <li><a href="{% url 'security_office:visitor_create' %}" class="{% if request.resolver_match.url_name == 'visitor_create' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Log Visitor</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="sidebar-menu-group-title">GUARDS &amp; PATROLS</li>
+                    <li>
+                        <a href="{% url 'security_office:roster_list' %}" {% if request.resolver_match.namespace == 'security_office' and 'roster' in request.resolver_match.url_name %}class="active"{% endif %}>
+                            <i class="ri-shield-user-line"></i>
+                            <span>Guard Roster</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'security_office:patrol_log_list' %}" {% if request.resolver_match.namespace == 'security_office' and 'patrol_log' in request.resolver_match.url_name %}class="active"{% endif %}>
+                            <i class="ri-map-pin-time-line"></i>
+                            <span>Patrol Logs</span>
+                        </a>
+                    </li>
+                {% elif request.user.role == 'COMPLIANCE_OFFICER' %}
+                    <li class="sidebar-menu-group-title">COMPLIANCE OFFICE</li>
+                    <li>
+                        <a href="{% url 'compliance_office:overview' %}" {% if request.resolver_match.namespace == 'compliance_office' and request.resolver_match.url_name == 'overview' %}class="active"{% endif %}>
+                            <i class="ri-dashboard-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if request.resolver_match.namespace == 'compliance_office' and 'policy' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-file-shield-2-line"></i>
+                            <span>Policies &amp; SOPs</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'compliance_office:policy_list' %}" class="{% if request.resolver_match.url_name == 'policy_list' or request.resolver_match.url_name == 'policy_edit' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Policy Directory</a></li>
+                            <li><a href="{% url 'compliance_office:policy_create' %}" class="{% if request.resolver_match.url_name == 'policy_create' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Add Policy</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if request.resolver_match.namespace == 'compliance_office' and 'inspection' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-search-eye-line"></i>
+                            <span>Inspections &amp; Audits</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'compliance_office:inspection_list' %}" class="{% if request.resolver_match.url_name == 'inspection_list' or request.resolver_match.url_name == 'inspection_edit' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Audit Records</a></li>
+                            <li><a href="{% url 'compliance_office:inspection_create' %}" class="{% if request.resolver_match.url_name == 'inspection_create' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Log Inspection</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="{% if request.resolver_match.namespace == 'compliance_office' and 'certification' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="ri-medal-line"></i>
+                            <span>School Certifications</span>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'compliance_office:certification_list' %}" class="{% if request.resolver_match.url_name == 'certification_list' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Certifications List</a></li>
+                            <li><a href="{% url 'compliance_office:certification_create' %}" class="{% if request.resolver_match.url_name == 'certification_create' %}active-page{% endif %}"><i class="ri-circle-fill circle-icon w-auto"></i> Add Certification</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="{% url 'compliance_office:student_list' %}" {% if request.resolver_match.namespace == 'compliance_office' and 'student' in request.resolver_match.url_name %}class="active"{% endif %}>
+                            <i class="ri-user-shield-line"></i>
+                            <span>Student Compliance</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="sidebar-menu-group-title">MAIN MENU</li>
+                    <li>
+                        <a href="{% url 'dashboard' %}" {% if current_section == 'dashboard' %}class="active"{% endif %}>
+                            <i class="ri-home-4-line"></i>
+                            <span>Dashboard </span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-group-title">ACADEMIC MODULES</li>
+                    {% for item in navigation %}
+                        {% if item.key != 'dashboard' %}
+                            <li class="dropdown">
+                                <a href="{{ item.url }}" {% if item.active %}class="active"{% endif %}>
+                                    <i class="{{ item.icon }}"></i>
+                                    <span>{{ item.label }}</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+
+        {% if request.user.is_authenticated %}
+        <!-- Sidebar Profile Bottom -->
+        <div class="sidebar-profile-bottom">
+            <div class="dropup profile-dropdown">
+                <div class="profile-dropdown__button d-flex align-items-center justify-content-between cursor-pointer">
+                    <a href="/profile/" class="d-flex align-items-center gap-10 flex-grow-1">
+                        <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% else %}{% static 'assets/images/user.png' %}{% endif %}" alt="Thumbnail"
+                            class="w-40-px h-40-px rounded-circle object-fit-cover flex-shrink-0">
+                        <span class="profile-dropdown__contents d-flex flex-column">
+                            <span class="h6 mb-0 text-md text-primary-light line-height-1">{{ request.user.get_full_name|default:request.user.username }}</span>
+                            <span class="text-secondary-light text-xs mb-0">{{ role_config.label|default:request.user.role }}</span>
+                        </span>
+                    </a>
+                    <button class="profile-dropdown__icon pe-8 text-xl d-flex line-height-1 border-0 bg-transparent" data-bs-toggle="dropdown">
+                        <i class="ri-arrow-up-s-line"></i>
+                    </button>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-lg-end border p-12">
+                    <li><a href="/profile/" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-user-3-line"></i> Profile</a></li>
+                    <li><a href="{% url 'logout' %}" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-shut-down-line"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="navbar-header shadow-1">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto">
+                    <div class="d-flex flex-wrap align-items-center gap-4">
+                        <button type="button" class="sidebar-mobile-toggle" aria-label="Sidebar Mobile Toggler Button">
+                            <iconify-icon icon="heroicons:bars-3-solid" class="icon"></iconify-icon>
+                        </button>
+                        <form class="navbar-search d-none d-sm-flex">
+                            <input type="text" class="bg-transparent" name="search" placeholder="Search">
+                            <iconify-icon icon="ion:search-outline" class="icon"></iconify-icon>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <button type="button" data-theme-toggle
+                            class="w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center"
+                            aria-label="Dark & Light Mode Button"></button>
+
+                        <div class="dropdown">
+                            <button class="d-flex align-items-center gap-8 bg-transparent border-0 py-4 px-8 radius-8 hover-bg-neutral-100 transition-all"
+                                type="button" data-bs-toggle="dropdown">
+                                <div class="d-flex flex-column text-start">
+                                    <span class="text-sm fw-bold text-primary-light line-height-1 mb-2">{{ request.user.get_full_name|default:request.user.username }}</span>
+                                    <span class="text-xs text-secondary-light">{{ role_config.label|default:request.user.role }}</span>
+                                </div>
+                                <i class="ri-arrow-down-s-line text-secondary-light text-lg"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border p-12">
+                                <li class="px-16 py-8 border-bottom border-neutral-100 mb-8">
+                                    <h6 class="text-sm mb-0">{{ request.user.get_full_name }}</h6>
+                                    <span class="text-xs text-secondary-light">{{ request.user.role }}</span>
+                                </li>
+                                <li><a href="/profile/" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-user-3-line me-8"></i> My Profile</a></li>
+                                <li><a href="/settings/" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-settings-3-line me-8"></i> Account Settings</a></li>
+                                <li><a href="javascript:void(0)" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-notification-3-line me-8"></i> Notifications</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a href="javascript:void(0)" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-question-line me-8"></i> Help & Support</a></li>
+                                <li><a href="{% url 'logout' %}" class="dropdown-item rounded text-danger-600 py-6"><i class="ri-shut-down-line me-8"></i> Logout</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="dropdown">
+                            <button class="has-indicator w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center position-relative"
+                                type="button" data-bs-toggle="dropdown">
+                                <iconify-icon icon="iconoir:bell" class="text-primary-light text-xl"></iconify-icon>
+                                <span class="w-8-px h-8-px bg-danger-600 position-absolute end-0 top-0 rounded-circle mt-2 me-2"></span>
+                            </button>
+                            <div class="dropdown-menu to-top dropdown-menu-lg p-0">
+                                <div class="m-16 py-12 px-16 radius-8 bg-primary-50 mb-16 d-flex align-items-center justify-content-between gap-2">
+                                    <div><h6 class="text-lg text-primary-light fw-semibold mb-0">Notifications</h6></div>
+                                    <span class="text-primary-600 fw-semibold text-lg w-40-px h-40-px rounded-circle bg-base d-flex justify-content-center align-items-center">00</span>
+                                </div>
+                                <div class="max-h-400-px overflow-y-auto scroll-sm pe-4">
+                                    <div class="text-center py-24 text-secondary-light">No new notifications</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-main-body">
+            <div class="breadcrumb d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+                <div class="">
+                    <h4 class="fw-bold mb-4 text-primary-light">{% block page_heading %}Dashboard{% endblock %}</h4>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{% url 'dashboard' %}" class="text-secondary-light hover-text-primary text-sm">Home</a>
+                        <span class="text-secondary-light text-xs"><i class="ri-arrow-right-s-line"></i></span>
+                        <span class="text-secondary-light text-sm">{% block breadcrumb_active %}{% endblock %}</span>
+                    </div>
+                </div>
+                {% block heading_actions %}{% endblock %}
+            </div>
+
+            <!-- Django Messages Toast Container -->
+            <div class="sf-toast-container" id="toastContainer">
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="sf-toast sf-toast-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">
+                    <div class="sf-toast-icon">
+                      {% if message.tags == 'error' %}<iconify-icon icon="mingcute:close-circle-fill"></iconify-icon>
+                      {% elif message.tags == 'success' %}<iconify-icon icon="mingcute:check-circle-fill"></iconify-icon>
+                      {% elif message.tags == 'warning' %}<iconify-icon icon="mingcute:warning-fill"></iconify-icon>
+                      {% else %}<iconify-icon icon="mingcute:information-fill"></iconify-icon>{% endif %}
+                    </div>
+                    <div class="sf-toast-content">
+                      <div class="sf-toast-title">
+                        {% if message.tags == 'error' %}Error
+                        {% elif message.tags == 'success' %}Success
+                        {% elif message.tags == 'warning' %}Warning
+                        {% else %}Information{% endif %}
+                      </div>
+                      <p class="sf-toast-message">{{ message }}</p>
+                    </div>
+                    <button class="sf-toast-close" onclick="this.closest('.sf-toast').remove()">&times;</button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+
+            {% block content %}{% endblock %}
+        </div>
+
+        <footer class="d-footer">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto">
+                    <p class="mb-0 text-sm text-secondary-light">© {% now "Y" %} {{ platform_settings.product_name|default:"SchoolFlow" }}. All Rights Reserved.</p>
+                </div>
+                <div class="col-auto">
+                    <p class="mb-0 text-sm text-secondary-light">{{ platform_settings.product_meta|default:"A product of TheWebfix" }}</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- jQuery library js -->
+    <script src="{% static 'assets/js/lib/jquery-3.7.1.min.js' %}"></script>
+    <!-- Bootstrap js -->
+    <script src="{% static 'assets/js/lib/bootstrap.bundle.min.js' %}"></script>
+    <!-- Apex Chart js -->
+    <script src="{% static 'assets/js/lib/apexcharts.min.js' %}"></script>
+    <!-- Iconify Font js -->
+    <script src="{% static 'assets/js/lib/iconify-icon.min.js' %}"></script>
+    <!-- Data Table js -->
+    <script src="{% static 'assets/js/lib/dataTables.min.js' %}"></script>
+    <!-- jQuery UI js -->
+    <script src="{% static 'assets/js/lib/jquery-ui.min.js' %}"></script>
+    <!-- main js -->
+    <script src="{% static 'assets/js/app.js' %}"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Auto dismiss toasts
+            const toasts = document.querySelectorAll('.sf-toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    if (toast) {
+                        toast.classList.add('closing');
+                        setTimeout(() => toast.remove(), 300);
+                    }
+                }, 5000); // Dismiss after 5 seconds
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>
-
-

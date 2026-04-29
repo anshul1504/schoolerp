@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Import Marketing Data{% endblock %}
+{% block page_heading %}Import Marketing Data{% endblock %}
+{% block breadcrumb_active %}Import{% endblock %}
+{% block content %}
+<div class="card"><div class="card-body"><form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="stage" value="preview"><p>Headers: {{ headers|join:", " }}</p><input type="file" name="import_file" class="form-control" required><button class="btn btn-primary mt-3">Preview</button></form></div></div>
+{% endblock %}

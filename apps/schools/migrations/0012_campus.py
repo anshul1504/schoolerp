@@ -5,32 +5,43 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schools', '0011_schoolcommunicationsettings'),
+        ("schools", "0011_schoolcommunicationsettings"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Campus',
+            name="Campus",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('code', models.CharField(blank=True, max_length=50)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('address', models.TextField(blank=True)),
-                ('city', models.CharField(blank=True, max_length=100)),
-                ('state', models.CharField(blank=True, max_length=100)),
-                ('pincode', models.CharField(blank=True, max_length=12)),
-                ('is_main', models.BooleanField(default=False)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='campuses', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("code", models.CharField(blank=True, max_length=50)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("address", models.TextField(blank=True)),
+                ("city", models.CharField(blank=True, max_length=100)),
+                ("state", models.CharField(blank=True, max_length=100)),
+                ("pincode", models.CharField(blank=True, max_length=12)),
+                ("is_main", models.BooleanField(default=False)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="campuses",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-is_main', 'name', 'id'],
-                'unique_together': {('school', 'code')},
+                "ordering": ["-is_main", "name", "id"],
+                "unique_together": {("school", "code")},
             },
         ),
     ]

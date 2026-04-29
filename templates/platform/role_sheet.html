@@ -20,12 +20,12 @@
       <article class="platform-kpi"><div class="platform-kpi__icon"><i class="ri-alert-line"></i></div><div><span>&#x274C; Pending</span><strong>{{ role_sheet_summary.pending }}</strong><small>Need implementation</small></div></article>
     </section>
     <div class="d-flex flex-wrap gap-2 mb-3">
-      <span class="status-pill status-pill--success">&#x2705; Complete</span>
-      <span class="status-pill status-pill--warning">&#x26A0;&#xFE0F; Partial</span>
-      <span class="status-pill status-pill--danger">&#x274C; Pending</span>
-      <span class="status-pill status-pill--success">&#x1F7E2; Green</span>
-      <span class="status-pill status-pill--warning">&#x1F7E1; Yellow</span>
-      <span class="status-pill status-pill--danger">&#x1F534; Red</span>
+      <span class="badge status-pill--success">&#x2705; Complete</span>
+      <span class="badge status-pill--warning">&#x26A0;&#xFE0F; Partial</span>
+      <span class="badge status-pill--danger">&#x274C; Pending</span>
+      <span class="badge status-pill--success">&#x1F7E2; Green</span>
+      <span class="badge status-pill--warning">&#x1F7E1; Yellow</span>
+      <span class="badge status-pill--danger">&#x1F534; Red</span>
     </div>
     <div class="table-responsive">
       <table class="table align-middle sf-table">
@@ -56,7 +56,7 @@
                 {% if row.status == "Complete" %}&#x2705;{% elif row.status == "Partial" %}&#x1F7E1;{% else %}&#x274C;{% endif %}
               </td>
               <td>
-                <span class="status-pill {% if row.status == 'Complete' %}status-pill--success{% elif row.status == 'Partial' %}status-pill--warning{% else %}status-pill--danger{% endif %}">
+                <span class="badge {% if row.status == 'Complete' %}status-pill--success{% elif row.status == 'Partial' %}status-pill--warning{% else %}status-pill--danger{% endif %}">
                   {{ row.status }}
                 </span>
               </td>

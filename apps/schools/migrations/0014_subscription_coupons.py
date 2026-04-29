@@ -10,9 +10,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="SubscriptionCoupon",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("code", models.CharField(max_length=40, unique=True)),
-                ("discount_type", models.CharField(choices=[("PERCENT", "Percent"), ("FIXED", "Fixed amount")], default="PERCENT", max_length=20)),
+                (
+                    "discount_type",
+                    models.CharField(
+                        choices=[("PERCENT", "Percent"), ("FIXED", "Fixed amount")],
+                        default="PERCENT",
+                        max_length=20,
+                    ),
+                ),
                 ("value", models.DecimalField(decimal_places=2, default=0, max_digits=10)),
                 ("is_active", models.BooleanField(default=True)),
                 ("starts_on", models.DateField(blank=True, null=True)),
@@ -26,4 +38,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

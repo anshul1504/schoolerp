@@ -1,78 +1,90 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Parent Portal{% endblock %}
+{% block title %}Parent Portal | School ERP{% endblock %}
 {% block page_heading %}Parent Portal{% endblock %}
-{% block page_copy %}Track your child's attendance, fee status, notices, and academic progress in one place.{% endblock %}
-{% block page_eyebrow %}Parent{% endblock %}
+{% block breadcrumb_active %}Overview{% endblock %}
 
 {% block content %}
-  <section class="platform-shell">
-    <div class="platform-panel mb-3">
-      <div class="platform-panel__body">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <div class="p-3 border rounded-3">
-              <div class="text-xs text-uppercase fw-semibold text-primary-600">Children Linked</div>
-              <h4 class="mt-2 mb-0">{{ parent_dashboard.child_count }}</h4>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="p-3 border rounded-3">
-              <div class="text-xs text-uppercase fw-semibold text-success-600">Active</div>
-              <h4 class="mt-2 mb-0">{{ parent_dashboard.active_children }}</h4>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="p-3 border rounded-3">
-              <div class="text-xs text-uppercase fw-semibold text-warning-600">Inactive</div>
-              <h4 class="mt-2 mb-0">{{ parent_dashboard.inactive_children }}</h4>
-            </div>
-          </div>
+<div class="row gy-4 mb-24">
+    <div class="col-12">
+        <div class="row gy-4">
+            {% include 'includes/dashboard_components.html' with label="Children Linked" value=parent_dashboard.child_count trend="" icon="ri:user-star-line" color_class="bg-primary-600" gradient_class="gradient-bg-end-1" %}
+            {% include 'includes/dashboard_components.html' with label="Active" value=parent_dashboard.active_children trend="" icon="ri:checkbox-circle-line" color_class="bg-success-600" gradient_class="gradient-bg-end-5" %}
+            {% include 'includes/dashboard_components.html' with label="Inactive" value=parent_dashboard.inactive_children trend="" icon="ri:close-circle-line" color_class="bg-danger-600" gradient_class="gradient-bg-end-3" %}
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="row gy-4">
-      {% for card in parent_dashboard.child_cards %}
-        <div class="col-lg-6">
-          <div class="platform-panel h-100">
-            <div class="platform-panel__body">
-              <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
-                <div>
-                  <h6 class="mb-1">{{ card.student.first_name }} {{ card.student.last_name }}</h6>
-                  <div class="text-muted text-sm">{{ card.class_label }} | {{ card.student.school.name }}</div>
+<div class="row gy-4">
+    {% for card in parent_dashboard.child_cards %}
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-1 radius-8 border-0 overflow-hidden">
+            <div class="card-header bg-base border-bottom border-neutral-200 py-16 px-20">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-12">
+                        <div class="w-48-px h-48-px bg-primary-50 text-primary-600 rounded-circle d-flex justify-content-center align-items-center fw-bold text-lg">
+                            {{ card.student.first_name|first }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ card.student.first_name }} {{ card.student.last_name }}</h6>
+                            <span class="text-sm text-secondary-light">{{ card.class_label }}</span>
+                        </div>
+                    </div>
+                    <span class="badge bg-success-50 text-success-600 radius-pill px-12 py-4">{{ card.attendance_rate }}% Attendance</span>
                 </div>
-                <span class="badge bg-primary">{{ card.attendance_rate }}% attendance</span>
-              </div>
-              <div class="row g-3 mb-3">
-                <div class="col-6"><div class="p-3 border rounded-3"><div class="text-xs text-uppercase fw-semibold text-danger-600">Fee Due</div><div class="fw-semibold">Rs {{ card.outstanding }}</div></div></div>
-                <div class="col-6"><div class="p-3 border rounded-3"><div class="text-xs text-uppercase fw-semibold text-info-600">Marks</div><div class="fw-semibold">{{ card.average_marks }}</div></div></div>
-              </div>
-              <div class="p-3 border rounded-3 mb-3">
-                <div class="text-xs text-uppercase fw-semibold text-secondary-600 mb-2">Latest Notice</div>
-                {% if card.latest_notice %}
-                  <strong>{{ card.latest_notice.title }}</strong>
-                {% else %}
-                  <span class="text-muted">No notices available.</span>
-                {% endif %}
-              </div>
-              <div class="d-flex gap-2 flex-wrap">
-                <a href="/students/{{ card.student.slug }}/" class="btn btn-outline-primary">Open Profile</a>
-                <a href="/students/{{ card.student.slug }}/communication-logs/" class="btn btn-outline-secondary">Communication</a>
-                <a href="/students/{{ card.student.slug }}/compliance/" class="btn btn-outline-secondary">Compliance</a>
-              </div>
             </div>
-          </div>
-        </div>
-      {% empty %}
-        <div class="col-12">
-          <div class="platform-panel">
-            <div class="platform-panel__body">
-              <div class="text-muted">No linked students found for this parent account.</div>
+            <div class="card-body p-20">
+                <div class="row gy-3 mb-24">
+                    <div class="col-6">
+                        <div class="p-16 radius-8 bg-danger-50 border border-danger-100">
+                            <span class="text-xs text-uppercase fw-bold text-danger-600 d-block mb-4">Outstanding Fee</span>
+                            <h6 class="mb-0">Rs {{ card.outstanding }}</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-16 radius-8 bg-info-50 border border-info-100">
+                            <span class="text-xs text-uppercase fw-bold text-info-600 d-block mb-4">Avg. Marks</span>
+                            <h6 class="mb-0">{{ card.average_marks }}</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-24">
+                    <h6 class="text-sm fw-bold text-primary-light mb-12">Latest Notice</h6>
+                    {% if card.latest_notice %}
+                    <div class="d-flex align-items-start gap-12 p-12 radius-8 bg-neutral-50 border border-neutral-100">
+                        <iconify-icon icon="ri:notification-3-line" class="text-primary-600 text-xl"></iconify-icon>
+                        <div>
+                            <p class="text-sm fw-semibold mb-4">{{ card.latest_notice.title }}</p>
+                            <span class="text-xs text-secondary-light">{{ card.latest_notice.created_at|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-secondary-light italic">No new notices for {{ card.student.first_name }}.</p>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-wrap gap-12">
+                    <a href="/students/{{ card.student.slug }}/" class="btn btn-primary-600 radius-8 px-20 py-8 d-flex align-items-center gap-8">
+                        <iconify-icon icon="ri:user-line"></iconify-icon> Profile
+                    </a>
+                    <a href="/students/{{ card.student.slug }}/history/" class="btn btn-outline-primary-600 radius-8 px-20 py-8 d-flex align-items-center gap-8">
+                        <iconify-icon icon="ri:calendar-line"></iconify-icon> History
+                    </a>
+                    <a href="/fees/" class="btn btn-outline-warning-600 radius-8 px-20 py-8 d-flex align-items-center gap-8">
+                        <iconify-icon icon="ri:money-rupee-circle-line"></iconify-icon> Pay Fees
+                    </a>
+                </div>
             </div>
-          </div>
         </div>
-      {% endfor %}
     </div>
-  </section>
+    {% empty %}
+    <div class="col-12 text-center py-48">
+        <iconify-icon icon="ri:user-search-line" class="text-6xl text-neutral-300 mb-16"></iconify-icon>
+        <h5 class="text-neutral-500">No students linked to your account.</h5>
+        <p class="text-neutral-400">Please contact the school administrator to link your children.</p>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

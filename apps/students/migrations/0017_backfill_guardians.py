@@ -67,4 +67,3 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(backfill_guardians, reverse_backfill_guardians),
     ]
-

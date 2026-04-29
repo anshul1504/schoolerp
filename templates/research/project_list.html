@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}All Projects | {{ school.name }}{% endblock %}
+
+{% block page_heading %}All Projects{% endblock %}
+{% block breadcrumb_active %}All Projects{% endblock %}
+
+{% block heading_actions %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card h-100 radius-12 border-0 shadow-sm">
+            <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="mb-0">
+                    <h6 class="text-lg fw-semibold mb-0">Research Projects</h6>
+                    <p class="text-sm text-secondary-light mb-0 mt-4">Manage and track all ongoing and proposed research initiatives.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary radius-8 px-20 d-flex align-items-center gap-8 dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                            <i class="ri-download-2-line"></i>
+                            <span>Export</span>
+                        </button>
+                        <ul class="dropdown-menu shadow-lg border-0">
+                            <li><a class="dropdown-item py-10 px-16 d-flex align-items-center gap-8" href="{% url 'research:export_projects_csv' %}"><i class="ri-file-excel-line text-success-600"></i> Export as Excel</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'research:project_create' %}" class="btn btn-primary-600 radius-8 px-20 py-11 d-flex align-items-center gap-8">
+                        <i class="ri-add-circle-line"></i>
+                        <span>Add Project</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-24">
+                <!-- Filters -->
+                <form method="get" class="mb-24">
+                    <div class="row gy-3 gx-3 align-items-end">
+                        <div class="col-lg-5">
+                            <label class="form-label fw-bold text-primary-light">Search</label>
+                            <div class="input-group border radius-8 overflow-hidden bg-neutral-50">
+                                <span class="input-group-text bg-transparent border-0 text-neutral-400 pe-0"><i class="ri-search-line"></i></span>
+                                <input type="text" name="q" class="form-control border-0 px-12 bg-transparent py-10" placeholder="Search by title, PI name..." value="{{ request.GET.q }}">
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <label class="form-label fw-bold text-primary-light">Status</label>
+                            <select name="status" class="form-select border radius-8 bg-neutral-50 py-10">
+                                <option value="">All Status</option>
+                                <option value="PROPOSED" {% if request.GET.status == 'PROPOSED' %}selected{% endif %}>Proposed</option>
+                                <option value="ONGOING" {% if request.GET.status == 'ONGOING' %}selected{% endif %}>Ongoing</option>
+                                <option value="COMPLETED" {% if request.GET.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <button type="submit" class="btn btn-primary-600 w-100 radius-8 py-10 fw-bold">Apply</button>
+                        </div>
+                        <div class="col-lg-2">
+                            <a href="{% url 'research:project_list' %}" class="btn btn-outline-danger-600 w-100 radius-8 py-10 fw-bold">Clear</a>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-responsive allow-dropdown">
+                    <table class="table bordered-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">#</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Project</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">PI</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Timeline</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Budget</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-center">Status</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                <td class="text-sm text-secondary-light fw-medium">{{ forloop.counter|add:projects.start_index|add:"-1" }}</td>
+                                <td>
+                                    <div class="d-flex align-items-start gap-12">
+                                        <div class="w-44-px h-44-px bg-primary-100 text-primary-600 radius-10 d-flex align-items-center justify-content-center shrink-0">
+                                            <i class="ri-folder-open-fill text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="text-sm mb-4 fw-bold text-primary-light">{{ project.title }}</h6>
+                                            <span class="text-xs text-secondary-light fw-bold">ID: #RES-{{ project.pk|stringformat:"04d" }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-10">
+                                        <div class="w-36-px h-36-px bg-neutral-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center text-sm fw-bold shrink-0">
+                                            {{ project.pi.full_name|slice:":1" }}
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-sm fw-bold text-primary-light">{{ project.pi.full_name }}</span>
+                                            <small class="text-secondary-light text-xs text-nowrap">{{ project.pi.designation }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-6" style="min-width: 120px;">
+                                        <span class="text-xs text-secondary-light fw-medium">{{ project.start_date|date:"M Y" }} – {{ project.end_date|date:"M Y"|default:"Ongoing" }}</span>
+                                        <div class="progress w-100 h-6-px bg-neutral-100 radius-pill overflow-hidden">
+                                            <div class="progress-bar {% if project.status == 'COMPLETED' %}bg-success-600{% else %}bg-primary-600{% endif %}" style="width: {% if project.status == 'COMPLETED' %}100%{% elif project.status == 'ONGOING' %}65%{% else %}10%{% endif %}"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-md fw-bold text-success-600 text-nowrap">{{ school.currency }} {{ project.budget|floatformat:0 }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="px-12 py-4 radius-pill text-xs fw-bold text-nowrap
+                                        {% if project.status == 'ONGOING' %}bg-success-100 text-success-600
+                                        {% elif project.status == 'PROPOSED' %}bg-warning-100 text-warning-600
+                                        {% elif project.status == 'COMPLETED' %}bg-primary-100 text-primary-600
+                                        {% else %}bg-neutral-100 text-neutral-600{% endif %}">
+                                        {{ project.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-icon bg-neutral-100 radius-8 transition-all hover-bg-neutral-200" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-8" style="z-index: 1060;">
+                                            <li><a href="{% url 'research:project_detail' project.pk %}" class="dropdown-item rounded py-8 px-16 d-flex align-items-center gap-8"><i class="ri-eye-line text-primary-600"></i> View Details</a></li>
+                                            <li><a href="{% url 'research:project_edit' project.pk %}" class="dropdown-item rounded py-8 px-16 d-flex align-items-center gap-8"><i class="ri-edit-line text-warning-600"></i> Edit</a></li>
+                                            <li><hr class="dropdown-divider my-4 opacity-50"></li>
+                                            <li><a href="{% url 'research:project_delete' project.pk %}" class="dropdown-item rounded py-8 px-16 d-flex align-items-center gap-8 text-danger-600" onclick="return confirm('Delete this project?')"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center py-80 text-secondary-light">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="ri-folder-open-line text-5xl mb-16 opacity-20"></i>
+                                    <h6 class="text-secondary-light">No projects found.</h6>
+                                </div>
+                            </td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if projects.paginator.num_pages > 1 %}
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24">
+                    <span class="text-secondary-light text-sm">Showing {{ projects.start_index }} to {{ projects.end_index }} of {{ projects.paginator.count }} entries</span>
+                    <ul class="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
+                        {% if projects.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ projects.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for i in projects.paginator.page_range %}
+                            {% if projects.number == i %}
+                                <li class="page-item">
+                                    <a class="page-link bg-primary-600 text-white fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px" href="javascript:void(0)">{{ i }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if projects.has_next %}
+                            <li class="page-item">
+                                <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ projects.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

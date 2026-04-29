@@ -3,10 +3,10 @@ from django.contrib import admin
 from .models import (
     AdmissionWorkflowEvent,
     Student,
+    StudentClassChangeHistory,
     StudentCommunicationLog,
     StudentComplianceReminder,
     StudentDisciplineIncident,
-    StudentClassChangeHistory,
     StudentDocument,
     StudentHealthRecord,
     StudentProfileEditHistory,

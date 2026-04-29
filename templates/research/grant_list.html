@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Research Grants | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Research Grants{% endblock %}
+{% block breadcrumb_active %}Grants{% endblock %}
+
+{% block heading_actions %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card h-100 radius-12 border-0 shadow-sm">
+            <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="mb-0">
+                    <h6 class="text-lg fw-semibold mb-0">Grant Tracking</h6>
+                    <p class="text-sm text-secondary-light mb-0 mt-4">Monitor funding distributions and grant approvals.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'research:export_grants_csv' %}" class="btn btn-outline-secondary radius-8 px-20 d-flex align-items-center gap-8">
+                        <i class="ri-download-2-line"></i>
+                        <span>Export Excel</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-24">
+                <!-- Summary Stats (Optional, matching theme) -->
+                <div class="mb-24 p-16 radius-8 bg-success-50 border border-success-100 d-inline-flex align-items-center gap-12">
+                    <div class="w-40-px h-40-px bg-success-600 text-white radius-8 d-flex align-items-center justify-content-center">
+                        <i class="ri-money-dollar-circle-line text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-secondary-light d-block fw-bold">Total Disbursed Funding</span>
+                        <h6 class="mb-0 text-success-600">{{ school.currency }} {{ total_funding|floatformat:2 }}</h6>
+                    </div>
+                </div>
+
+                <div class="table-responsive allow-dropdown">
+                    <table class="table bordered-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">#</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Grant ID</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Project</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Agency</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Date</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grant in grants %}
+                            <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                <td class="text-sm text-secondary-light fw-medium">{{ forloop.counter|add:grants.start_index|add:"-1" }}</td>
+                                <td class="fw-bold text-primary-light">{{ grant.grant_id }}</td>
+                                <td>
+                                    <a href="{% url 'research:project_detail' grant.project.pk %}" class="text-sm fw-medium text-primary-600 hover-text-primary-700">{{ grant.project.title }}</a>
+                                </td>
+                                <td class="text-sm text-secondary-light">{{ grant.agency }}</td>
+                                <td class="text-sm text-secondary-light">{{ grant.received_date|date:"d M, Y" }}</td>
+                                <td class="text-end fw-bold text-success-600">{{ school.currency }} {{ grant.amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-80 text-secondary-light">No grant records found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if grants.paginator.num_pages > 1 %}
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24">
+                    <span class="text-secondary-light text-sm">Showing {{ grants.start_index }} to {{ grants.end_index }} of {{ grants.paginator.count }} entries</span>
+                    <ul class="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
+                        {% if grants.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ grants.previous_page_number }}">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for i in grants.paginator.page_range %}
+                            {% if grants.number == i %}
+                                <li class="page-item">
+                                    <a class="page-link bg-primary-600 text-white fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px" href="javascript:void(0)">{{ i }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if grants.has_next %}
+                            <li class="page-item">
+                                <a class="page-link bg-neutral-50 text-secondary-light fw-semibold radius-8 border d-flex align-items-center justify-content-center h-32-px w-32-px" href="?page={{ grants.next_page_number }}">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

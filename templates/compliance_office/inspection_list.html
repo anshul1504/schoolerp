@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Inspections & Audits | School ERP{% endblock %}
+{% block page_heading %}Inspections & Audits{% endblock %}
+{% block breadcrumb_active %}Inspections{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Audit Records</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Manage safety and compliance inspections.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap" href="?q={{ filters.q }}&export=csv"><iconify-icon icon="ri:file-download-line" class="me-2 text-xl"></iconify-icon> Export CSV</a>
+        <a class="btn btn-primary-600 radius-8 px-20 py-11 d-inline-flex align-items-center text-nowrap" href="{% url 'compliance_office:inspection_create' %}"><iconify-icon icon="ri:add-line" class="me-2 text-xl"></iconify-icon> Log Inspection</a>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Search inspections...">
+          </div>
+          <div class="col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-600">Apply</button>
+            <a class="btn btn-outline-secondary" href="{% url 'compliance_office:inspection_list' %}">Reset</a>
+          </div>
+        </div>
+      </form>
+
+      {% if inspections %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Inspector</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in inspections %}
+                <tr>
+                  <td><span class="fw-medium text-neutral-700">{{ i.title }}</span></td>
+                  <td>{{ i.inspection_date|date:'d M Y' }}</td>
+                  <td>{{ i.inspector_name }}</td>
+                  <td>
+                    <span class="badge bg-primary-50 text-primary-600">{{ i.get_status_display }}</span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                      <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="{% url 'compliance_office:inspection_edit' i.id %}"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit</a>
+                      <form method="post" action="{% url 'compliance_office:inspection_delete' i.id %}" class="d-inline" onsubmit="return confirm('Delete this inspection?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"><iconify-icon icon="ri:delete-bin-line" class="me-1"></iconify-icon> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:search-eye-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No inspections logged.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

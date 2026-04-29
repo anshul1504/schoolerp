@@ -5,34 +5,58 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schools', '0010_school_profile_fields'),
+        ("schools", "0010_school_profile_fields"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SchoolCommunicationSettings',
+            name="SchoolCommunicationSettings",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('smtp_enabled', models.BooleanField(default=False)),
-                ('smtp_host', models.CharField(blank=True, max_length=150)),
-                ('smtp_port', models.PositiveIntegerField(default=465)),
-                ('smtp_use_ssl', models.BooleanField(default=True)),
-                ('smtp_use_tls', models.BooleanField(default=False)),
-                ('smtp_username', models.CharField(blank=True, max_length=150)),
-                ('smtp_password', models.CharField(blank=True, max_length=200)),
-                ('smtp_from_email', models.EmailField(blank=True, max_length=254)),
-                ('smtp_from_name', models.CharField(blank=True, max_length=150)),
-                ('whatsapp_enabled', models.BooleanField(default=False)),
-                ('whatsapp_provider', models.CharField(choices=[('NONE', 'Not configured'), ('TWILIO', 'Twilio WhatsApp'), ('META_CLOUD', 'Meta WhatsApp Cloud API'), ('GUPSHUP', 'Gupshup'), ('OTHER', 'Other')], default='NONE', max_length=30)),
-                ('whatsapp_sender', models.CharField(blank=True, max_length=80)),
-                ('whatsapp_access_token', models.CharField(blank=True, max_length=400)),
-                ('whatsapp_phone_number_id', models.CharField(blank=True, max_length=120)),
-                ('whatsapp_webhook_secret', models.CharField(blank=True, max_length=120)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('school', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='communication_settings', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("smtp_enabled", models.BooleanField(default=False)),
+                ("smtp_host", models.CharField(blank=True, max_length=150)),
+                ("smtp_port", models.PositiveIntegerField(default=465)),
+                ("smtp_use_ssl", models.BooleanField(default=True)),
+                ("smtp_use_tls", models.BooleanField(default=False)),
+                ("smtp_username", models.CharField(blank=True, max_length=150)),
+                ("smtp_password", models.CharField(blank=True, max_length=200)),
+                ("smtp_from_email", models.EmailField(blank=True, max_length=254)),
+                ("smtp_from_name", models.CharField(blank=True, max_length=150)),
+                ("whatsapp_enabled", models.BooleanField(default=False)),
+                (
+                    "whatsapp_provider",
+                    models.CharField(
+                        choices=[
+                            ("NONE", "Not configured"),
+                            ("TWILIO", "Twilio WhatsApp"),
+                            ("META_CLOUD", "Meta WhatsApp Cloud API"),
+                            ("GUPSHUP", "Gupshup"),
+                            ("OTHER", "Other"),
+                        ],
+                        default="NONE",
+                        max_length=30,
+                    ),
+                ),
+                ("whatsapp_sender", models.CharField(blank=True, max_length=80)),
+                ("whatsapp_access_token", models.CharField(blank=True, max_length=400)),
+                ("whatsapp_phone_number_id", models.CharField(blank=True, max_length=120)),
+                ("whatsapp_webhook_secret", models.CharField(blank=True, max_length=120)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "school",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="communication_settings",
+                        to="schools.school",
+                    ),
+                ),
             ],
         ),
     ]

@@ -1,9 +1,9 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from apps.academics.models import AcademicClass, AcademicSubject
-from datetime import date
-
 from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
 from apps.students.models import Student
 
@@ -31,11 +31,19 @@ class ExamsModuleTests(TestCase):
             role="PRINCIPAL",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         self.academic_class = AcademicClass.objects.create(
             school=self.school,
@@ -93,7 +101,11 @@ class ExamsModuleTests(TestCase):
             },
         )
         self.assertEqual(marks_response.status_code, 302)
-        self.assertTrue(ExamMark.objects.filter(exam=exam, student=self.student, subject=self.subject, marks_obtained="78").exists())
+        self.assertTrue(
+            ExamMark.objects.filter(
+                exam=exam, student=self.student, subject=self.subject, marks_obtained="78"
+            ).exists()
+        )
 
     def test_exam_marks_export_rejects_cross_school_exam_id(self):
         other_school = School.objects.create(
@@ -108,11 +120,19 @@ class ExamsModuleTests(TestCase):
             established_year=2005,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         other_user = get_user_model().objects.create_user(
             username="principal2",
@@ -181,10 +201,16 @@ class ExamsModuleTests(TestCase):
             guardian_phone="+91 9876543222",
             admission_date="2026-04-20",
         )
-        ExamMark.objects.create(exam=exam, student=self.student, subject=self.subject, marks_obtained="78", remark="")
-        ExamMark.objects.create(exam=exam, student=other_student, subject=self.subject, marks_obtained="55", remark="")
+        ExamMark.objects.create(
+            exam=exam, student=self.student, subject=self.subject, marks_obtained="78", remark=""
+        )
+        ExamMark.objects.create(
+            exam=exam, student=other_student, subject=self.subject, marks_obtained="55", remark=""
+        )
 
-        response = self.client.get(f"/exams/?school={self.school.id}&exam={exam.id}&dataset=marks&export=csv&student_ids={self.student.id}")
+        response = self.client.get(
+            f"/exams/?school={self.school.id}&exam={exam.id}&dataset=marks&export=csv&student_ids={self.student.id}"
+        )
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8", errors="ignore")
         self.assertIn(self.student.admission_no, body)

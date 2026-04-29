@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.utils import timezone
 from django.db.models import Q
+from django.utils import timezone
 
 from apps.core.models import PlatformAnnouncement, PlatformSettings
 

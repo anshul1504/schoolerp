@@ -2,12 +2,11 @@
 
 import secrets
 
-from django.db import migrations, models
 import django.db.models.deletion
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0005_user_login_lockout_fields"),
     ]
@@ -16,16 +15,30 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="UserLoginOTP",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("salt", models.CharField(default=secrets.token_hex, editable=False, max_length=64)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "salt",
+                    models.CharField(default=secrets.token_hex, editable=False, max_length=64),
+                ),
                 ("code_hash", models.CharField(max_length=64)),
                 ("expires_at", models.DateTimeField()),
                 ("used_at", models.DateTimeField(blank=True, null=True)),
                 ("attempts", models.PositiveIntegerField(default=0)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="login_otps", to="accounts.user")),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="login_otps",
+                        to="accounts.user",
+                    ),
+                ),
             ],
             options={"ordering": ["-created_at"]},
         ),
     ]
-

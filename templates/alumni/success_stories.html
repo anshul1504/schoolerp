@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Alumni Success Stories | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Alumni Spotlights{% endblock %}
+{% block breadcrumb_active %}Success Stories{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-base py-16 px-24 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h6 class="mb-0 fw-bold">Alumni Spotlights & Achievements</h6>
+                    <p class="text-sm text-secondary-light mb-0 mt-4">Showcase the inspiring journeys of our distinguished graduates.</p>
+                </div>
+                <div class="d-flex align-items-center gap-12">
+                    <form method="get" class="d-flex align-items-center gap-8">
+                        <select name="year" class="form-select form-select-sm radius-8 py-6" onchange="this.form.submit()">
+                            <option value="">All Batches</option>
+                            {% for yr in years %}
+                            <option value="{{ yr }}" {% if request.GET.year == yr|stringformat:"s" %}selected{% endif %}>Batch {{ yr }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <a href="{% url 'alumni:story_create' %}" class="btn btn-sm btn-primary-600 radius-8 px-16">
+                        <i class="ri-add-circle-line me-4"></i> Create Story
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-24">
+                <div class="row gy-4">
+                    {% for story in stories %}
+                    <div class="col-xxl-4 col-md-6">
+                        <div class="card h-100 radius-12 border shadow-sm transition-all hover-translate-y-4 bg-base">
+                            {% if story.image %}
+                            <img src="{{ story.image.url }}" class="card-img-top object-fit-cover" style="height: 220px; border-radius: 12px 12px 0 0;" alt="{{ story.title }}">
+                            {% else %}
+                            <!-- bg-primary-100 is a themed color that works in dark mode -->
+                            <div class="bg-primary-100 d-flex align-items-center justify-content-center" style="height: 220px; border-radius: 12px 12px 0 0;">
+                                <i class="ri-medal-line text-primary-300 text-6xl"></i>
+                            </div>
+                            {% endif %}
+
+                            <div class="card-body p-24">
+                                <div class="d-flex align-items-center gap-12 mb-16">
+                                    <div class="w-40-px h-40-px bg-primary-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center fw-bold text-sm shrink-0">
+                                        {{ story.alumni.full_name|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <h6 class="text-sm mb-0 fw-bold text-primary-light">{{ story.alumni.full_name }}</h6>
+                                        <span class="text-xs text-secondary-light">Class of {{ story.alumni.graduation_year }}</span>
+                                    </div>
+                                    {% if story.is_featured %}
+                                    <span class="ms-auto badge bg-warning-100 text-warning-600 radius-pill px-8 py-4 text-xxs fw-bold">FEATURED</span>
+                                    {% endif %}
+                                </div>
+
+                                <h6 class="text-md fw-bold mb-12 line-clamp-2" style="min-height: 2.8rem;">{{ story.title }}</h6>
+                                <p class="text-sm text-secondary-light mb-0 line-clamp-3">{{ story.content }}</p>
+                            </div>
+
+                            <!-- bg-base and border-top ensure dark mode compatibility -->
+                            <div class="card-footer bg-base border-top p-20 d-flex align-items-center justify-content-between">
+                                <a href="{% url 'alumni:story_detail' story.pk %}" class="text-primary-600 fw-bold text-sm text-decoration-none d-flex align-items-center gap-4">
+                                    Read More <i class="ri-arrow-right-line"></i>
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-icon radius-8 border" data-bs-toggle="dropdown">
+                                        <i class="ri-more-2-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border shadow-sm p-8">
+                                        <li><a class="dropdown-item radius-8 py-8" href="{% url 'alumni:story_detail' story.pk %}"><i class="ri-eye-line me-8"></i> View Details</a></li>
+                                        <li><a class="dropdown-item radius-8 py-8" href="{% url 'alumni:story_edit' story.pk %}"><i class="ri-edit-line me-8"></i> Edit Story</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{% url 'alumni:story_delete' story.pk %}" method="POST" onsubmit="return confirm('Remove this story?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item radius-8 py-8 text-danger-600 border-0 bg-transparent w-100 text-start">
+                                                    <i class="ri-delete-bin-line me-8"></i> Remove
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 py-100 text-center text-secondary-light">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="ri-medal-line text-6xl mb-16 opacity-25"></i>
+                            <h6 class="fw-bold">No success stories published</h6>
+                            <p class="text-sm">Share the achievements of your alumni network.</p>
+                            <a href="{% url 'alumni:story_create' %}" class="btn btn-primary-600 radius-8 px-24 py-10 mt-16 fw-bold">Create Story</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if stories.has_other_pages %}
+                <div class="d-flex justify-content-center mt-40">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-primary gap-8 mb-0">
+                            {% if stories.has_previous %}
+                            <li class="page-item"><a class="page-link radius-8" href="?page={{ stories.previous_page_number }}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}"><i class="ri-arrow-left-s-line"></i></a></li>
+                            {% endif %}
+                            <li class="page-item active"><span class="page-link radius-8">{{ stories.number }}</span></li>
+                            {% if stories.has_next %}
+                            <li class="page-item"><a class="page-link radius-8" href="?page={{ stories.next_page_number }}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}"><i class="ri-arrow-right-s-line"></i></a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

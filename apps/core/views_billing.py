@@ -1,35 +1,48 @@
 import calendar
-import json
-from datetime import date, timedelta
-from decimal import Decimal, ROUND_HALF_UP
-import math
 import csv
 import hashlib
 import hmac
+import json
+import math
 import time
+from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
-from django.contrib import messages
 from django.conf import settings
-from django.http import HttpResponse
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.db.models import Q
-from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
+from django.contrib import messages
 from django.core.cache import cache
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.crypto import constant_time_compare
+from django.views.decorators.csrf import csrf_exempt
 
+from apps.core.models import ActivityLog, BillingWebhookEvent
 from apps.core.permissions import permission_required, role_required
 from apps.core.ui import build_layout_context
-from apps.schools.models import PlanFeature, School, SchoolSubscription, SubscriptionCoupon, SubscriptionInvoice, SubscriptionPayment, SubscriptionPlan
+from apps.schools.models import (
+    PlanFeature,
+    School,
+    SchoolSubscription,
+    SubscriptionCoupon,
+    SubscriptionInvoice,
+    SubscriptionPayment,
+    SubscriptionPlan,
+)
 from apps.students.models import Student
-from apps.core.models import BillingWebhookEvent, ActivityLog
 
 
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def plan_list(request):
-    plans = SubscriptionPlan.objects.all().order_by("name")
+    plans_list = SubscriptionPlan.objects.all().order_by("name")
+    paginator = Paginator(plans_list, 20)
+    page_number = request.GET.get("page")
+    plans = paginator.get_page(page_number)
+
     context = build_layout_context(request.user, current_section="billing")
     context["plans"] = plans
     return render(request, "billing/plans_list.html", context)
@@ -42,7 +55,11 @@ def ensure_default_plans():
         {"code": "ATTENDANCE", "name": "Attendance", "description": "Sessions, marking, summaries"},
         {"code": "FEES", "name": "Fees", "description": "Structures, dues, collections"},
         {"code": "EXAMS", "name": "Exams", "description": "Exam setup, marks, results"},
-        {"code": "COMMUNICATION", "name": "Communication", "description": "Notices & notifications"},
+        {
+            "code": "COMMUNICATION",
+            "name": "Communication",
+            "description": "Notices & notifications",
+        },
         {"code": "REPORTS", "name": "Reports", "description": "Exports and reporting views"},
     ]
 
@@ -50,7 +67,11 @@ def ensure_default_plans():
     for feature in feature_defs:
         _, created = PlanFeature.objects.get_or_create(
             code=feature["code"],
-            defaults={"name": feature["name"], "description": feature["description"], "is_active": True},
+            defaults={
+                "name": feature["name"],
+                "description": feature["description"],
+                "is_active": True,
+            },
         )
         if created:
             created_features += 1
@@ -70,7 +91,14 @@ def ensure_default_plans():
             "tier": "GOLD",
             "billing_mode": "PER_500",
             "unit_price": Decimal("750"),
-            "feature_codes": {"STUDENTS", "ACADEMICS", "ATTENDANCE", "FEES", "EXAMS", "COMMUNICATION"},
+            "feature_codes": {
+                "STUDENTS",
+                "ACADEMICS",
+                "ATTENDANCE",
+                "FEES",
+                "EXAMS",
+                "COMMUNICATION",
+            },
         },
         {
             "code": "PLATINUM",
@@ -78,7 +106,15 @@ def ensure_default_plans():
             "tier": "PLATINUM",
             "billing_mode": "PER_500",
             "unit_price": Decimal("1000"),
-            "feature_codes": {"STUDENTS", "ACADEMICS", "ATTENDANCE", "FEES", "EXAMS", "COMMUNICATION", "REPORTS"},
+            "feature_codes": {
+                "STUDENTS",
+                "ACADEMICS",
+                "ATTENDANCE",
+                "FEES",
+                "EXAMS",
+                "COMMUNICATION",
+                "REPORTS",
+            },
         },
     ]
 
@@ -170,10 +206,11 @@ def plan_create(request):
         elif SubscriptionPlan.objects.filter(code=payload["code"]).exists():
             messages.error(request, "That plan code already exists.")
         else:
-            feature_ids = payload.pop("feature_ids", [])
-            plan = SubscriptionPlan.objects.create(**payload)
-            if feature_ids:
-                plan.features.set(PlanFeature.objects.filter(id__in=feature_ids))
+            with transaction.atomic():
+                feature_ids = payload.pop("feature_ids", [])
+                plan = SubscriptionPlan.objects.create(**payload)
+                if feature_ids:
+                    plan.features.set(PlanFeature.objects.filter(id__in=feature_ids))
             messages.success(request, "Plan created.")
             return redirect("/billing/plans/")
 
@@ -195,11 +232,12 @@ def plan_update(request, id):
         elif SubscriptionPlan.objects.filter(code=payload["code"]).exclude(id=plan.id).exists():
             messages.error(request, "That plan code already exists.")
         else:
-            feature_ids = payload.pop("feature_ids", [])
-            for field, value in payload.items():
-                setattr(plan, field, value)
-            plan.save()
-            plan.features.set(PlanFeature.objects.filter(id__in=feature_ids))
+            with transaction.atomic():
+                feature_ids = payload.pop("feature_ids", [])
+                for field, value in payload.items():
+                    setattr(plan, field, value)
+                plan.save()
+                plan.features.set(PlanFeature.objects.filter(id__in=feature_ids))
             messages.success(request, "Plan updated.")
             return redirect("/billing/plans/")
 
@@ -215,7 +253,11 @@ def plan_update(request, id):
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def feature_list(request):
-    features = PlanFeature.objects.all().order_by("name")
+    features_list = PlanFeature.objects.all().order_by("name")
+    paginator = Paginator(features_list, 20)
+    page_number = request.GET.get("page")
+    features = paginator.get_page(page_number)
+
     context = build_layout_context(request.user, current_section="billing")
     context["features"] = features
     return render(request, "billing/features_list.html", context)
@@ -235,7 +277,9 @@ def feature_create(request):
         elif PlanFeature.objects.filter(code=code).exists():
             messages.error(request, "That feature code already exists.")
         else:
-            PlanFeature.objects.create(name=name, code=code, description=description, is_active=is_active)
+            PlanFeature.objects.create(
+                name=name, code=code, description=description, is_active=is_active
+            )
             messages.success(request, "Feature created.")
             return redirect("/billing/features/")
 
@@ -248,9 +292,14 @@ def feature_create(request):
 def plan_delete(request, id):
     plan = get_object_or_404(SubscriptionPlan, id=id)
     if request.method == "POST":
-        in_use = SchoolSubscription.objects.filter(plan=plan).exists() or SubscriptionInvoice.objects.filter(plan=plan).exists()
+        in_use = (
+            SchoolSubscription.objects.filter(plan=plan).exists()
+            or SubscriptionInvoice.objects.filter(plan=plan).exists()
+        )
         if in_use:
-            messages.error(request, "Plan cannot be deleted because it is assigned to schools/invoices.")
+            messages.error(
+                request, "Plan cannot be deleted because it is assigned to schools/invoices."
+            )
         else:
             plan.delete()
             messages.success(request, "Plan deleted.")
@@ -260,10 +309,16 @@ def plan_delete(request, id):
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def school_subscriptions(request):
-    schools = School.objects.all().order_by("name").prefetch_related("subscription")
+    schools_list = School.objects.all().order_by("name").prefetch_related("subscription")
+    paginator = Paginator(schools_list, 20)
+    page_number = request.GET.get("page")
+    schools = paginator.get_page(page_number)
+
     plans = SubscriptionPlan.objects.filter(is_active=True).order_by("name")
     context = build_layout_context(request.user, current_section="billing")
-    context.update({"schools": schools, "plans": plans, "status_choices": SchoolSubscription.STATUS_CHOICES})
+    context.update(
+        {"schools": schools, "plans": plans, "status_choices": SchoolSubscription.STATUS_CHOICES}
+    )
     return render(request, "billing/schools.html", context)
 
 
@@ -322,7 +377,11 @@ def invoice_list(request):
     date_to = (request.GET.get("date_to") or "").strip()
 
     if query:
-        invoices = invoices.filter(Q(school__name__icontains=query) | Q(plan__code__icontains=query) | Q(id__icontains=query))
+        invoices = invoices.filter(
+            Q(school__name__icontains=query)
+            | Q(plan__code__icontains=query)
+            | Q(id__icontains=query)
+        )
     if school_id.isdigit():
         invoices = invoices.filter(school_id=int(school_id))
     if status in {"DRAFT", "ISSUED", "PAID", "VOID"}:
@@ -349,7 +408,19 @@ def invoice_list(request):
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = 'attachment; filename="invoices_export.csv"'
         writer = csv.writer(response)
-        writer.writerow(["id", "school", "plan", "period_start", "period_end", "amount", "status", "due_date", "issued_at"])
+        writer.writerow(
+            [
+                "id",
+                "school",
+                "plan",
+                "period_start",
+                "period_end",
+                "amount",
+                "status",
+                "due_date",
+                "issued_at",
+            ]
+        )
         for inv in invoices[:10000]:
             writer.writerow(
                 [
@@ -403,12 +474,22 @@ def invoice_list(request):
         )
         return response
 
+    paginator = Paginator(invoices, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     context = build_layout_context(request.user, current_section="billing")
     context.update(
         {
-            "invoices": invoices[:500],
+            "invoices": page_obj,
             "schools": School.objects.all().order_by("name"),
-            "filters": {"q": query, "school_id": school_id, "status": status, "date_from": date_from, "date_to": date_to},
+            "filters": {
+                "q": query,
+                "school_id": school_id,
+                "status": status,
+                "date_from": date_from,
+                "date_to": date_to,
+            },
         }
     )
     return render(request, "billing/invoices_list.html", context)
@@ -448,12 +529,19 @@ def invoice_create(request):
             messages.error(request, "Create invoice as DRAFT or ISSUED first.")
         else:
             if amount <= 0:
-                amount = _calculate_invoice_amount(school_id=school_id, plan_id=plan_id, period_start=period_start, period_end=period_end)
+                amount = _calculate_invoice_amount(
+                    school_id=school_id,
+                    plan_id=plan_id,
+                    period_start=period_start,
+                    period_end=period_end,
+                )
 
             applied_coupon = None
             if coupon_code:
                 today = date.today()
-                applied_coupon = SubscriptionCoupon.objects.filter(code=coupon_code, is_active=True).first()
+                applied_coupon = SubscriptionCoupon.objects.filter(
+                    code=coupon_code, is_active=True
+                ).first()
                 if not applied_coupon:
                     messages.error(request, "Invalid coupon code.")
                     return redirect("/billing/invoices/create/")
@@ -468,7 +556,9 @@ def invoice_create(request):
                     return redirect("/billing/invoices/create/")
 
                 if applied_coupon.discount_type == "PERCENT":
-                    discount = (amount * (applied_coupon.value / Decimal("100"))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    discount = (amount * (applied_coupon.value / Decimal("100"))).quantize(
+                        Decimal("0.01"), rounding=ROUND_HALF_UP
+                    )
                     amount = max(amount - discount, Decimal("0"))
                 else:
                     amount = max(amount - (applied_coupon.value or Decimal("0")), Decimal("0"))
@@ -477,36 +567,50 @@ def invoice_create(request):
                 tax_percent = Decimal("0")
             if tax_percent > 100:
                 tax_percent = Decimal("100")
-            tax_amount = (amount * (tax_percent / Decimal("100"))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            tax_amount = (amount * (tax_percent / Decimal("100"))).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
             total_amount = (amount + tax_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-            invoice = SubscriptionInvoice.objects.create(
-                school_id=school_id,
-                plan_id=plan_id,
-                period_start=period_start,
-                period_end=period_end,
-                amount=amount,
-                tax_percent=tax_percent,
-                tax_amount=tax_amount,
-                total_amount=total_amount,
-                due_date=due_date,
-                status=status,
-                issued_at=subscription_default_datetime() if status == "ISSUED" else None,
-            )
-            if applied_coupon:
-                SubscriptionCoupon.objects.filter(id=applied_coupon.id).update(used_count=applied_coupon.used_count + 1)
+            with transaction.atomic():
+                invoice = SubscriptionInvoice.objects.create(
+                    school_id=school_id,
+                    plan_id=plan_id,
+                    period_start=period_start,
+                    period_end=period_end,
+                    amount=amount,
+                    tax_percent=tax_percent,
+                    tax_amount=tax_amount,
+                    total_amount=total_amount,
+                    due_date=due_date,
+                    status=status,
+                    issued_at=subscription_default_datetime() if status == "ISSUED" else None,
+                )
+                if applied_coupon:
+                    SubscriptionCoupon.objects.filter(id=applied_coupon.id).update(
+                        used_count=applied_coupon.used_count + 1
+                    )
             messages.success(request, f"Invoice created (#{invoice.id}).")
             return redirect("/billing/invoices/")
 
     context = build_layout_context(request.user, current_section="billing")
-    context.update({"schools": schools, "plans": plans, "status_choices": SubscriptionInvoice.STATUS_CHOICES, "today": date.today()})
+    context.update(
+        {
+            "schools": schools,
+            "plans": plans,
+            "status_choices": SubscriptionInvoice.STATUS_CHOICES,
+            "today": date.today(),
+        }
+    )
     return render(request, "billing/invoice_form.html", context)
 
 
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def invoice_payments(request, invoice_id):
-    invoice = get_object_or_404(SubscriptionInvoice.objects.select_related("school", "plan"), id=invoice_id)
+    invoice = get_object_or_404(
+        SubscriptionInvoice.objects.select_related("school", "plan"), id=invoice_id
+    )
     payments = invoice.payments.all()
     total_paid = sum((p.amount or Decimal("0")) for p in payments)
     due_total = invoice.total_amount or invoice.amount or Decimal("0")
@@ -534,7 +638,9 @@ def payment_create(request, invoice_id):
         return redirect(f"/billing/invoices/{invoice_id}/")
 
     if invoice.status in {"VOID", "DRAFT"}:
-        messages.error(request, f"Payments cannot be recorded for {invoice.get_status_display} invoices.")
+        messages.error(
+            request, f"Payments cannot be recorded for {invoice.get_status_display} invoices."
+        )
         return redirect(f"/billing/invoices/{invoice_id}/")
 
     amount_raw = (request.POST.get("amount") or "").strip()
@@ -550,22 +656,29 @@ def payment_create(request, invoice_id):
         messages.error(request, "Payment amount must be greater than 0.")
         return redirect(f"/billing/invoices/{invoice_id}/")
 
-    SubscriptionPayment.objects.create(invoice=invoice, amount=amount, method=method, transaction_ref=transaction_ref, paid_at=paid_at)
+    with transaction.atomic():
+        SubscriptionPayment.objects.create(
+            invoice=invoice,
+            amount=amount,
+            method=method,
+            transaction_ref=transaction_ref,
+            paid_at=paid_at,
+        )
 
-    total_paid = sum((p.amount or Decimal("0")) for p in invoice.payments.all())
-    due_total = invoice.total_amount or invoice.amount or Decimal("0")
-    if invoice.status != "VOID":
-        if total_paid >= due_total:
-            invoice.status = "PAID"
-            if not invoice.issued_at:
-                invoice.issued_at = subscription_default_datetime()
-            invoice.save(update_fields=["status", "issued_at"])
-        else:
-            if invoice.status == "DRAFT":
-                invoice.status = "ISSUED"
+        total_paid = sum((p.amount or Decimal("0")) for p in invoice.payments.all())
+        due_total = invoice.total_amount or invoice.amount or Decimal("0")
+        if invoice.status != "VOID":
+            if total_paid >= due_total:
+                invoice.status = "PAID"
                 if not invoice.issued_at:
                     invoice.issued_at = subscription_default_datetime()
                 invoice.save(update_fields=["status", "issued_at"])
+            else:
+                if invoice.status == "DRAFT":
+                    invoice.status = "ISSUED"
+                    if not invoice.issued_at:
+                        invoice.issued_at = subscription_default_datetime()
+                    invoice.save(update_fields=["status", "issued_at"])
 
     messages.success(request, "Payment recorded.")
     return redirect(f"/billing/invoices/{invoice_id}/")
@@ -574,7 +687,9 @@ def payment_create(request, invoice_id):
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def invoice_status_update(request, invoice_id):
-    invoice = get_object_or_404(SubscriptionInvoice.objects.select_related("school", "plan"), id=invoice_id)
+    invoice = get_object_or_404(
+        SubscriptionInvoice.objects.select_related("school", "plan"), id=invoice_id
+    )
     if request.method != "POST":
         messages.error(request, "Invalid request.")
         return redirect(f"/billing/invoices/{invoice_id}/")
@@ -638,9 +753,13 @@ def invoice_status_update(request, invoice_id):
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def billing_webhook_events(request):
-    events = BillingWebhookEvent.objects.all().order_by("-created_at")
+    events_list = BillingWebhookEvent.objects.all().order_by("-created_at")
+    paginator = Paginator(events_list, 20)
+    page_number = request.GET.get("page")
+    events = paginator.get_page(page_number)
+
     context = build_layout_context(request.user, current_section="billing")
-    context["events"] = events[:200]
+    context["events"] = events
     return render(request, "billing/webhook_events.html", context)
 
 
@@ -690,7 +809,7 @@ def billing_webhook_generic(request):
         if abs(now_ts - ts) > max_skew:
             return JsonResponse({"error": "stale timestamp"}, status=401)
 
-        signed_payload = f"{timestamp}.{body.decode('utf-8', errors='replace')}".encode("utf-8")
+        signed_payload = f"{timestamp}.{body.decode('utf-8', errors='replace')}".encode()
         expected = hmac.new(secret_key.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
         if not constant_time_compare(signature, expected):
             return JsonResponse({"error": "invalid signature"}, status=401)
@@ -709,7 +828,9 @@ def billing_webhook_generic(request):
         defaults={
             "provider": provider,
             "event_type": str(data.get("event_type") or "")[:80],
-            "invoice_id": int(data.get("invoice_id")) if str(data.get("invoice_id") or "").isdigit() else None,
+            "invoice_id": int(data.get("invoice_id"))
+            if str(data.get("invoice_id") or "").isdigit()
+            else None,
             "status": str(data.get("status") or "")[:40],
             "payload": data,
         },
@@ -721,12 +842,20 @@ def billing_webhook_generic(request):
     try:
         invoice_id = obj.invoice_id
         if invoice_id:
-            invoice = SubscriptionInvoice.objects.select_related("school", "plan").get(id=invoice_id)
+            invoice = SubscriptionInvoice.objects.select_related("school", "plan").get(
+                id=invoice_id
+            )
             amount_raw = str(data.get("amount") or "").strip()
             amount = Decimal(amount_raw) if amount_raw else (invoice.total_amount or invoice.amount)
             method = str(data.get("method") or "OTHER").strip().upper()
             transaction_ref = str(data.get("transaction_ref") or "").strip()[:120]
-            SubscriptionPayment.objects.create(invoice=invoice, amount=amount, method=method if method in dict(SubscriptionPayment.METHOD_CHOICES) else "OTHER", transaction_ref=transaction_ref, paid_at=timezone.now())
+            SubscriptionPayment.objects.create(
+                invoice=invoice,
+                amount=amount,
+                method=method if method in dict(SubscriptionPayment.METHOD_CHOICES) else "OTHER",
+                transaction_ref=transaction_ref,
+                paid_at=timezone.now(),
+            )
             paid_total = sum((p.amount for p in invoice.payments.all()), Decimal("0"))
             due_total = invoice.total_amount or invoice.amount or Decimal("0")
             if paid_total >= due_total and invoice.status != "PAID":
@@ -761,9 +890,13 @@ def billing_webhook_generic(request):
 @role_required("SUPER_ADMIN")
 @permission_required("billing.manage")
 def coupon_list(request):
-    coupons = SubscriptionCoupon.objects.all().order_by("-created_at")
+    coupons_list = SubscriptionCoupon.objects.all().order_by("-created_at")
+    paginator = Paginator(coupons_list, 20)
+    page_number = request.GET.get("page")
+    coupons = paginator.get_page(page_number)
+
     context = build_layout_context(request.user, current_section="billing")
-    context["coupons"] = coupons[:200]
+    context["coupons"] = coupons
     return render(request, "billing/coupons_list.html", context)
 
 
@@ -844,7 +977,7 @@ def _prorate_amount(monthly_amount, *, period_start, period_end):
         month_end = cursor.replace(day=days_in_month)
         segment_end = month_end if month_end <= period_end else period_end
         segment_days = (segment_end - cursor).days + 1
-        total += (monthly_amount * Decimal(segment_days) / Decimal(days_in_month))
+        total += monthly_amount * Decimal(segment_days) / Decimal(days_in_month)
         cursor = segment_end + timedelta(days=1)
 
     return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

@@ -1,0 +1,35 @@
+<div class="card radius-16 border-0 shadow-1 mb-24 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="d-flex align-items-center justify-content-between px-24 py-16 bg-base">
+            <div class="d-flex align-items-center gap-12">
+                <div class="w-40-px h-40-px bg-primary-600 text-white radius-12 d-flex align-items-center justify-content-center">
+                    <i class="ri-compass-3-line text-xl"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Career Counseling</h6>
+                    <p class="text-xs text-neutral-500 mb-0">Navigate your counseling workspace</p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-8 flex-wrap">
+                <a href="{% url 'career_counseling:overview' %}" class="btn btn-sm {% if request.resolver_match.url_name == 'overview' %}btn-primary-600{% else %}bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100{% endif %} radius-8 px-16">
+                    <i class="ri-dashboard-line me-4"></i> Dashboard
+                </a>
+                <a href="{% url 'career_counseling:student_list' %}" class="btn btn-sm {% if 'student' in request.resolver_match.url_name %}btn-primary-600{% else %}bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100{% endif %} radius-8 px-16">
+                    <i class="ri-user-heart-line me-4"></i> Student Profiles
+                </a>
+                <a href="{% url 'career_counseling:application_list' %}" class="btn btn-sm {% if 'application' in request.resolver_match.url_name %}btn-primary-600{% else %}bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100{% endif %} radius-8 px-16">
+                    <i class="ri-government-line me-4"></i> Applications
+                </a>
+                <a href="{% url 'career_counseling:session_list' %}" class="btn btn-sm {% if 'session' in request.resolver_match.url_name %}btn-primary-600{% else %}bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100{% endif %} radius-8 px-16">
+                    <i class="ri-calendar-event-line me-4"></i> Sessions
+                </a>
+                <a href="{% url 'career_counseling:university_list' %}" class="btn btn-sm {% if 'university' in request.resolver_match.url_name %}btn-primary-600{% else %}bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100{% endif %} radius-8 px-16">
+                    <i class="ri-hotel-line me-4"></i> Universities
+                </a>
+                <a href="{% url 'career_counseling:event_list' %}" class="btn btn-sm {% if 'event' in request.resolver_match.url_name %}btn-primary-600{% else %}bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100{% endif %} radius-8 px-16">
+                    <i class="ri-medal-line me-4"></i> Events
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

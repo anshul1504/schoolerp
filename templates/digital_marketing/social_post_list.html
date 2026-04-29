@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Social Posts{% endblock %}
+{% block page_heading %}Social Posts{% endblock %}
+{% block breadcrumb_active %}Social Posts{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div><h6 class="text-lg fw-semibold mb-0">Social Post Manager</h6><p class="text-sm text-secondary-light mb-0 mt-4">Track posting schedule and performance.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'digital_marketing:advanced_report_csv' %}">Advanced Report</a><a class="btn btn-primary-600 radius-8 px-20 py-11" href="{% url 'digital_marketing:social_post_create' %}">Create Post</a></div>
+  </div>
+  <div class="card-body p-24">
+    <form method="get" class="mb-24">
+      <div class="row gy-3 gx-3 align-items-end">
+        <div class="col-lg-4"><label class="form-label">Search</label><input name="q" value="{{ filters.q }}" class="form-control" placeholder="Title/Campaign/Handle"></div>
+        <div class="col-lg-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">All</option>{% for code,label in status_choices %}<option value="{{ code }}" {% if filters.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-lg-3"><label class="form-label">Post Type</label><select name="post_type" class="form-select"><option value="">All</option><option value="organic" {% if filters.post_type == 'organic' %}selected{% endif %}>Organic</option><option value="campaign" {% if filters.post_type == 'campaign' %}selected{% endif %}>Campaign Linked</option></select></div>
+        <div class="col-lg-1"><button class="btn btn-primary-600 w-100">Apply</button></div>
+        <div class="col-lg-1"><a class="btn btn-outline-danger-600 w-100" href="{% url 'digital_marketing:social_post_list' %}">Reset</a></div>
+      </div>
+    </form>
+    <div class="table-responsive"><table class="table bordered-table mb-0"><thead><tr><th>#</th><th>Title</th><th>Type</th><th>Campaign</th><th>Account</th><th>Status</th><th>Reviewed By</th><th>Reviewed At</th><th>Reach</th><th>Clicks</th><th>Leads</th><th class="text-end">Actions</th></tr></thead><tbody>{% for p in posts %}<tr><td>{{ forloop.counter|add:posts.start_index|add:'-1' }}</td><td><div>{{ p.title }}</div>{% if p.review_notes %}<small class="text-secondary-light">Note: {{ p.review_notes }}</small>{% endif %}</td><td>{% if p.campaign %}<span class="badge bg-info-100 text-info-600">Campaign</span>{% else %}<span class="badge bg-success-100 text-success-600">Organic</span>{% endif %}</td><td>{{ p.campaign|default:'-' }}</td><td>{{ p.account|default:'-' }}</td><td><span class="badge bg-primary-100 text-primary-600">{{ p.get_status_display }}</span></td><td>{{ p.reviewed_by|default:'-' }}</td><td>{% if p.reviewed_at %}{{ p.reviewed_at|date:"d M Y H:i" }}{% else %}-{% endif %}</td><td>{{ p.reach }}</td><td>{{ p.clicks }}</td><td>{{ p.leads_generated }}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'digital_marketing:social_post_edit' p.id %}">Edit</a> {% if p.status == 'DRAFT' or p.status == 'FAILED' %}<form method="post" action="{% url 'digital_marketing:social_post_submit_review' p.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-info">Send Review</button></form>{% endif %} {% if p.status == 'IN_REVIEW' %}<button type="button" class="btn btn-sm btn-outline-secondary" onclick="openReviewModal('{% url 'digital_marketing:social_post_approve' p.id %}', false)">Approve</button> <button type="button" class="btn btn-sm btn-outline-danger" onclick="openReviewModal('{% url 'digital_marketing:social_post_reject' p.id %}', true)">Reject</button>{% endif %} {% if p.status == 'APPROVED' or p.status == 'SCHEDULED' %}<form method="post" action="{% url 'digital_marketing:social_post_publish' p.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-success">Publish</button></form>{% endif %} {% if p.status == 'FAILED' %}<form method="post" action="{% url 'digital_marketing:social_post_retry' p.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-warning">Retry</button></form>{% endif %} <form method="post" action="{% url 'digital_marketing:social_post_delete' p.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete post?')">Delete</button></form></td></tr>{% empty %}<tr><td colspan="12" class="text-center py-20">No social posts found.</td></tr>{% endfor %}</tbody></table></div>
+    {% if posts.paginator.num_pages > 1 %}<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24"><span class="text-secondary-light text-sm">Showing {{ posts.start_index }} to {{ posts.end_index }} of {{ posts.paginator.count }} entries</span><ul class="pagination d-flex gap-2 mb-0">{% if posts.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ posts.previous_page_number }}&q={{ filters.q }}&status={{ filters.status }}&post_type={{ filters.post_type }}">Prev</a></li>{% endif %}<li class="page-item"><span class="page-link bg-primary-600 text-white">{{ posts.number }}</span></li>{% if posts.has_next %}<li class="page-item"><a class="page-link" href="?page={{ posts.next_page_number }}&q={{ filters.q }}&status={{ filters.status }}&post_type={{ filters.post_type }}">Next</a></li>{% endif %}</ul></div>{% endif %}
+  </div>
+</div>
+<div id="reviewNoteModal" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background: rgba(15, 23, 42, 0.4); z-index: 1060;">
+  <div class="card radius-12 border-0 shadow-sm" style="width: 100%; max-width: 520px;">
+    <div class="card-header border-bottom py-16 px-24 d-flex align-items-center justify-content-between">
+      <h6 class="mb-0" id="reviewModalTitle">Review Note</h6>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeReviewModal()">Close</button>
+    </div>
+    <form id="reviewNoteForm" method="post" class="card-body p-24">
+      {% csrf_token %}
+      <input type="hidden" name="review_notes" id="reviewNotesInput">
+      <div class="mb-16">
+        <label class="form-label">Note</label>
+        <textarea id="reviewNotesTextarea" class="form-control" rows="4" placeholder="Enter your review note..."></textarea>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" onclick="closeReviewModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary-600">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  let reviewNoteRequired = false;
+  function openReviewModal(actionUrl, required) {
+    reviewNoteRequired = required;
+    document.getElementById("reviewModalTitle").textContent = required ? "Reject Post" : "Approve Post";
+    document.getElementById("reviewNoteForm").action = actionUrl;
+    document.getElementById("reviewNotesTextarea").value = "";
+    document.getElementById("reviewNoteModal").classList.remove("d-none");
+    document.getElementById("reviewNoteModal").classList.add("d-flex");
+  }
+  function closeReviewModal() {
+    document.getElementById("reviewNoteModal").classList.add("d-none");
+    document.getElementById("reviewNoteModal").classList.remove("d-flex");
+  }
+  document.getElementById("reviewNoteForm").addEventListener("submit", function (e) {
+    const value = (document.getElementById("reviewNotesTextarea").value || "").trim();
+    if (reviewNoteRequired && !value) {
+      e.preventDefault();
+      alert("Rejection note is required.");
+      return;
+    }
+    document.getElementById("reviewNotesInput").value = value;
+  });
+</script>
+{% endblock %}

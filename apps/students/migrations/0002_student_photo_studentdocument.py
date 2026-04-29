@@ -5,28 +5,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('students', '0001_initial'),
+        ("students", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='student',
-            name='photo',
-            field=models.ImageField(blank=True, null=True, upload_to='students/photos/'),
+            model_name="student",
+            name="photo",
+            field=models.ImageField(blank=True, null=True, upload_to="students/photos/"),
         ),
         migrations.CreateModel(
-            name='StudentDocument',
+            name="StudentDocument",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=150)),
-                ('document', models.FileField(upload_to='students/documents/')),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("title", models.CharField(max_length=150)),
+                ("document", models.FileField(upload_to="students/documents/")),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documents",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-uploaded_at'],
+                "ordering": ["-uploaded_at"],
             },
         ),
     ]

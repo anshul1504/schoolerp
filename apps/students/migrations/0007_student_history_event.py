@@ -6,28 +6,68 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schools', '0009_seed_default_plans'),
-        ('students', '0006_student_aadhar_card_student_academic_year_and_more'),
+        ("schools", "0009_seed_default_plans"),
+        ("students", "0006_student_aadhar_card_student_academic_year_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='StudentHistoryEvent',
+            name="StudentHistoryEvent",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('CREATED', 'Created'), ('UPDATED', 'Updated'), ('DOCUMENT_UPLOADED', 'Document Uploaded'), ('PROMOTED', 'Promoted'), ('TC_ISSUED', 'Transfer Certificate Issued'), ('DELETED', 'Deleted')], max_length=40)),
-                ('message', models.CharField(blank=True, max_length=255)),
-                ('meta', models.JSONField(blank=True, default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('actor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='student_history_events', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='student_history_events', to='schools.school')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='history_events', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("CREATED", "Created"),
+                            ("UPDATED", "Updated"),
+                            ("DOCUMENT_UPLOADED", "Document Uploaded"),
+                            ("PROMOTED", "Promoted"),
+                            ("TC_ISSUED", "Transfer Certificate Issued"),
+                            ("DELETED", "Deleted"),
+                        ],
+                        max_length=40,
+                    ),
+                ),
+                ("message", models.CharField(blank=True, max_length=255)),
+                ("meta", models.JSONField(blank=True, default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "actor",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="student_history_events",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="student_history_events",
+                        to="schools.school",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="history_events",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

@@ -99,7 +99,7 @@
               <td class="small">{% if row.wardens %}{{ row.wardens|join:", " }}{% else %}-{% endif %}</td>
               <td class="small">{% if row.mess_plans %}{{ row.mess_plans|join:", " }}{% else %}-{% endif %}</td>
               <td>{{ row.allocation_count }}</td>
-              <td>{% if row.status == "Ready" %}<span class="status-pill status-pill--success">Ready</span>{% else %}<span class="status-pill status-pill--warning">Needs setup</span>{% endif %}</td>
+              <td>{% if row.status == "Ready" %}<span class="badge status-pill--success">Ready</span>{% else %}<span class="badge status-pill--warning">Needs setup</span>{% endif %}</td>
             </tr>
           {% empty %}
             <tr><td colspan="7" class="text-center text-muted">No schools found.</td></tr>

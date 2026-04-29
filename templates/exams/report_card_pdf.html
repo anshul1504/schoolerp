@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Report Card - {{ student.get_full_name }}</title>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; }
+        .report-container { width: 100%; max-width: 900px; margin: 0 auto; border: 2px solid #333; padding: 40px; }
+        .header { text-align: center; border-bottom: 3px solid #1a56db; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; color: #1a56db; text-transform: uppercase; }
+        .header p { margin: 5px 0; font-size: 14px; }
+        .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; background: #f9fafb; padding: 20px; border-radius: 8px; }
+        .info-item { display: flex; border-bottom: 1px solid #eee; padding: 5px 0; }
+        .info-label { font-weight: bold; width: 140px; font-size: 14px; color: #666; }
+        .info-value { font-weight: bold; font-size: 14px; }
+        .marks-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .marks-table th { background: #1a56db; color: white; text-align: left; padding: 12px; border: 1px solid #ddd; font-size: 14px; }
+        .marks-table td { padding: 12px; border: 1px solid #ddd; font-size: 14px; }
+        .summary-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+        .summary-box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .summary-label { font-weight: bold; }
+        .footer { margin-top: 60px; display: flex; justify-content: space-between; }
+        .sig-box { border-top: 1px solid #333; width: 200px; text-align: center; padding-top: 10px; font-size: 14px; font-weight: bold; }
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.05); z-index: -1; }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="watermark">REPORT CARD</div>
+        <div class="header">
+            <h1>{{ school.name }}</h1>
+            <p>{{ school.address }}, {{ school.city }}, {{ school.state }}</p>
+            <p><strong>ACADEMIC PROGRESS REPORT ({{ exam.name }})</strong></p>
+        </div>
+
+        <div class="student-info">
+            <div>
+                <div class="info-item"><span class="info-label">Student Name:</span><span class="info-value">{{ student.get_full_name }}</span></div>
+                <div class="info-item"><span class="info-label">Admission No:</span><span class="info-value">{{ student.admission_no }}</span></div>
+                <div class="info-item"><span class="info-label">Roll Number:</span><span class="info-value">{{ student.roll_number }}</span></div>
+            </div>
+            <div>
+                <div class="info-item"><span class="info-label">Class & Sec:</span><span class="info-value">{{ student.class_name }} - {{ student.section }}</span></div>
+                <div class="info-item"><span class="info-label">Date of Birth:</span><span class="info-value">{{ student.date_of_birth }}</span></div>
+                <div class="info-item"><span class="info-label">Father's Name:</span><span class="info-value">{{ student.father_name }}</span></div>
+            </div>
+        </div>
+
+        <table class="marks-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th style="text-align: center;">Max Marks</th>
+                    <th style="text-align: center;">Passing Marks</th>
+                    <th style="text-align: center;">Obtained</th>
+                    <th style="text-align: center;">Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in marks %}
+                <tr>
+                    <td>{{ row.subject.name }}</td>
+                    <td style="text-align: center;">{{ exam.total_marks }}</td>
+                    <td style="text-align: center;">{{ exam.passing_marks }}</td>
+                    <td style="text-align: center;">{{ row.marks_obtained }}</td>
+                    <td style="text-align: center;">{{ row.grade }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="summary-section">
+            <div class="summary-box">
+                <div class="summary-row"><span class="summary-label">Grand Total:</span><span>{{ total_obtained }} / {{ grand_total }}</span></div>
+                <div class="summary-row"><span class="summary-label">Percentage:</span><span>{{ percentage }}%</span></div>
+                <div class="summary-row"><span class="summary-label">Result:</span><span style="color: {% if result == 'PASSED' %}green{% else %}red{% endif %}; font-weight: bold;">{{ result }}</span></div>
+            </div>
+            <div class="summary-box">
+                <p style="margin: 0; font-size: 12px; color: #666;">Remarks:</p>
+                <p style="margin: 5px 0; font-style: italic;">{{ overall_remark }}</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="sig-box">Class Teacher</div>
+            <div class="sig-box">Principal</div>
+            <div class="sig-box">Parent / Guardian</div>
+        </div>
+    </div>
+</body>
+</html>

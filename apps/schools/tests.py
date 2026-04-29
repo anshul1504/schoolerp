@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from apps.core.models import EntityChangeLog
+
 from .models import (
     Campus,
     ImplementationProject,
@@ -89,7 +90,11 @@ class SchoolCreateUpdateTests(TestCase):
         self.assertEqual(school.name, "Gamma School Updated")
         self.assertEqual(school.principal_name, "Principal Updated")
         self.assertEqual(school.established_year, 2002)
-        self.assertTrue(EntityChangeLog.objects.filter(entity="schools.School", object_id=str(school.id), action="UPDATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="schools.School", object_id=str(school.id), action="UPDATED"
+            ).exists()
+        )
 
 
 class SchoolDeleteTests(TestCase):
@@ -133,7 +138,9 @@ class SchoolDeleteTests(TestCase):
 class SchoolImportTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.super_admin = User.objects.create_user(username="superadmin_import", password="pass123", role="SUPER_ADMIN")
+        self.super_admin = User.objects.create_user(
+            username="superadmin_import", password="pass123", role="SUPER_ADMIN"
+        )
 
     def test_school_import_preview_and_confirm_creates_school(self):
         self.client.force_login(self.super_admin)
@@ -141,7 +148,10 @@ class SchoolImportTests(TestCase):
             "name,code,email,phone,support_email,website,principal_name,board,medium,established_year,address,address_line2,city,state,pincode,student_capacity,allowed_campuses,is_active\n"
             "Beta School,BETA01,beta@example.com,9999999999,support@example.com,https://beta.example.com,Principal Beta,CBSE,English,2005,Main road,,Bhopal,Madhya Pradesh,462001,1200,1,yes\n"
         )
-        preview = self.client.post("/schools/import/", data={"stage": "preview", "import_file": self._file(csv_text, "schools.csv")})
+        preview = self.client.post(
+            "/schools/import/",
+            data={"stage": "preview", "import_file": self._file(csv_text, "schools.csv")},
+        )
         self.assertEqual(preview.status_code, 200)
         confirm = self.client.post("/schools/import/", data={"stage": "confirm"})
         self.assertEqual(confirm.status_code, 302)
@@ -159,7 +169,9 @@ class SchoolImportTests(TestCase):
 class ImplementationTrackerTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.super_admin = User.objects.create_user(username="superadmin_impl", password="pass123", role="SUPER_ADMIN")
+        self.super_admin = User.objects.create_user(
+            username="superadmin_impl", password="pass123", role="SUPER_ADMIN"
+        )
         self.school = School.objects.create(
             name="Impl School",
             code="IMPL01",
@@ -184,7 +196,9 @@ class ImplementationTrackerTests(TestCase):
         )
         self.assertEqual(create.status_code, 302)
         project = ImplementationProject.objects.get(school=self.school)
-        self.assertTrue(ImplementationTask.objects.filter(project=project, title="Do training").exists())
+        self.assertTrue(
+            ImplementationTask.objects.filter(project=project, title="Do training").exists()
+        )
 
 
 class SubscriptionFeatureGatingTests(TestCase):
@@ -202,15 +216,26 @@ class SubscriptionFeatureGatingTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        self.user = User.objects.create_user(username="teacher_gate", password="pass123", role="TEACHER", school=self.school)
+        self.user = User.objects.create_user(
+            username="teacher_gate", password="pass123", role="TEACHER", school=self.school
+        )
 
         # Create a plan that explicitly excludes STAFF feature.
-        PlanFeature.objects.update_or_create(code="STAFF", defaults={"name": "Staff", "description": "", "is_active": True})
-        plan = SubscriptionPlan.objects.create(name="NoStaff", code="NOSTAFF", tier="SILVER", max_students=1000, max_campuses=1)
+        PlanFeature.objects.update_or_create(
+            code="STAFF", defaults={"name": "Staff", "description": "", "is_active": True}
+        )
+        plan = SubscriptionPlan.objects.create(
+            name="NoStaff", code="NOSTAFF", tier="SILVER", max_students=1000, max_campuses=1
+        )
         plan.features.set([])
         SchoolSubscription.objects.update_or_create(
             school=self.school,
-            defaults={"plan": plan, "status": "ACTIVE", "starts_on": self.school.created_at.date(), "ends_on": None},
+            defaults={
+                "plan": plan,
+                "status": "ACTIVE",
+                "starts_on": self.school.created_at.date(),
+                "ends_on": None,
+            },
         )
 
     def test_staff_module_redirects_when_feature_missing(self):
@@ -234,7 +259,9 @@ class BillingEntityChangeLogTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        self.plan = SubscriptionPlan.objects.create(name="Plan", code="BLP", tier="SILVER", max_students=1000, max_campuses=1)
+        self.plan = SubscriptionPlan.objects.create(
+            name="Plan", code="BLP", tier="SILVER", max_students=1000, max_campuses=1
+        )
 
     def test_invoice_and_payment_create_update_logged(self):
         invoice = SubscriptionInvoice.objects.create(
@@ -245,14 +272,28 @@ class BillingEntityChangeLogTests(TestCase):
             amount="100.00",
             status="ISSUED",
         )
-        self.assertTrue(EntityChangeLog.objects.filter(entity="schools.SubscriptionInvoice", object_id=str(invoice.id), action="CREATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="schools.SubscriptionInvoice", object_id=str(invoice.id), action="CREATED"
+            ).exists()
+        )
 
         invoice.status = "PAID"
         invoice.save(update_fields=["status"])
-        self.assertTrue(EntityChangeLog.objects.filter(entity="schools.SubscriptionInvoice", object_id=str(invoice.id), action="UPDATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="schools.SubscriptionInvoice", object_id=str(invoice.id), action="UPDATED"
+            ).exists()
+        )
 
-        payment = SubscriptionPayment.objects.create(invoice=invoice, amount="100.00", method="UPI", transaction_ref="tx")
-        self.assertTrue(EntityChangeLog.objects.filter(entity="schools.SubscriptionPayment", object_id=str(payment.id), action="CREATED").exists())
+        payment = SubscriptionPayment.objects.create(
+            invoice=invoice, amount="100.00", method="UPI", transaction_ref="tx"
+        )
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="schools.SubscriptionPayment", object_id=str(payment.id), action="CREATED"
+            ).exists()
+        )
 
 
 class AdminSchoolsAccessTests(TestCase):
@@ -282,7 +323,9 @@ class AdminSchoolsAccessTests(TestCase):
             is_active=True,
         )
         User = get_user_model()
-        self.admin = User.objects.create_user(username="admin_school", password="pass123", role="ADMIN", school=self.school)
+        self.admin = User.objects.create_user(
+            username="admin_school", password="pass123", role="ADMIN", school=self.school
+        )
 
     def test_admin_can_open_school_list_and_profile(self):
         self.client.force_login(self.admin)
@@ -303,7 +346,9 @@ class AdminSchoolsAccessTests(TestCase):
 
     def test_admin_export_remains_scoped_to_own_school(self):
         self.client.force_login(self.admin)
-        response = self.client.get(f"/schools/export/csv/?school_ids={self.school.id},{self.other_school.id}")
+        response = self.client.get(
+            f"/schools/export/csv/?school_ids={self.school.id},{self.other_school.id}"
+        )
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8", errors="ignore")
         self.assertIn("Admin Scoped School", body)
@@ -337,9 +382,18 @@ class SchoolOwnerWorkflowAccessTests(TestCase):
             is_active=True,
         )
         User = get_user_model()
-        self.owner = User.objects.create_user(username="school_owner_ops", password="pass123", role="SCHOOL_OWNER", school=self.school)
-        self.same_school_user = User.objects.create_user(username="same_school_staff", password="pass123", role="TEACHER", school=self.school)
-        self.other_school_user = User.objects.create_user(username="other_school_staff", password="pass123", role="TEACHER", school=self.other_school)
+        self.owner = User.objects.create_user(
+            username="school_owner_ops", password="pass123", role="SCHOOL_OWNER", school=self.school
+        )
+        self.same_school_user = User.objects.create_user(
+            username="same_school_staff", password="pass123", role="TEACHER", school=self.school
+        )
+        self.other_school_user = User.objects.create_user(
+            username="other_school_staff",
+            password="pass123",
+            role="TEACHER",
+            school=self.other_school,
+        )
 
     def test_school_owner_can_update_own_school_profile(self):
         self.client.force_login(self.owner)

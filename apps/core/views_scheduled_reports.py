@@ -34,8 +34,12 @@ def _next_run_at(*, frequency: str, now):
 
 
 def _run_now(report: ScheduledReport) -> ScheduledReportRun:
-    from apps.core.management.commands.run_scheduled_reports import _report_csv, _recipients  # local import to avoid cycles
     from django.core.mail import EmailMultiAlternatives
+
+    from apps.core.management.commands.run_scheduled_reports import (
+        _recipients,
+        _report_csv,
+    )  # local import to avoid cycles
 
     now = timezone.now()
     started_at = now
@@ -103,7 +107,11 @@ def scheduled_report_create(request):
         filters = _parse_filters(request.POST.get("filters") or "")
         is_active = request.POST.get("is_active") == "on"
 
-        if not name or report_type not in dict(ScheduledReport.REPORT_CHOICES) or frequency not in dict(ScheduledReport.FREQUENCY_CHOICES):
+        if (
+            not name
+            or report_type not in dict(ScheduledReport.REPORT_CHOICES)
+            or frequency not in dict(ScheduledReport.FREQUENCY_CHOICES)
+        ):
             messages.error(request, "Please fill all required fields.")
         elif not _recipients_list(recipients):
             messages.error(request, "At least one recipient email is required.")
@@ -115,7 +123,9 @@ def scheduled_report_create(request):
                 recipients=recipients,
                 filters=filters,
                 is_active=is_active,
-                next_run_at=_next_run_at(frequency=frequency, now=timezone.now()) if is_active else None,
+                next_run_at=_next_run_at(frequency=frequency, now=timezone.now())
+                if is_active
+                else None,
             )
             messages.success(request, "Scheduled report created.")
             return redirect("/reports/scheduled/")
@@ -143,7 +153,11 @@ def scheduled_report_update(request, report_id):
         filters = _parse_filters(request.POST.get("filters") or "")
         is_active = request.POST.get("is_active") == "on"
 
-        if not name or report_type not in dict(ScheduledReport.REPORT_CHOICES) or frequency not in dict(ScheduledReport.FREQUENCY_CHOICES):
+        if (
+            not name
+            or report_type not in dict(ScheduledReport.REPORT_CHOICES)
+            or frequency not in dict(ScheduledReport.FREQUENCY_CHOICES)
+        ):
             messages.error(request, "Please fill all required fields.")
         elif not _recipients_list(recipients):
             messages.error(request, "At least one recipient email is required.")
@@ -154,7 +168,9 @@ def scheduled_report_update(request, report_id):
             report.recipients = recipients
             report.filters = filters
             report.is_active = is_active
-            report.next_run_at = _next_run_at(frequency=frequency, now=timezone.now()) if is_active else None
+            report.next_run_at = (
+                _next_run_at(frequency=frequency, now=timezone.now()) if is_active else None
+            )
             report.save()
             messages.success(request, "Scheduled report updated.")
             return redirect("/reports/scheduled/")

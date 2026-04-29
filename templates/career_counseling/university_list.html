@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Universities Database | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Universities & Institutions{% endblock %}
+{% block breadcrumb_active %}Universities{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="card radius-16 border-0 shadow-1">
+        <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <h6 class="mb-0 fw-bold">Institutions Repository</h6>
+            <a href="{% url 'career_counseling:university_add' %}" class="btn btn-sm btn-primary-600 radius-8">
+                <i class="ri-add-line me-4"></i> Add University
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table border-0 mb-0">
+                    <thead class="bg-neutral-100 dark-bg-neutral-800">
+                        <tr>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">University Name</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Location</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-center">Website</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for uni in universities %}
+                        <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                            <td class="py-16 px-24">
+                                <span class="text-sm fw-bold text-primary-light">{{ uni.name }}</span>
+                            </td>
+                            <td class="py-16 px-24">
+                                <span class="text-sm text-secondary-light">{{ uni.country }}{% if uni.city %}, {{ uni.city }}{% endif %}</span>
+                            </td>
+                            <td class="py-16 px-24 text-center">
+                                {% if uni.website %}
+                                <a href="{{ uni.website }}" target="_blank" class="text-primary-600 text-sm fw-bold"><i class="ri-external-link-line me-4"></i> Visit</a>
+                                {% else %}
+                                <span class="text-xxs text-neutral-400">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-16 px-24 text-end">
+                                <div class="d-flex align-items-center justify-content-end gap-8">
+                                    <a href="{% url 'career_counseling:university_edit' uni.pk %}" class="btn btn-icon btn-sm bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100 radius-8">
+                                        <i class="ri-edit-line"></i>
+                                    </a>
+                                    <a href="{% url 'career_counseling:university_delete' uni.pk %}" class="btn btn-icon btn-sm bg-danger-50 text-danger-600 border border-danger-100 hover-bg-danger-100 radius-8" onclick="return confirm('Are you sure?')">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-80 text-center text-secondary-light">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="ri-government-line text-5xl mb-16 opacity-25"></i>
+                                    <h6>No universities listed</h6>
+                                    <p class="text-sm">Populate the institution database for counseling reference.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

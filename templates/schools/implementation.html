@@ -2,199 +2,203 @@
 
 {% block title %}Implementation Tracker{% endblock %}
 {% block page_eyebrow %}School Onboarding{% endblock %}
-{% block page_heading %}Implementation — {{ school.name }}{% endblock %}
+{% block page_heading %}Implementation - {{ school.name }}{% endblock %}
 {% block page_copy %}Track tasks, owners, and due dates for rollout.{% endblock %}
 
 {% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Project</h6>
-          <p>One tracker per school (created automatically).</p>
+  <section class="schools-page">
+    <div class="card radius-12 border-neutral-200 mb-24">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          <div class="mb-0">
+            <h6 class="mb-4">Project Status</h6>
+            <p class="text-neutral-600 text-sm mb-0">Update the current onboarding status and track general blockers or notes.</p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary radius-8 px-20 py-11" href="/schools/{{ school.id }}/">Back to School</a>
+          </div>
         </div>
-        <div class="sf-actions">
-          <a class="btn btn-outline-secondary" href="/schools/{{ school.id }}/">Back to School</a>
-        </div>
-      </div>
 
-      <form method="post" class="row gy-3 mt-2">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update_project">
-        <div class="col-md-4">
-          <label class="form-label">Status</label>
-          <select name="status" class="form-control">
-            {% for value,label in project.STATUS_CHOICES %}
-              <option value="{{ value }}" {% if project.status == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-8">
-          <label class="form-label">Notes</label>
-          <input type="text" name="notes" class="form-control" value="{{ project.notes }}" placeholder="Optional summary, blockers, next steps">
-        </div>
-        <div class="col-12">
-          <button class="btn btn-primary" type="submit">Save Project</button>
-        </div>
-      </form>
+        <form method="post" class="row gy-3 mt-2">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_project">
+          <div class="col-md-4">
+            <label class="form-label text-primary-light text-sm fw-semibold">Status</label>
+            <select name="status" class="form-control radius-8">
+              {% for value,label in project.STATUS_CHOICES %}
+                <option value="{{ value }}" {% if project.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label text-primary-light text-sm fw-semibold">Notes</label>
+            <input type="text" name="notes" class="form-control radius-8" value="{{ project.notes }}" placeholder="Optional summary, blockers, next steps">
+          </div>
+          <div class="col-12 mt-24">
+            <button class="btn btn-primary-600 radius-8 px-20 py-11" type="submit">Save Project</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Add task</h6>
-          <p>Create rollout tasks (data migration, training, billing setup, etc.).</p>
+    <div class="card radius-12 border-neutral-200 mb-24">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          <div class="mb-0">
+            <h6 class="mb-4">Add Task</h6>
+            <p class="text-neutral-600 text-sm mb-0">Create rollout tasks (e.g., data migration, training, billing setup).</p>
+          </div>
         </div>
+
+        <form method="post" class="row gy-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_task">
+          <div class="col-md-5">
+            <label class="form-label text-primary-light text-sm fw-semibold">Title</label>
+            <input type="text" name="title" class="form-control radius-8" placeholder="e.g., Import students from legacy" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-primary-light text-sm fw-semibold">Owner</label>
+            <select name="owner_id" class="form-control radius-8">
+              <option value="">-</option>
+              {% for u in owners %}
+                <option value="{{ u.id }}">{{ u.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-primary-light text-sm fw-semibold">Due Date</label>
+            <input type="date" name="due_date" class="form-control radius-8">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-primary-light text-sm fw-semibold">Status</label>
+            <select name="task_status" class="form-control radius-8">
+              {% for value,label in project.tasks.model.STATUS_CHOICES %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-10">
+            <label class="form-label text-primary-light text-sm fw-semibold">Description</label>
+            <input type="text" name="description" class="form-control radius-8" placeholder="Optional details">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-primary-light text-sm fw-semibold">Order</label>
+            <input type="number" name="sort_order" class="form-control radius-8" value="0" min="0">
+          </div>
+          <div class="col-12 mt-24">
+            <button class="btn btn-primary-600 radius-8 px-20 py-11" type="submit">Add Task</button>
+          </div>
+        </form>
       </div>
-
-      <form method="post" class="row gy-3">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="create_task">
-        <div class="col-md-5">
-          <label class="form-label">Title</label>
-          <input type="text" name="title" class="form-control" placeholder="e.g., Import students from legacy" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Owner</label>
-          <select name="owner_id" class="form-control">
-            <option value="">—</option>
-            {% for u in owners %}
-              <option value="{{ u.id }}">{{ u.username }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Due</label>
-          <input type="date" name="due_date" class="form-control">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Status</label>
-          <select name="task_status" class="form-control">
-            {% for value,label in project.tasks.model.STATUS_CHOICES %}
-              <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-10">
-          <label class="form-label">Description</label>
-          <input type="text" name="description" class="form-control" placeholder="Optional details">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Order</label>
-          <input type="number" name="sort_order" class="form-control" value="0" min="0">
-        </div>
-        <div class="col-12">
-          <button class="btn btn-primary" type="submit">Add Task</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <div class="sf-card">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Tasks</h6>
-          <p>Update status, owner, due dates.</p>
+    <div class="card radius-12 border-neutral-200">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          <div class="mb-0">
+            <h6 class="mb-4">Task List</h6>
+            <p class="text-neutral-600 text-sm mb-0">Update status, assign owners, and due dates.</p>
+          </div>
         </div>
-      </div>
 
-      <div class="table-responsive">
-        <table class="table align-middle sf-table">
-          <thead>
+        <div class="table-responsive">
+          <table class="table bordered-table mb-0">
+            <thead>
             <tr>
-              <th class="sf-th-70">Order</th>
-              <th>Title</th>
-              <th class="sf-th-160">Owner</th>
-              <th class="sf-th-160">Due</th>
-              <th class="sf-th-170">Status</th>
-              <th class="sf-th-120"></th>
+              <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 60px;">S.No</th>
+              <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 70px;">Order</th>
+              <th scope="col" class="text-xs text-secondary-light font-bold">Title</th>
+              <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 160px;">Owner</th>
+              <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 160px;">Due</th>
+              <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 170px;">Status</th>
+              <th scope="col" class="text-xs text-secondary-light font-bold text-end" style="width: 120px;">Action</th>
             </tr>
-          </thead>
-          <tbody>
-            {% for t in tasks %}
-              <tr>
-                <td class="text-muted text-sm">{{ t.sort_order }}</td>
-                <td>
-                  <div class="fw-semibold">{{ t.title }}</div>
-                  {% if t.description %}<div class="text-muted text-sm">{{ t.description }}</div>{% endif %}
-                </td>
-                <td class="text-muted text-sm">{% if t.owner %}{{ t.owner.username }}{% else %}—{% endif %}</td>
-                <td class="text-muted text-sm">{% if t.due_date %}{{ t.due_date }}{% else %}—{% endif %}</td>
-                <td>
-                  {% if t.status == "DONE" %}
-                    <span class="badge bg-success">{{ t.get_status_display }}</span>
-                  {% elif t.status == "BLOCKED" %}
-                    <span class="badge bg-danger">{{ t.get_status_display }}</span>
-                  {% elif t.status == "IN_PROGRESS" %}
-                    <span class="badge bg-warning text-dark">{{ t.get_status_display }}</span>
-                  {% else %}
-                    <span class="badge bg-secondary">{{ t.get_status_display }}</span>
-                  {% endif %}
-                </td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#taskEdit{{ t.id }}">Edit</button>
-                  <form method="post" class="d-inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="delete_task">
-                    <input type="hidden" name="task_id" value="{{ t.id }}">
-                    <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete this task?');">Delete</button>
-                  </form>
-                </td>
-              </tr>
-              <tr class="collapse" id="taskEdit{{ t.id }}">
-                <td colspan="6">
-                  <form method="post" class="row gy-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="update_task">
-                    <input type="hidden" name="task_id" value="{{ t.id }}">
-                    <div class="col-md-4">
-                      <label class="form-label">Title</label>
-                      <input type="text" name="title" class="form-control" value="{{ t.title }}" required>
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label">Owner</label>
-                      <select name="owner_id" class="form-control">
-                        <option value="">—</option>
-                        {% for u in owners %}
-                          <option value="{{ u.id }}" {% if t.owner and t.owner.id == u.id %}selected{% endif %}>{{ u.username }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    <div class="col-md-2">
-                      <label class="form-label">Due</label>
-                      <input type="date" name="due_date" class="form-control" value="{% if t.due_date %}{{ t.due_date|date:'Y-m-d' }}{% endif %}">
-                    </div>
-                    <div class="col-md-2">
-                      <label class="form-label">Status</label>
-                      <select name="task_status" class="form-control">
-                        {% for value,label in project.tasks.model.STATUS_CHOICES %}
-                          <option value="{{ value }}" {% if t.status == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    <div class="col-md-1">
-                      <label class="form-label">Order</label>
-                      <input type="number" name="sort_order" class="form-control" value="{{ t.sort_order }}" min="0">
-                    </div>
-                    <div class="col-md-10">
-                      <label class="form-label">Description</label>
-                      <input type="text" name="description" class="form-control" value="{{ t.description }}">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end justify-content-end gap-10">
-                      <button class="btn btn-primary" type="submit">Save</button>
-                    </div>
-                  </form>
-                </td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="6" class="text-center text-muted">No tasks yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for t in tasks %}
+                <tr>
+                  <td class="text-muted text-sm">{{ forloop.counter }}</td>
+                  <td class="text-muted text-sm">{{ t.sort_order }}</td>
+                  <td>
+                    <div class="fw-semibold">{{ t.title }}</div>
+                    {% if t.description %}<div class="text-muted text-sm">{{ t.description }}</div>{% endif %}
+                  </td>
+                  <td class="text-muted text-sm">{% if t.owner %}{{ t.owner.username }}{% else %}-{% endif %}</td>
+                  <td class="text-muted text-sm">{% if t.due_date %}{{ t.due_date }}{% else %}-{% endif %}</td>
+                  <td>
+                    {% if t.status == "DONE" %}
+                      <span class="badge bg-success">{{ t.get_status_display }}</span>
+                    {% elif t.status == "BLOCKED" %}
+                      <span class="badge bg-danger">{{ t.get_status_display }}</span>
+                    {% elif t.status == "IN_PROGRESS" %}
+                      <span class="badge bg-warning text-dark">{{ t.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary">{{ t.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary-600 radius-8" type="button" data-bs-toggle="collapse" data-bs-target="#taskEdit{{ t.id }}">Edit</button>
+                    <form method="post" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete_task">
+                      <input type="hidden" name="task_id" value="{{ t.id }}">
+                      <button class="btn btn-sm btn-outline-danger radius-8" type="submit" onclick="return confirm('Delete this task?');">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                <tr class="collapse" id="taskEdit{{ t.id }}">
+                  <td colspan="7">
+                    <form method="post" class="row gy-3">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="update_task">
+                      <input type="hidden" name="task_id" value="{{ t.id }}">
+                      <div class="col-md-4">
+                        <label class="form-label text-primary-light text-sm fw-semibold">Title</label>
+                        <input type="text" name="title" class="form-control radius-8" value="{{ t.title }}" required>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label text-primary-light text-sm fw-semibold">Owner</label>
+                        <select name="owner_id" class="form-control radius-8">
+                          <option value="">-</option>
+                          {% for u in owners %}
+                            <option value="{{ u.id }}" {% if t.owner and t.owner.id == u.id %}selected{% endif %}>{{ u.username }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="col-md-2">
+                        <label class="form-label text-primary-light text-sm fw-semibold">Due Date</label>
+                        <input type="date" name="due_date" class="form-control radius-8" value="{% if t.due_date %}{{ t.due_date|date:'Y-m-d' }}{% endif %}">
+                      </div>
+                      <div class="col-md-2">
+                        <label class="form-label text-primary-light text-sm fw-semibold">Status</label>
+                        <select name="task_status" class="form-control radius-8">
+                          {% for value,label in project.tasks.model.STATUS_CHOICES %}
+                            <option value="{{ value }}" {% if t.status == value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="col-md-1">
+                        <label class="form-label text-primary-light text-sm fw-semibold">Order</label>
+                        <input type="number" name="sort_order" class="form-control radius-8" value="{{ t.sort_order }}" min="0">
+                      </div>
+                      <div class="col-md-10">
+                        <label class="form-label text-primary-light text-sm fw-semibold">Description</label>
+                        <input type="text" name="description" class="form-control radius-8" value="{{ t.description }}">
+                      </div>
+                      <div class="col-md-2 d-flex align-items-end justify-content-end gap-10 mt-24">
+                        <button class="btn btn-primary-600 radius-8 px-20 py-11" type="submit">Save</button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="7" class="text-center text-muted">No tasks yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 {% endblock %}

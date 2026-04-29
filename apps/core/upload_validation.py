@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path
 
 from PIL import Image
 
@@ -174,7 +174,7 @@ def antivirus_scan(upload, *, kind: str) -> list[str]:
 
             if mode == "required":
                 details = (proc.stderr or proc.stdout or "").strip()
-                details = (details[:400] if details else "scanner error")
+                details = details[:400] if details else "scanner error"
                 return [f"{kind}: antivirus scan failed ({details})"]
             return []
 

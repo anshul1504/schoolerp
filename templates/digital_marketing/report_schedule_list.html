@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Report Schedules{% endblock %}
+{% block page_heading %}Report Schedules{% endblock %}
+{% block breadcrumb_active %}Report Schedules{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+    <div><h6 class="mb-0">Scheduled Report Delivery</h6></div>
+    <a class="btn btn-primary-600 radius-8 px-20 py-11" href="{% url 'digital_marketing:report_schedule_create' %}">Create Schedule</a>
+  </div>
+  <div class="card-body p-24">
+    <div class="table-responsive">
+      <table class="table bordered-table mb-0">
+        <thead><tr><th>Name</th><th>Frequency</th><th>Email</th><th>Last Run</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for s in schedules %}
+          <tr>
+            <td>{{ s.name }}</td><td>{{ s.get_frequency_display }}</td><td>{{ s.delivery_email }}</td><td>{{ s.last_run_at|default:"-" }}</td>
+            <td>{% if s.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'digital_marketing:report_schedule_edit' s.id %}">Edit</a> <form method="post" action="{% url 'digital_marketing:report_schedule_run_now' s.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-success">Run Now</button></form></td>
+          </tr>
+          {% empty %}<tr><td colspan="6" class="text-center py-20">No schedules configured.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

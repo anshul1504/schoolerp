@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0019_audit_log_export_immutable_copy_path'),
+        ("core", "0019_audit_log_export_immutable_copy_path"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rolepermissionsoverride',
-            name='role',
+            model_name="rolepermissionsoverride",
+            name="role",
             field=models.CharField(max_length=40, unique=True),
         ),
         migrations.AlterField(
-            model_name='rolesectionsoverride',
-            name='role',
+            model_name="rolesectionsoverride",
+            name="role",
             field=models.CharField(max_length=40, unique=True),
         ),
     ]

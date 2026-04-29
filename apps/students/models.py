@@ -1,11 +1,9 @@
 from django.conf import settings
 from django.db import models
-from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.text import slugify
 
 from apps.schools.models import School
- 
- 
 
 
 class Student(models.Model):
@@ -119,7 +117,9 @@ class Student(models.Model):
     birth_certificate = models.FileField(upload_to="students/documents/", null=True, blank=True)
     aadhar_card = models.FileField(upload_to="students/documents/", null=True, blank=True)
     previous_marksheet = models.FileField(upload_to="students/documents/", null=True, blank=True)
-    transfer_certificate_file = models.FileField(upload_to="students/documents/", null=True, blank=True)
+    transfer_certificate_file = models.FileField(
+        upload_to="students/documents/", null=True, blank=True
+    )
     caste_certificate = models.FileField(upload_to="students/documents/", null=True, blank=True)
     income_certificate = models.FileField(upload_to="students/documents/", null=True, blank=True)
     passport_photo = models.FileField(upload_to="students/documents/", null=True, blank=True)
@@ -134,7 +134,9 @@ class Student(models.Model):
     class Meta:
         ordering = ["first_name", "last_name"]
         constraints = [
-            models.UniqueConstraint(fields=["school", "admission_no"], name="uniq_student_admission_no_per_school"),
+            models.UniqueConstraint(
+                fields=["school", "admission_no"], name="uniq_student_admission_no_per_school"
+            ),
         ]
 
     def __str__(self):
@@ -142,7 +144,10 @@ class Student(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            name_part = slugify(f"{self.first_name} {self.middle_name} {self.last_name}".strip()) or "student"
+            name_part = (
+                slugify(f"{self.first_name} {self.middle_name} {self.last_name}".strip())
+                or "student"
+            )
             admission_part = slugify(getattr(self, "admission_no", "") or "")
             base = name_part
             if admission_part:
@@ -152,7 +157,7 @@ class Student(models.Model):
             while Student.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
                 index += 1
                 suffix = f"-{index}"
-                candidate = (base[: (120 - len(suffix))] + suffix)
+                candidate = base[: (120 - len(suffix))] + suffix
             self.slug = candidate
         super().save(*args, **kwargs)
 
@@ -188,7 +193,9 @@ class StudentPromotion(models.Model):
 
 
 class TransferCertificate(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name="transfer_certificate")
+    student = models.OneToOneField(
+        Student, on_delete=models.CASCADE, related_name="transfer_certificate"
+    )
     certificate_no = models.CharField(max_length=50, unique=True)
     issue_date = models.DateField()
     reason = models.TextField(blank=True)
@@ -219,8 +226,12 @@ class AdmissionWorkflowEvent(models.Model):
         ("REJECTED", "Rejected"),
     )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="admission_workflow_events")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="admission_workflow_events")
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="admission_workflow_events"
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="admission_workflow_events"
+    )
     stage = models.CharField(max_length=40, choices=STAGE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
     note = models.CharField(max_length=255, blank=True)
@@ -241,8 +252,12 @@ class AdmissionWorkflowEvent(models.Model):
 
 
 class StudentProfileEditHistory(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="profile_edit_history")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_profile_edit_history")
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="profile_edit_history"
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_profile_edit_history"
+    )
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -267,8 +282,12 @@ class StudentClassChangeHistory(models.Model):
         ("MANUAL", "Manual Update"),
     )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="class_change_history")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_class_change_history")
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="class_change_history"
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_class_change_history"
+    )
     from_class = models.CharField(max_length=100)
     from_section = models.CharField(max_length=50)
     to_class = models.CharField(max_length=100)
@@ -343,8 +362,12 @@ class StudentDisciplineIncident(models.Model):
         ("CLOSED", "Closed"),
     )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="discipline_incidents")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_discipline_incidents")
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="discipline_incidents"
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_discipline_incidents"
+    )
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True)
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default="LOW")
@@ -375,7 +398,9 @@ class StudentHealthRecord(models.Model):
     )
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="health_records")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_health_records")
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_health_records"
+    )
     record_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="CHECKUP")
     title = models.CharField(max_length=150)
     notes = models.TextField(blank=True)
@@ -404,8 +429,12 @@ class StudentComplianceReminder(models.Model):
         ("DONE", "Done"),
     )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="compliance_reminders")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_compliance_reminders")
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="compliance_reminders"
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_compliance_reminders"
+    )
     reminder_type = models.CharField(max_length=100)
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
@@ -436,8 +465,12 @@ class StudentCommunicationLog(models.Model):
         ("NOTE", "Internal Note"),
     )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="communication_logs")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_communication_logs")
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="communication_logs"
+    )
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_communication_logs"
+    )
     channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default="NOTE")
     subject = models.CharField(max_length=150, blank=True)
     message = models.TextField(blank=True)
@@ -469,7 +502,9 @@ class StudentHistoryEvent(models.Model):
     )
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="history_events")
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="student_history_events")
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="student_history_events"
+    )
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -524,7 +559,9 @@ class StudentGuardian(models.Model):
     class Meta:
         ordering = ["-is_primary", "id"]
         constraints = [
-            models.UniqueConstraint(fields=["student", "guardian"], name="uniq_guardian_per_student"),
+            models.UniqueConstraint(
+                fields=["student", "guardian"], name="uniq_guardian_per_student"
+            ),
         ]
 
     def __str__(self):

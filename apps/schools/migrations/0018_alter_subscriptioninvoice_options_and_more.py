@@ -4,24 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schools', '0017_more_plan_features_and_gating'),
+        ("schools", "0017_more_plan_features_and_gating"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='subscriptioninvoice',
-            options={'ordering': ['-created_at', '-id']},
+            name="subscriptioninvoice",
+            options={"ordering": ["-created_at", "-id"]},
         ),
         migrations.AlterField(
-            model_name='implementationproject',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="implementationproject",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='implementationtask',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="implementationtask",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
     ]

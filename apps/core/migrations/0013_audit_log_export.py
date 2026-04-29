@@ -1,6 +1,6 @@
+import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -13,7 +13,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="AuditLogExport",
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("filters", models.JSONField(blank=True, default=dict)),
                 ("row_count", models.PositiveIntegerField(default=0)),
@@ -36,4 +41,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

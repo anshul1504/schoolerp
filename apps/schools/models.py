@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.conf import settings
+
 
 class School(models.Model):
     name = models.CharField(max_length=255)
@@ -24,7 +25,22 @@ class School(models.Model):
     student_capacity = models.PositiveIntegerField(default=1000)
     allowed_campuses = models.PositiveIntegerField(default=1)
 
-    logo = models.ImageField(upload_to='school_logos/', null=True, blank=True)
+    # Professional SaaS / MNC Fields
+    registration_number = models.CharField(
+        max_length=100, blank=True, help_text="Official school registration number"
+    )
+    gst_number = models.CharField(max_length=20, blank=True, help_text="GSTIN for Indian schools")
+    cin_number = models.CharField(
+        max_length=30, blank=True, help_text="Corporate Identification Number if applicable"
+    )
+    upi_id = models.CharField(
+        max_length=100, blank=True, help_text="UPI ID for fee collection (e.g., school@upi)"
+    )
+
+    currency = models.CharField(max_length=10, default="INR")
+    timezone = models.CharField(max_length=50, default="Asia/Kolkata")
+
+    logo = models.ImageField(upload_to="school_logos/", null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
 
@@ -83,7 +99,9 @@ class SchoolCommunicationSettings(models.Model):
         ("OTHER", "Other"),
     )
 
-    school = models.OneToOneField(School, on_delete=models.CASCADE, related_name="communication_settings")
+    school = models.OneToOneField(
+        School, on_delete=models.CASCADE, related_name="communication_settings"
+    )
 
     # SMTP
     smtp_enabled = models.BooleanField(default=False)
@@ -98,7 +116,9 @@ class SchoolCommunicationSettings(models.Model):
 
     # WhatsApp
     whatsapp_enabled = models.BooleanField(default=False)
-    whatsapp_provider = models.CharField(max_length=30, choices=WHATSAPP_PROVIDER_CHOICES, default="NONE")
+    whatsapp_provider = models.CharField(
+        max_length=30, choices=WHATSAPP_PROVIDER_CHOICES, default="NONE"
+    )
     whatsapp_sender = models.CharField(max_length=80, blank=True)
     whatsapp_access_token = models.CharField(max_length=400, blank=True)
     whatsapp_phone_number_id = models.CharField(max_length=120, blank=True)
@@ -154,7 +174,9 @@ class SchoolSubscription(models.Model):
     )
 
     school = models.OneToOneField(School, on_delete=models.CASCADE, related_name="subscription")
-    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name="subscriptions")
+    plan = models.ForeignKey(
+        SubscriptionPlan, on_delete=models.PROTECT, related_name="subscriptions"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TRIAL")
     starts_on = models.DateField(default=timezone.now)
     ends_on = models.DateField(null=True, blank=True)
@@ -187,7 +209,9 @@ class SubscriptionInvoice(models.Model):
         ("VOID", "Void"),
     )
 
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="subscription_invoices")
+    school = models.ForeignKey(
+        School, on_delete=models.CASCADE, related_name="subscription_invoices"
+    )
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name="invoices")
     period_start = models.DateField()
     period_end = models.DateField()
@@ -220,7 +244,9 @@ class ImplementationProject(models.Model):
         ("DONE", "Done"),
     )
 
-    school = models.OneToOneField(School, on_delete=models.CASCADE, related_name="implementation_project")
+    school = models.OneToOneField(
+        School, on_delete=models.CASCADE, related_name="implementation_project"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NOT_STARTED")
     notes = models.TextField(blank=True)
 
@@ -242,7 +268,9 @@ class ImplementationTask(models.Model):
         ("DONE", "Done"),
     )
 
-    project = models.ForeignKey(ImplementationProject, on_delete=models.CASCADE, related_name="tasks")
+    project = models.ForeignKey(
+        ImplementationProject, on_delete=models.CASCADE, related_name="tasks"
+    )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="TODO")
@@ -275,7 +303,9 @@ class SubscriptionPayment(models.Model):
         ("OTHER", "Other"),
     )
 
-    invoice = models.ForeignKey(SubscriptionInvoice, on_delete=models.CASCADE, related_name="payments")
+    invoice = models.ForeignKey(
+        SubscriptionInvoice, on_delete=models.CASCADE, related_name="payments"
+    )
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, default="BANK")
     transaction_ref = models.CharField(max_length=120, blank=True)
@@ -296,7 +326,9 @@ class SubscriptionCoupon(models.Model):
     )
 
     code = models.CharField(max_length=40, unique=True)
-    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, default="PERCENT")
+    discount_type = models.CharField(
+        max_length=20, choices=DISCOUNT_TYPE_CHOICES, default="PERCENT"
+    )
     value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_active = models.BooleanField(default=True)
     starts_on = models.DateField(null=True, blank=True)

@@ -7,14 +7,14 @@
 {% block page_copy %}Review and manage TC requests for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
   <div class="row gy-4">
     <div class="col-12">
       {% include "students/_student_nav.html" with student_nav_active="tc_requests" %}
     </div>
     <div class="col-12">
-      <div class="platform-panel">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <h6 class="mb-14">Request Timeline</h6>
           {% if tc_requests %}
             <div class="table-responsive">
@@ -33,7 +33,7 @@
                   {% for item in tc_requests %}
                     <tr>
                       <td>{{ item.created_at|date:"d M Y, h:i A" }}</td>
-                      <td><span class="student-pill">{{ item.get_status_display }}</span></td>
+                      <td><span class="badge">{{ item.get_status_display }}</span></td>
                       <td>{{ item.reason|default:"-" }}</td>
                       <td>{{ item.destination_school|default:"-" }}</td>
                       <td>{{ item.review_note|default:"-" }}</td>
@@ -64,3 +64,9 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

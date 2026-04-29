@@ -2,116 +2,148 @@
 
 {% block title %}Invoice Payments{% endblock %}
 {% block page_heading %}Invoice #{{ invoice.id }}{% endblock %}
-{% block page_copy %}{{ invoice.school.name }} • {{ invoice.plan.name }} • {{ invoice.period_start }} → {{ invoice.period_end }}{% endblock %}
-{% block page_eyebrow %}Billing{% endblock %}
+{% block breadcrumb_active %}Billing / Invoices / #{{ invoice.id }}{% endblock %}
 
 {% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Invoice #{{ invoice.id }}</h6>
-          <p>
-            Subtotal: <strong>Rs {{ invoice.amount }}</strong>
-            {% if invoice.tax_percent and invoice.tax_percent > 0 %}
-              • Tax: <strong>Rs {{ invoice.tax_amount }}</strong> ({{ invoice.tax_percent }}%)
-            {% endif %}
-            • Total: <strong>Rs {{ due_total }}</strong>
-            • Paid: <strong>Rs {{ total_paid }}</strong>
-            • Remaining: <strong>Rs {{ remaining }}</strong>
-            • Status: <strong>{{ invoice.get_status_display }}</strong>
-          </p>
+  <div class="row gy-4">
+    <div class="col-12">
+      <div class="card h-100 p-0 radius-12">
+        <div class="card-body p-24">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="mb-0">
+              <h5 class="mb-8 text-primary-light">Invoice #{{ invoice.id }} - <span class="text-secondary-light text-md fw-normal">{{ invoice.school.name }}</span></h5>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="text-secondary-light text-sm">{{ invoice.plan.name }}</span>
+                  <span class="text-secondary-light text-sm">•</span>
+                  <span class="text-secondary-light text-sm">{{ invoice.period_start }} to {{ invoice.period_end }}</span>
+              </div>
+              <div class="mt-16 d-flex flex-wrap gap-24">
+                  <div>
+                      <span class="text-secondary-light text-sm d-block mb-4">Total Amount</span>
+                      <strong class="text-primary-light text-md">Rs {{ due_total }}</strong>
+                  </div>
+                  <div>
+                      <span class="text-secondary-light text-sm d-block mb-4">Amount Paid</span>
+                      <strong class="text-success-600 text-md">Rs {{ total_paid }}</strong>
+                  </div>
+                  <div>
+                      <span class="text-secondary-light text-sm d-block mb-4">Amount Due</span>
+                      <strong class="text-danger-600 text-md">Rs {{ remaining }}</strong>
+                  </div>
+                  <div>
+                      <span class="text-secondary-light text-sm d-block mb-4">Status</span>
+                      {% if invoice.status == "PAID" %}
+                        <span class="bg-success-100 text-success-600 px-12 py-4 radius-4 fw-medium text-xs">PAID</span>
+                      {% elif invoice.status == "ISSUED" %}
+                        <span class="bg-info-100 text-info-600 px-12 py-4 radius-4 fw-medium text-xs">ISSUED</span>
+                      {% elif invoice.status == "VOID" %}
+                        <span class="bg-neutral-200 text-neutral-600 px-12 py-4 radius-4 fw-medium text-xs">VOID</span>
+                      {% else %}
+                        <span class="bg-warning-100 text-warning-600 px-12 py-4 radius-4 fw-medium text-xs">DRAFT</span>
+                      {% endif %}
+                  </div>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="/billing/invoices/" class="btn btn-outline-secondary d-flex align-items-center gap-2"><iconify-icon icon="ri:arrow-left-line"></iconify-icon> Back</a>
+              <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="DRAFT">
+                <button type="submit" class="btn btn-outline-warning" {% if invoice.status == "PAID" or invoice.status == "VOID" %}disabled{% endif %}>Mark Draft</button>
+              </form>
+              <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="ISSUED">
+                <button type="submit" class="btn btn-outline-info" {% if invoice.status == "PAID" or invoice.status == "VOID" %}disabled{% endif %}>Mark Issued</button>
+              </form>
+              <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="PAID">
+                <button type="submit" class="btn btn-outline-success" {% if invoice.status == "VOID" %}disabled{% endif %}>Mark Paid</button>
+              </form>
+              <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline" onsubmit="return confirm('Void this invoice? This is only allowed if there are no payments.');">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="VOID">
+                <button type="submit" class="btn btn-outline-danger" {% if invoice.status == "VOID" %}disabled{% endif %}>Void</button>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="sf-actions">
-          <a href="/billing/invoices/" class="btn btn-outline-secondary">Back</a>
-          <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline">
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card h-100 p-0 radius-12">
+        <div class="card-body p-24">
+          <h6 class="mb-16 text-primary-light">Record Payment</h6>
+          <form method="post" action="/billing/invoices/{{ invoice.id }}/payments/create/" class="row gy-3">
             {% csrf_token %}
-            <input type="hidden" name="status" value="DRAFT">
-            <button type="submit" class="btn btn-outline-secondary" {% if invoice.status == "PAID" or invoice.status == "VOID" %}disabled{% endif %}>Mark Draft</button>
-          </form>
-          <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline">
-            {% csrf_token %}
-            <input type="hidden" name="status" value="ISSUED">
-            <button type="submit" class="btn btn-outline-secondary" {% if invoice.status == "PAID" or invoice.status == "VOID" %}disabled{% endif %}>Mark Issued</button>
-          </form>
-          <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline">
-            {% csrf_token %}
-            <input type="hidden" name="status" value="PAID">
-            <button type="submit" class="btn btn-outline-success" {% if invoice.status == "VOID" %}disabled{% endif %}>Mark Paid</button>
-          </form>
-          <form method="post" action="/billing/invoices/{{ invoice.id }}/status/" class="d-inline" onsubmit="return confirm('Void this invoice? This is only allowed if there are no payments.');">
-            {% csrf_token %}
-            <input type="hidden" name="status" value="VOID">
-            <button type="submit" class="btn btn-outline-danger" {% if invoice.status == "VOID" %}disabled{% endif %}>Void</button>
+            <div class="col-12">
+              <label class="form-label fw-semibold text-primary-light text-sm mb-8">Amount (Rs) <span class="text-danger-600">*</span></label>
+              <input type="number" step="0.01" name="amount" class="form-control radius-8" required value="{{ remaining }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold text-primary-light text-sm mb-8">Method <span class="text-danger-600">*</span></label>
+              <select name="method" class="form-control radius-8 form-select">
+                {% for value,label in method_choices %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold text-primary-light text-sm mb-8">Transaction Reference</label>
+              <input type="text" name="transaction_ref" class="form-control radius-8" placeholder="e.g. UTR / UPI / Bank Ref">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold text-primary-light text-sm mb-8">Paid At</label>
+              <input type="datetime-local" name="paid_at" class="form-control radius-8">
+            </div>
+            <div class="col-12 mt-24">
+              <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" {% if invoice.status == "VOID" or invoice.status == "DRAFT" %}disabled{% endif %}>
+                  <iconify-icon icon="ri:add-line"></iconify-icon> Add Payment
+              </button>
+              {% if invoice.status == "VOID" %}
+                <div class="text-danger-600 text-sm mt-2 text-center">Payments are disabled because the invoice is void.</div>
+              {% elif invoice.status == "DRAFT" %}
+                <div class="text-warning-600 text-sm mt-2 text-center">Mark the invoice as Issued before recording payments.</div>
+              {% endif %}
+            </div>
           </form>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <h6 class="mb-16">Record Payment</h6>
-      <form method="post" action="/billing/invoices/{{ invoice.id }}/payments/create/" class="row gy-3">
-        {% csrf_token %}
-        <div class="col-md-3">
-          <label class="form-label">Amount (Rs)</label>
-          <input type="number" step="0.01" name="amount" class="form-control" required>
+    <div class="col-lg-7">
+      <div class="card h-100 p-0 radius-12">
+        <div class="card-body p-0 dataTable-wrapper">
+          <div class="px-20 py-16 border-bottom border-neutral-200">
+            <h6 class="mb-0 text-primary-light">Payment History</h6>
+          </div>
+          <div class="table-responsive">
+            <table class="table bordered-table mb-0 data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Paid At</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Method</th>
+                  <th scope="col">Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in payments %}
+                  <tr>
+                    <td><span class="text-secondary-light text-sm">{{ p.paid_at }}</span></td>
+                    <td><strong class="text-success-600">Rs {{ p.amount }}</strong></td>
+                    <td><span class="bg-neutral-100 text-secondary-light px-12 py-4 radius-4 text-xs">{{ p.get_method_display }}</span></td>
+                    <td><span class="text-secondary-light text-sm">{{ p.transaction_ref|default:"—" }}</span></td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4" class="text-center py-24 text-secondary-light">No payments recorded yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Method</label>
-          <select name="method" class="form-select">
-            {% for value,label in method_choices %}
-              <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Transaction ref</label>
-          <input type="text" name="transaction_ref" class="form-control" placeholder="UTR / UPI / bank ref">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Paid at</label>
-          <input type="datetime-local" name="paid_at" class="form-control">
-        </div>
-        <div class="col-12">
-          <button type="submit" class="btn btn-primary" {% if invoice.status == "VOID" or invoice.status == "DRAFT" %}disabled{% endif %}>Add payment</button>
-          {% if invoice.status == "VOID" %}
-            <div class="text-muted text-sm mt-2">Payments are disabled because the invoice is void.</div>
-          {% elif invoice.status == "DRAFT" %}
-            <div class="text-muted text-sm mt-2">Mark the invoice as Issued before recording payments.</div>
-          {% endif %}
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="sf-card">
-    <div class="sf-card__body">
-      <h6 class="mb-16">Payments</h6>
-      <div class="table-responsive">
-        <table class="table align-middle sf-table">
-          <thead>
-            <tr>
-              <th>Paid at</th>
-              <th>Amount</th>
-              <th>Method</th>
-              <th>Reference</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p in payments %}
-              <tr>
-                <td class="text-muted text-sm">{{ p.paid_at }}</td>
-                <td>Rs {{ p.amount }}</td>
-                <td>{{ p.get_method_display }}</td>
-                <td class="text-muted">{{ p.transaction_ref|default:"—" }}</td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="4" class="text-center text-muted">No payments yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
       </div>
     </div>
   </div>

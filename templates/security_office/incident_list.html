@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Incidents | School ERP{% endblock %}
+{% block page_heading %}Security Incidents{% endblock %}
+{% block breadcrumb_active %}Incidents{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Security Incidents</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Manage and track security incidents and reports.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap" href="?q={{ filters.q }}&status={{ filters.status }}&export=csv"><iconify-icon icon="ri:file-download-line" class="me-2 text-xl"></iconify-icon> Export CSV</a>
+        <a class="btn btn-primary-600 radius-8 px-20 py-11 d-inline-flex align-items-center text-nowrap" href="{% url 'security_office:incident_create' %}"><iconify-icon icon="ri:add-line" class="me-2 text-xl"></iconify-icon> Add Incident</a>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      <form method="get" class="sf-filters">
+        <div class="row gy-3 gx-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Search by title, type, location...">
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select form-control">
+              <option value="">All Statuses</option>
+              {% for c,l in status_choices %}
+                <option value="{{ c }}" {% if filters.status == c %}selected{% endif %}>{{ l }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-600">Apply</button>
+            <a class="btn btn-outline-secondary" href="{% url 'security_office:incident_list' %}">Reset</a>
+          </div>
+        </div>
+      </form>
+
+      {% if incidents %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable" data-page-length="10">
+            <thead>
+              <tr>
+                <th>Incident Details</th>
+                <th>Location</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Reported At</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in incidents %}
+                <tr>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium text-neutral-700">{{ i.title }}</span>
+                      <span class="text-sm text-neutral-500">{{ i.incident_type }}</span>
+                    </div>
+                  </td>
+                  <td class="text-neutral-600">{{ i.location|default:"-" }}</td>
+                  <td>
+                    {% if i.severity == 'CRITICAL' %}
+                      <span class="badge bg-danger-100 text-danger-700">{{ i.get_severity_display }}</span>
+                    {% elif i.severity == 'HIGH' %}
+                      <span class="badge bg-warning-100 text-warning-700">{{ i.get_severity_display }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary-100 text-secondary-700">{{ i.get_severity_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                     <span class="badge bg-primary-50 text-primary-600">{{ i.get_status_display }}</span>
+                  </td>
+                  <td class="text-neutral-600 text-sm">{{ i.reported_at|date:'d M Y, H:i' }}</td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                      <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="{% url 'security_office:incident_edit' i.id %}"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit</a>
+                      <form method="post" action="{% url 'security_office:incident_delete' i.id %}" class="d-inline" onsubmit="return confirm('Delete this incident? This cannot be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"><iconify-icon icon="ri:delete-bin-line" class="me-1"></iconify-icon> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination logic here if needed -->
+
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:alarm-warning-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No incidents found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

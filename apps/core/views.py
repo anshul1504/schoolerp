@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
-
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 
 DEMO_PAGES = {
     "index.html",
@@ -75,6 +76,10 @@ DEMO_PAGES = {
 def demo_index(request):
     if not getattr(settings, "ENABLE_DEMO_PAGES", False):
         raise Http404("Demo pages disabled")
+    try:
+        get_template("demo/index.html")
+    except TemplateDoesNotExist as err:
+        raise Http404("Demo index template not found") from err
     return render(request, "demo/index.html", {"demo_page": "index.html"})
 
 
@@ -83,5 +88,9 @@ def demo_page(request, page):
         raise Http404("Demo pages disabled")
     if page not in DEMO_PAGES:
         raise Http404("Demo page not found")
+    try:
+        get_template(f"demo/{page}")
+    except TemplateDoesNotExist as err:
+        raise Http404("Demo page template not found") from err
 
     return render(request, f"demo/{page}", {"demo_page": page})

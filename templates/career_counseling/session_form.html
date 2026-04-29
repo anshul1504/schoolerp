@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Schedule{% endif %} Session | {{ school.name }}{% endblock %}
+
+{% block page_heading %}{% if is_edit %}Modify{% else %}Schedule{% endif %} Counseling Session{% endblock %}
+{% block breadcrumb_active %}Session Form{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card radius-16 border-0 shadow-1">
+                <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100">
+                    <h6 class="mb-0 fw-bold">Session Configuration</h6>
+                </div>
+                <div class="card-body p-24">
+                    <form method="post" class="row gy-4">
+                        {% csrf_token %}
+
+                        {% if not is_edit %}
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Select Students</label>
+                            {{ form.students }}
+                            <div class="text-xxs text-neutral-400 mt-4">You can select multiple students for a group session.</div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <div class="p-16 radius-12 bg-primary-50 border border-primary-100 d-flex align-items-center gap-12 mb-16">
+                                <i class="ri-user-voice-line text-primary-600 text-xl"></i>
+                                <div>
+                                    <h6 class="text-sm fw-bold mb-0">{{ session.student.full_name }}</h6>
+                                    <span class="text-xxs text-primary-600">Individual Session</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Session Type</label>
+                            {{ form.session_type }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Mode</label>
+                            {{ form.mode }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Scheduled At</label>
+                            {{ form.scheduled_at }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-sm text-primary-light">Duration (Minutes)</label>
+                            {{ form.duration_minutes }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Meeting Link (if Online)</label>
+                            {{ form.meeting_link }}
+                        </div>
+
+                        {% if is_edit %}
+                        <div class="col-12 mt-24">
+                            <h6 class="text-xs fw-bold text-neutral-400 text-uppercase mb-16 border-bottom pb-8">Post-Session Documentation</h6>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Session Summary</label>
+                            {{ form.summary }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-sm text-primary-light">Student Feedback</label>
+                            {{ form.feedback }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-12">
+                                {{ form.follow_up_required }}
+                                <label class="form-check-label text-sm fw-bold" for="{{ form.follow_up_required.id_for_label }}">Follow-up Required</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-12">
+                                {{ form.is_completed }}
+                                <label class="form-check-label text-sm fw-bold text-success-600" for="{{ form.is_completed.id_for_label }}">Mark as Completed</label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-12 mt-32 d-flex gap-12">
+                            <button type="submit" class="btn btn-primary-600 radius-8 px-24">
+                                {% if is_edit %}Update Session{% else %}Schedule Session{% endif %}
+                            </button>
+                            <a href="{% url 'career_counseling:session_list' %}" class="btn bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100 radius-8 px-24">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

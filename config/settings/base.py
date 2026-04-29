@@ -9,14 +9,18 @@ if not SECRET_KEY:
     SECRET_KEY = "dev-unsafe-secret-key"
 
 DEBUG = False
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()]
+ALLOWED_HOSTS = [
+    host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()
+]
 ENABLE_DEMO_PAGES = os.getenv("ENABLE_DEMO_PAGES", "false").lower() in {"1", "true", "yes"}
 
 # SSO (Google OIDC)
 GOOGLE_OIDC_CLIENT_ID = os.getenv("GOOGLE_OIDC_CLIENT_ID", "")
 GOOGLE_OIDC_CLIENT_SECRET = os.getenv("GOOGLE_OIDC_CLIENT_SECRET", "")
 GOOGLE_OIDC_REDIRECT_URI = os.getenv("GOOGLE_OIDC_REDIRECT_URI", "")
-GOOGLE_OIDC_ENABLED = bool(GOOGLE_OIDC_CLIENT_ID and GOOGLE_OIDC_CLIENT_SECRET and GOOGLE_OIDC_REDIRECT_URI)
+GOOGLE_OIDC_ENABLED = bool(
+    GOOGLE_OIDC_CLIENT_ID and GOOGLE_OIDC_CLIENT_SECRET and GOOGLE_OIDC_REDIRECT_URI
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -37,6 +41,16 @@ INSTALLED_APPS = [
     "apps.exams.apps.ExamsConfig",
     "apps.communication.apps.CommunicationConfig",
     "apps.frontoffice.apps.FrontofficeConfig",
+    "apps.transport.apps.TransportConfig",
+    "apps.hostel.apps.HostelConfig",
+    "apps.library.apps.LibraryConfig",
+    "apps.timetable.apps.TimetableConfig",
+    "apps.research.apps.ResearchConfig",
+    "apps.career_counseling.apps.CareerCounselingConfig",
+    "apps.alumni.apps.AlumniConfig",
+    "apps.digital_marketing.apps.DigitalMarketingConfig",
+    "apps.security_office.apps.SecurityOfficeConfig",
+    "apps.compliance_office.apps.ComplianceOfficeConfig",
     "apps.core.apps.CoreConfig",
 ]
 
@@ -103,7 +117,11 @@ USE_TZ = True
 
 # Session / auto logout
 SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", str(12 * 60 * 60)))
-SESSION_SAVE_EVERY_REQUEST = os.getenv("SESSION_SAVE_EVERY_REQUEST", "true").lower() in {"1", "true", "yes"}
+SESSION_SAVE_EVERY_REQUEST = os.getenv("SESSION_SAVE_EVERY_REQUEST", "true").lower() in {
+    "1",
+    "true",
+    "yes",
+}
 IDLE_TIMEOUT_SECONDS = int(os.getenv("IDLE_TIMEOUT_SECONDS", str(30 * 60)))
 
 # 2FA (Email OTP) for all roles
@@ -133,6 +151,7 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "false").lower() in {"1", "true", "ye
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "noreply@thewebfix.in")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+EMAIL_HELO_NAME = os.getenv("EMAIL_HELO_NAME", "thewebfix.in")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 
@@ -147,11 +166,17 @@ SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() in {
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "false").lower() in {"1", "true", "yes"}
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "false").lower() in {"1", "true", "yes"}
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "false").lower() in {"1", "true", "yes"}
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "false").lower() in {
+    "1",
+    "true",
+    "yes",
+}
 SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "false").lower() in {"1", "true", "yes"}
 
 # Billing webhook hardening
-BILLING_WEBHOOK_REQUIRE_SIGNATURE = os.getenv("BILLING_WEBHOOK_REQUIRE_SIGNATURE", "true").lower() in {"1", "true", "yes"}
+BILLING_WEBHOOK_REQUIRE_SIGNATURE = os.getenv(
+    "BILLING_WEBHOOK_REQUIRE_SIGNATURE", "true"
+).lower() in {"1", "true", "yes"}
 BILLING_WEBHOOK_MAX_SKEW_SECONDS = int(os.getenv("BILLING_WEBHOOK_MAX_SKEW_SECONDS", "300"))
 BILLING_WEBHOOK_REPLAY_TTL_SECONDS = int(os.getenv("BILLING_WEBHOOK_REPLAY_TTL_SECONDS", "600"))
 BILLING_WEBHOOK_SECRET = os.getenv("BILLING_WEBHOOK_SECRET", "")
@@ -173,3 +198,41 @@ if ENFORCE_PROD_SECURITY and not DEBUG:
         prod_errors.append("SECURE_SSL_REDIRECT must be true.")
     if prod_errors:
         raise RuntimeError("Production security guardrails failed: " + " | ".join(prod_errors))
+
+# Logging Configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}

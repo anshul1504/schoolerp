@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #487FFF; padding-bottom: 20px; }
+        .school-name { font-size: 24px; font-weight: bold; color: #487FFF; }
+        .report-title { font-size: 18px; color: #666; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background-color: #f8f9fa; color: #487FFF; font-weight: bold; text-align: left; padding: 12px; border-bottom: 2px solid #dee2e6; }
+        td { padding: 12px; border-bottom: 1px solid #dee2e6; font-size: 14px; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #999; padding-top: 20px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="school-name">{{ school.name }}</div>
+        <div class="report-title">Institutional Research Portfolio</div>
+        <div style="font-size: 12px; color: #999; margin-top: 5px;">Generated on {{ generated_at|date:"F d, Y H:i" }}</div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Project Title</th>
+                <th>Principal Investigator</th>
+                <th>Status</th>
+                <th>Budget ({{ school.currency }})</th>
+                <th>Timeline</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td><strong>{{ project.title }}</strong></td>
+                <td>{{ project.pi.full_name }}</td>
+                <td>{{ project.get_status_display }}</td>
+                <td>{{ project.budget|floatformat:2 }}</td>
+                <td>{{ project.start_date|date:"M Y" }} - {{ project.end_date|date:"M Y"|default:"Ongoing" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        © {{ generated_at|date:"Y" }} {{ school.name }} Research Department. Confidential Institutional Data.
+    </div>
+</body>
+</html>

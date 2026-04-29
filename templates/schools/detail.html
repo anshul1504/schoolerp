@@ -1,203 +1,327 @@
 {% extends 'base.html' %}
 
 {% block title %}School Profile | School ERP{% endblock %}
-{% block page_eyebrow %}School Profile{% endblock %}
 {% block page_heading %}{{ school.name }}{% endblock %}
-{% block page_copy %}School-level profile, contact details, and operational limits for this school.{% endblock %}
+{% block breadcrumb_active %}{{ school.name }}{% endblock %}
 
 {% block content %}
-<div class="row gy-4">
-  <div class="col-12">
-    <div class="sf-card">
-      <div class="sf-card__body">
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-16 mb-20">
-          <div class="d-flex align-items-center gap-12">
-            {% if school.logo %}
-              <span class="sf-avatar sf-avatar--lg"><img src="{{ school.logo.url }}" alt="{{ school.name }}"></span>
-            {% else %}
-              <span class="sf-avatar sf-avatar--soft sf-avatar--lg">{{ school.name|first|upper }}</span>
-            {% endif %}
-            <div>
-              <h6 class="mb-2">{{ school.name }}</h6>
-              <div class="text-neutral-500 text-sm">{{ school.city }}, {{ school.state }} - <span class="sf-badge-soft">Code: {{ school.code }}</span></div>
-            </div>
-          </div>
-          <div class="d-flex flex-wrap gap-10">
-            <a href="/schools/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
-            <a href="/schools/{{ school.id }}/setup/" class="btn btn-outline-primary radius-8 px-20 py-11">Setup</a>
-            <a href="/schools/{{ school.id }}/campuses/" class="btn btn-outline-primary radius-8 px-20 py-11">Campuses</a>
-            <a href="/schools/{{ school.id }}/team/" class="btn btn-outline-primary radius-8 px-20 py-11">Team</a>
-            {% if can_edit_school_profile %}
-              <a href="/schools/edit/{{ school.id }}/" class="btn btn-primary-600 radius-8 px-20 py-11">Edit Profile</a>
-            {% endif %}
-            {% if can_manage_comm_settings %}
-              <a href="/schools/{{ school.id }}/communication/" class="btn btn-outline-primary radius-8 px-20 py-11">Email/WhatsApp Setup</a>
-            {% endif %}
-            {% if can_manage_schools %}
-              <a href="/schools/{{ school.id }}/implementation/" class="btn btn-outline-primary radius-8 px-20 py-11">Implementation</a>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="row gy-4 mb-20">
-          <div class="col-xl-3 col-sm-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <span class="text-xs text-uppercase fw-bold text-secondary">Campuses</span>
-              <h4 class="mt-10 mb-0">{{ campus_count }}</h4>
-              <div class="text-neutral-500 text-sm mt-6">Active branches</div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-sm-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <span class="text-xs text-uppercase fw-bold text-primary-600">Active Students</span>
-              <h4 class="mt-10 mb-0">{{ active_students }}</h4>
-              <div class="text-neutral-500 text-sm mt-6">{{ total_students }} total records</div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-sm-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <span class="text-xs text-uppercase fw-bold text-info-600">Classes</span>
-              <h4 class="mt-10 mb-0">{{ classes }}</h4>
-              <div class="text-neutral-500 text-sm mt-6">Academic structure entries</div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-sm-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <span class="text-xs text-uppercase fw-bold text-success-600">Attendance Sessions</span>
-              <h4 class="mt-10 mb-0">{{ attendance_sessions }}</h4>
-              <div class="text-neutral-500 text-sm mt-6">Marked sessions</div>
-            </div>
-          </div>
-          <div class="col-xl-3 col-sm-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <span class="text-xs text-uppercase fw-bold text-warning-600">Fees Ledgers</span>
-              <h4 class="mt-10 mb-0">{{ fee_ledgers }}</h4>
-              <div class="text-neutral-500 text-sm mt-6">Dues created</div>
-            </div>
-          </div>
-          {# Implementation tracker is shown below to avoid duplicate UI. #}
-        </div>
-
-        <div class="row gy-4">
-          <div class="col-md-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <strong class="d-block mb-8">Contact</strong>
-              <div class="text-neutral-700 text-sm">Email: {{ school.email }}</div>
-              <div class="text-neutral-700 text-sm mt-4">Phone: {{ school.phone }}</div>
-              {% if school.support_email %}
-                <div class="text-neutral-700 text-sm mt-4">Support: {{ school.support_email }}</div>
-              {% endif %}
-              {% if school.website %}
-                <div class="text-neutral-700 text-sm mt-4">Website: {{ school.website }}</div>
-              {% endif %}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="border border-neutral-200 radius-12 p-18 h-100">
-              <strong class="d-block mb-8">Leadership</strong>
-              <div class="text-neutral-700 text-sm">Principal: {{ school.principal_name }}</div>
-              <div class="text-neutral-700 text-sm mt-4">Established: {{ school.established_year }}</div>
-              {% if school.board %}
-                <div class="text-neutral-700 text-sm mt-4">Board: {{ school.board }}</div>
-              {% endif %}
-              {% if school.medium %}
-                <div class="text-neutral-700 text-sm mt-4">Medium: {{ school.medium }}</div>
-              {% endif %}
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="border border-neutral-200 radius-12 p-18">
-              <strong class="d-block mb-8">Address</strong>
-              <div class="text-neutral-700 text-sm">{{ school.address }}</div>
-              {% if school.address_line2 %}
-                <div class="text-neutral-700 text-sm mt-4">{{ school.address_line2 }}</div>
-              {% endif %}
-              <div class="text-neutral-500 text-sm mt-4">{{ school.city }}, {{ school.state }}{% if school.pincode %} - {{ school.pincode }}{% endif %}</div>
-            </div>
-          </div>
-          {% if show_advanced_school_panels %}
-            <div class="col-12">
-              <div class="border border-neutral-200 radius-12 p-18">
-                <strong class="d-block mb-8">Subscription</strong>
-                {% if subscription %}
-                  <div class="d-flex flex-wrap gap-12">
-                    <span class="sf-badge-soft">Plan: {{ subscription.plan.name }}</span>
-                    <span class="sf-badge-soft">Status: {{ subscription.status }}</span>
-                    <span class="sf-badge-soft">From: {{ subscription.starts_on }}</span>
-                    <span class="sf-badge-soft">To: {% if subscription.ends_on %}{{ subscription.ends_on }}{% else %}Ongoing{% endif %}</span>
-                  </div>
-                {% else %}
-                  <div class="text-neutral-600 text-sm">No subscription record found yet.</div>
-                {% endif %}
-              </div>
-            </div>
-          {% endif %}
-          {% if can_toggle_school_status %}
-            <div class="col-12">
-              <div class="border border-neutral-200 radius-12 p-18">
-                <strong class="d-block mb-8">School Status</strong>
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-12">
-                  <div class="text-neutral-700 text-sm">
-                    Current: {% if school.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-danger">Suspended</span>{% endif %}
-                  </div>
-                  <form method="post" action="/schools/{{ school.id }}/status/" class="d-flex flex-wrap gap-10 align-items-end">
-                    {% csrf_token %}
-                    {% if school.is_active %}
-                      <input type="hidden" name="action" value="suspend">
-                      <div>
-                        <label class="form-label mb-1">Reason (optional)</label>
-                        <input type="text" name="reason" class="form-control sf-input-minw-260" placeholder="e.g., payment pending">
-                      </div>
-                      <button type="submit" class="btn btn-outline-danger">Suspend</button>
-                    {% else %}
-                      <input type="hidden" name="action" value="resume">
-                      <button type="submit" class="btn btn-outline-success">Resume</button>
-                    {% endif %}
-                  </form>
-                </div>
-              </div>
-            </div>
-          {% endif %}
-          {% if show_advanced_school_panels %}
-            <div class="col-12">
-              <div class="border border-neutral-200 radius-12 p-18">
-                <strong class="d-block mb-8">Enabled Modules</strong>
-                {% if enabled_features %}
-                  <div class="d-flex flex-wrap gap-10">
-                    {% for code in enabled_features %}
-                      <span class="sf-badge-soft">{{ code }}</span>
-                    {% endfor %}
-                  </div>
-                {% else %}
-                  <div class="text-neutral-600 text-sm">No module features enabled for this school subscription.</div>
-                {% endif %}
-              </div>
-            </div>
-          {% endif %}
-          {% if can_manage_schools %}
-            <div class="col-12">
-              <div class="border border-neutral-200 radius-12 p-18">
-                <strong class="d-block mb-8">Implementation</strong>
-                {% if implementation_project %}
-                  <div class="d-flex flex-wrap gap-12 align-items-center justify-content-between">
-                    <div class="text-neutral-700 text-sm">
-                      Status: <span class="sf-badge-soft">{{ implementation_project.get_status_display }}</span>
+<div class="mt-24">
+    <div class="card h-100 mb-24">
+        <div class="card-body p-24">
+            <div class="d-flex gap-32 flex-md-row flex-column">
+                <div class="max-w-300-px w-100 text-center">
+                    <figure class="mb-24 w-120-px h-120-px mx-auto rounded-circle overflow-hidden bg-primary-50 d-flex align-items-center justify-content-center">
+                        {% if school.logo %}
+                            <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="w-100 h-100 object-fit-cover">
+                        {% else %}
+                            <span class="text-4xl text-primary-600 fw-semibold">{{ school.name|first|upper }}</span>
+                        {% endif %}
+                    </figure>
+                    <h2 class="h6 text-primary-light mb-16 fw-semibold">{{ school.name }}</h2>
+                    <p class="mb-0">Code: <span class="text-primary-600 fw-semibold">{{ school.code }}</span></p>
+                    <p class="mb-0">Location: <span class="text-primary-light fw-semibold">{{ school.city }}, {{ school.state }}</span></p>
+                    <div class="mt-32 d-flex flex-wrap gap-16 w-100">
+                        {% if can_edit_school_profile %}
+                        <a href="/schools/edit/{{ school.id }}/" class="btn btn-primary-600 border fw-medium border-primary-600 text-md d-flex justify-content-center align-items-center gap-8 flex-grow-1 px-12 py-8 radius-8">
+                            <span class="d-flex text-lg"><i class="ri-edit-line"></i></span>
+                            Edit
+                        </a>
+                        {% endif %}
+                        <a href="/schools/" class="btn border fw-medium border-secondary-600 bg-hover-secondary-200 text-secondary-600 text-md d-flex justify-content-center align-items-center gap-8 flex-grow-1 px-12 py-8 radius-8">
+                            <span class="d-flex text-lg"><i class="ri-arrow-left-line"></i></span>
+                            Back
+                        </a>
                     </div>
-                    <a href="/schools/{{ school.id }}/implementation/" class="btn btn-sm btn-outline-secondary">Open tracker</a>
-                  </div>
-                {% else %}
-                  <div class="d-flex flex-wrap gap-12 align-items-center justify-content-between">
-                    <div class="text-neutral-600 text-sm">No implementation tracker yet.</div>
-                    <a href="/schools/{{ school.id }}/implementation/" class="btn btn-sm btn-outline-secondary">Create tracker</a>
-                  </div>
-                {% endif %}
-              </div>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
+                </div>
+                <div class="">
+                    <span class="h-100 w-1-px bg-neutral-200"></span>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="pb-16 border-bottom d-flex align-items-center justify-content-between gap-20">
+                        <h3 class="h6 text-primary-light text-lg mb-0 fw-semibold">School Info</h3>
+                        {% if school.is_active %}
+                            <span class="bg-success-100 text-success-600 px-16 py-4 radius-4 fw-medium text-sm">Active</span>
+                        {% else %}
+                            <span class="bg-danger-100 text-danger-600 px-16 py-4 radius-4 fw-medium text-sm">Suspended</span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-16 d-flex flex-column gap-8">
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Principal</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ school.principal_name|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Established</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ school.established_year|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Board</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ school.board|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Medium</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ school.medium|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Phone</span>
+                            <span class="fw-normal text-sm text-primary-600">: {{ school.phone|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Email</span>
+                            <span class="fw-normal text-sm text-primary-600">: {{ school.email|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Website</span>
+                            <span class="fw-normal text-sm text-primary-600">: {{ school.website|default:"-" }}</span>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <span class="fw-semibold text-sm text-primary-light w-150-px">Setup Progress</span>
+                            <span class="fw-normal text-sm text-secondary-light">: {{ setup_completed }}/{{ setup_total }} ({{ setup_completion_percent }}%)</span>
+                        </div>
+                    </div>
 
+                    <div class="mt-24 d-flex flex-wrap gap-12">
+                        <a href="/schools/{{ school.id }}/setup/" class="btn btn-outline-primary px-16 py-8 radius-8">Setup</a>
+                        <a href="/schools/{{ school.id }}/campuses/" class="btn btn-outline-primary px-16 py-8 radius-8">Campuses</a>
+                        <a href="/schools/{{ school.id }}/team/" class="btn btn-outline-primary px-16 py-8 radius-8">Team</a>
+                        {% if can_manage_comm_settings %}
+                        <a href="/schools/{{ school.id }}/communication/" class="btn btn-outline-primary px-16 py-8 radius-8">Comm. Setup</a>
+                        {% endif %}
+                        {% if can_manage_schools %}
+                        <a href="/schools/{{ school.id }}/implementation/" class="btn btn-outline-primary px-16 py-8 radius-8">Implementation</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-16">
+        <ul class="nav nav-pills bordered-tab mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12 active" id="pills-overview-tab" data-bs-toggle="pill" data-bs-target="#pills-overview" type="button" role="tab" aria-controls="pills-overview" aria-selected="true">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-dashboard-line"></i></span>
+                    Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12" id="pills-professional-tab" data-bs-toggle="pill" data-bs-target="#pills-professional" type="button" role="tab" aria-controls="pills-professional" aria-selected="false">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-briefcase-line"></i></span>
+                    Professional Details
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12" id="pills-address-tab" data-bs-toggle="pill" data-bs-target="#pills-address" type="button" role="tab" aria-controls="pills-address" aria-selected="false">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-map-pin-line"></i></span>
+                    Address
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12" id="pills-settings-tab" data-bs-toggle="pill" data-bs-target="#pills-settings" type="button" role="tab" aria-controls="pills-settings" aria-selected="false">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-settings-3-line"></i></span>
+                    Settings & Status
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="pills-overview" role="tabpanel" aria-labelledby="pills-overview-tab" tabindex="0">
+                <div class="row row-cols-xxl-4 row-cols-lg-3 row-cols-sm-2 row-cols-1 gy-4">
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Campuses</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ campus_count }}</strong>
+                            <small class="text-xs text-neutral-500">Active branches</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Students</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ active_students }}</strong>
+                            <small class="text-xs text-neutral-500">{{ total_students }} total records</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Teachers</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ teacher_count }}</strong>
+                            <small class="text-xs text-neutral-500">Active teaching staff</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Team Members</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ staff_count }}</strong>
+                            <small class="text-xs text-neutral-500">All active users</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Classes</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ classes }}</strong>
+                            <small class="text-xs text-neutral-500">Academic class records</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Attendance Sessions</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ attendance_sessions }}</strong>
+                            <small class="text-xs text-neutral-500">Marked sessions</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Fee Ledgers</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ fee_ledgers }}</strong>
+                            <small class="text-xs text-neutral-500">Dues created</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Pending Invites</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ pending_invites }}</strong>
+                            <small class="text-xs text-neutral-500">Awaiting activation</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Details Tab -->
+            <div class="tab-pane fade" id="pills-professional" role="tabpanel" aria-labelledby="pills-professional-tab" tabindex="0">
+                <div class="card shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Professional Details</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="p-24">
+                            <div class="row gy-4">
+                                <div class="col-sm-4">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">Registration Number</h6>
+                                    <span class="text-secondary-light">{{ school.registration_number|default:"Not provided" }}</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">GST Number</h6>
+                                    <span class="text-secondary-light">{{ school.gst_number|default:"Not provided" }}</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">CIN Number</h6>
+                                    <span class="text-secondary-light">{{ school.cin_number|default:"Not provided" }}</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">UPI ID</h6>
+                                    <span class="text-secondary-light">{{ school.upi_id|default:"Not provided" }}</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">Currency</h6>
+                                    <span class="text-secondary-light">{{ school.currency }}</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">Timezone</h6>
+                                    <span class="text-secondary-light">{{ school.timezone }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Tab -->
+            <div class="tab-pane fade" id="pills-address" role="tabpanel" aria-labelledby="pills-address-tab" tabindex="0">
+                <div class="card shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Address</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="p-24">
+                            <div class="row gy-4">
+                                <div class="col-sm-12">
+                                    <h6 class="text-md mb-2 fw-medium flex-grow-1">Address Details</h6>
+                                    <span class="text-secondary-light">{{ school.address }}</span><br>
+                                    {% if school.address_line2 %}<span class="text-secondary-light">{{ school.address_line2 }}</span><br>{% endif %}
+                                    <span class="text-secondary-light">{{ school.city }}, {{ school.state }}{% if school.pincode %} - {{ school.pincode }}{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="pills-settings" role="tabpanel" aria-labelledby="pills-settings-tab" tabindex="0">
+                <div class="row gy-4">
+                    {% if show_advanced_school_panels %}
+                    <div class="col-12">
+                        <div class="card shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                            <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                                <h6 class="text-lg fw-semibold mb-0">Subscription</h6>
+                            </div>
+                            <div class="card-body p-24">
+                                {% if subscription %}
+                                <div class="d-flex flex-wrap gap-12">
+                                    <span class="bg-primary-50 text-primary-600 px-16 py-8 radius-4 fw-medium text-sm">Plan: {{ subscription.plan.name }}</span>
+                                    <span class="bg-primary-50 text-primary-600 px-16 py-8 radius-4 fw-medium text-sm">Status: {{ subscription.status }}</span>
+                                    <span class="bg-primary-50 text-primary-600 px-16 py-8 radius-4 fw-medium text-sm">From: {{ subscription.starts_on }}</span>
+                                    <span class="bg-primary-50 text-primary-600 px-16 py-8 radius-4 fw-medium text-sm">To: {% if subscription.ends_on %}{{ subscription.ends_on }}{% else %}Ongoing{% endif %}</span>
+                                </div>
+                                {% else %}
+                                <div class="text-neutral-600 text-sm">No subscription record found yet.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                            <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                                <h6 class="text-lg fw-semibold mb-0">Enabled Modules</h6>
+                            </div>
+                            <div class="card-body p-24">
+                                {% if enabled_features %}
+                                <div class="d-flex flex-wrap gap-12">
+                                    {% for code in enabled_features %}
+                                    <span class="bg-primary-50 text-primary-600 px-16 py-8 radius-4 fw-medium text-sm">{{ code }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-neutral-600 text-sm">No module features enabled for this school subscription.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if can_toggle_school_status %}
+                    <div class="col-12">
+                        <div class="card shadow-1 radius-12 border border-danger-200 h-100 overflow-hidden">
+                            <div class="card-header border-bottom border-danger-200 bg-danger-50 py-16 px-24 d-flex align-items-center justify-content-between">
+                                <h6 class="text-lg fw-semibold text-danger-600 mb-0">School Status Controls</h6>
+                            </div>
+                            <div class="card-body p-24">
+                                <form method="post" action="/schools/{{ school.id }}/status/" class="d-flex flex-wrap gap-16 align-items-end">
+                                    {% csrf_token %}
+                                    {% if school.is_active %}
+                                        <input type="hidden" name="action" value="suspend">
+                                        <div class="flex-grow-1 max-w-400-px">
+                                            <label class="form-label mb-8">Reason (optional)</label>
+                                            <input type="text" name="reason" class="form-control" placeholder="e.g., payment pending">
+                                        </div>
+                                        <button type="submit" class="btn btn-danger px-20 py-12 radius-8 d-flex align-items-center gap-8">
+                                            <i class="ri-forbid-line"></i> Suspend School
+                                        </button>
+                                    {% else %}
+                                        <input type="hidden" name="action" value="resume">
+                                        <button type="submit" class="btn btn-success px-20 py-12 radius-8 d-flex align-items-center gap-8">
+                                            <i class="ri-check-line"></i> Resume School
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

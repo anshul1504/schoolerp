@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Alumni Profile | {{ school.name }}{% endblock %}
+{% block page_heading %}{{ person.full_name }}{% endblock %}
+{% block breadcrumb_active %}Profile Details{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+    <!-- Top Identity Card (School Detail Style) -->
+    <div class="card h-100 mb-24 radius-16 border-0 shadow-sm">
+        <div class="card-body p-24">
+            <div class="d-flex gap-32 flex-md-row flex-column">
+                <!-- Profile Avatar & Core Actions -->
+                <div class="max-w-300-px w-100 text-center">
+                    <figure class="mb-24 w-120-px h-120-px mx-auto rounded-circle overflow-hidden bg-primary-50 d-flex align-items-center justify-content-center border border-4 border-white shadow-sm">
+                        <span class="text-4xl text-primary-600 fw-semibold">{{ person.full_name|first|upper }}</span>
+                    </figure>
+                    <h2 class="h6 text-primary-light mb-16 fw-semibold">{{ person.full_name }}</h2>
+                    <p class="mb-0 text-sm">Batch: <span class="text-primary-600 fw-semibold">{{ person.graduation_year }}</span></p>
+                    <p class="mb-0 text-sm">Stream: <span class="text-primary-light fw-semibold">{{ person.batch|default:"General" }}</span></p>
+
+                    <div class="mt-32 d-flex flex-wrap gap-12 w-100">
+                        <a href="{% url 'alumni:alumni_edit' person.pk %}" class="btn btn-primary-600 border fw-medium border-primary-600 text-md d-flex justify-content-center align-items-center gap-8 flex-grow-1 px-12 py-8 radius-8 shadow-primary">
+                            <span class="d-flex text-lg"><i class="ri-edit-line"></i></span>
+                            Edit
+                        </a>
+                        <a href="{% url 'alumni:alumni_list' %}" class="btn border fw-medium border-secondary-600 bg-hover-secondary-200 text-secondary-600 text-md d-flex justify-content-center align-items-center gap-8 flex-grow-1 px-12 py-8 radius-8">
+                            <span class="d-flex text-lg"><i class="ri-arrow-left-line"></i></span>
+                            Back
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Vertical Divider -->
+                <div class="d-none d-md-block">
+                    <span class="h-100 w-1-px bg-neutral-200 d-block"></span>
+                </div>
+
+                <!-- Primary Info -->
+                <div class="flex-grow-1">
+                    <div class="pb-16 border-bottom d-flex align-items-center justify-content-between gap-20">
+                        <h3 class="h6 text-primary-light text-lg mb-0 fw-semibold">Member Information</h3>
+                        {% if person.is_verified %}
+                            <div class="d-flex align-items-center gap-12">
+                                <span class="bg-success-100 text-success-600 px-16 py-4 radius-4 fw-medium text-sm">Verified</span>
+                                <a href="{% url 'alumni:toggle_verification' person.pk %}" class="text-xs text-danger-600 hover-text-danger fw-bold"><i class="ri-close-circle-line"></i> Unverify</a>
+                            </div>
+                        {% else %}
+                            <div class="d-flex align-items-center gap-12">
+                                <span class="bg-warning-100 text-warning-600 px-16 py-4 radius-4 fw-medium text-sm">Pending Verification</span>
+                                <a href="{% url 'alumni:toggle_verification' person.pk %}" class="btn btn-sm btn-success-600 radius-4 py-4 px-12 text-xs fw-bold">Verify Now</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-16 d-flex flex-column gap-12">
+                        <div class="row row-cols-md-2 gy-3">
+                            <div class="col">
+                                <div class="d-flex gap-4">
+                                    <span class="fw-semibold text-sm text-primary-light w-150-px">Email Address</span>
+                                    <span class="fw-normal text-sm text-primary-600">: {{ person.email }}</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex gap-4">
+                                    <span class="fw-semibold text-sm text-primary-light w-150-px">Phone Number</span>
+                                    <span class="fw-normal text-sm text-secondary-light">: {{ person.phone|default:"-" }}</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex gap-4">
+                                    <span class="fw-semibold text-sm text-primary-light w-150-px">Occupation</span>
+                                    <span class="fw-normal text-sm text-secondary-light">: {{ person.current_occupation|default:"-" }}</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex gap-4">
+                                    <span class="fw-semibold text-sm text-primary-light w-150-px">Organization</span>
+                                    <span class="fw-normal text-sm text-secondary-light">: {{ person.current_organization|default:"-" }}</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex gap-4">
+                                    <span class="fw-semibold text-sm text-primary-light w-150-px">LinkedIn</span>
+                                    <span class="fw-normal text-sm text-primary-600">:
+                                        {% if person.linkedin_profile %}
+                                        <a href="{{ person.linkedin_profile }}" target="_blank" class="text-decoration-none">View <i class="ri-external-link-line ms-4"></i></a>
+                                        {% else %} - {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex gap-4">
+                                    <span class="fw-semibold text-sm text-primary-light w-150-px">Student Link</span>
+                                    <span class="fw-normal text-sm text-secondary-light">: {% if person.student %}#{{ person.student.student_id }}{% else %}Manual Entry{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-24 d-flex flex-wrap gap-12 pt-24 border-top">
+                        <button class="btn btn-outline-primary-600 px-16 py-8 radius-8 text-sm"><i class="ri-mail-send-line me-4"></i> Send Message</button>
+                        <button class="btn btn-outline-primary-600 px-16 py-8 radius-8 text-sm"><i class="ri-printer-line me-4"></i> Print Record</button>
+                        <form action="{% url 'alumni:alumni_delete' person.pk %}" method="POST" onsubmit="return confirm('Delete this profile permanently?');" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger-600 px-16 py-8 radius-8 text-sm"><i class="ri-delete-bin-line me-4"></i> Delete Member</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabbed Information (School Detail Style) -->
+    <div class="my-16">
+        <ul class="nav nav-pills bordered-tab mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12 active" id="pills-overview-tab" data-bs-toggle="pill" data-bs-target="#pills-overview" type="button" role="tab" aria-controls="pills-overview" aria-selected="true">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-dashboard-line"></i></span>
+                    Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12" id="pills-academic-tab" data-bs-toggle="pill" data-bs-target="#pills-academic" type="button" role="tab" aria-controls="pills-academic" aria-selected="false">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-book-open-line"></i></span>
+                    Academic History
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center gap-8 text-secondary-light fw-medium text-sm text-hover-primary-600 text-capitalize bg-transparent px-20 py-12" id="pills-finance-tab" data-bs-toggle="pill" data-bs-target="#pills-finance" type="button" role="tab" aria-controls="pills-finance" aria-selected="false">
+                    <span class="d-flex tab-icon line-height-1 text-md"><i class="ri-hand-coin-line"></i></span>
+                    Finance & Stories
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="pills-overview" role="tabpanel" aria-labelledby="pills-overview-tab" tabindex="0">
+                <div class="row row-cols-xxl-4 row-cols-lg-3 row-cols-sm-2 row-cols-1 gy-4">
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Engagements</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ contribution_count }}</strong>
+                            <small class="text-xs text-neutral-500">Total interactions</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Total Donated</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ school.currency }} {{ total_donated|floatformat:0 }}</strong>
+                            <small class="text-xs text-neutral-500">Financial support</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Success Stories</span>
+                            <strong class="text-xl fw-bold d-block mt-8">{{ story_count }}</strong>
+                            <small class="text-xs text-neutral-500">Published spotlights</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 p-24 border border-neutral-200 radius-12 shadow-none bg-base">
+                            <span class="text-sm fw-medium text-neutral-600">Status</span>
+                            <strong class="text-xl fw-bold d-block mt-8 text-{% if person.is_verified %}success{% else %}warning{% endif %}">
+                                {% if person.is_verified %}Active{% else %}Pending{% endif %}
+                            </strong>
+                            <small class="text-xs text-neutral-500">Verification state</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Tab -->
+            <div class="tab-pane fade" id="pills-academic" role="tabpanel" aria-labelledby="pills-academic-tab" tabindex="0">
+                <div class="card shadow-none radius-12 bg-base border border-neutral-200 h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24">
+                        <h6 class="text-lg fw-semibold mb-0">Academic Record</h6>
+                    </div>
+                    <div class="card-body p-24">
+                        <div class="row gy-4">
+                            <div class="col-sm-4">
+                                <h6 class="text-sm mb-4 fw-bold text-primary-light">Graduation Year</h6>
+                                <p class="text-secondary-light mb-0">{{ person.graduation_year }}</p>
+                            </div>
+                            <div class="col-sm-4">
+                                <h6 class="text-sm mb-4 fw-bold text-primary-light">Batch / Stream</h6>
+                                <p class="text-secondary-light mb-0">{{ person.batch|default:"General" }}</p>
+                            </div>
+                            <div class="col-sm-4">
+                                <h6 class="text-sm mb-4 fw-bold text-primary-light">Campus Location</h6>
+                                <p class="text-secondary-light mb-0">Main Campus</p>
+                            </div>
+                            {% if person.student %}
+                            <div class="col-12 mt-16">
+                                <div class="p-16 radius-12 bg-primary-50 border border-primary-100">
+                                    <div class="d-flex align-items-center gap-12">
+                                        <div class="w-40-px h-40-px bg-white radius-circle d-flex align-items-center justify-content-center text-primary-600 shadow-sm">
+                                            <i class="ri-id-card-line"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="text-sm fw-bold mb-0 text-primary-light">Linked Student Record Found</h6>
+                                            <p class="text-xs text-secondary-light mb-0">System Student ID: #{{ person.student.student_id }} | Admission No: {{ person.student.admission_no|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finance & Stories Tab -->
+            <div class="tab-pane fade" id="pills-finance" role="tabpanel" aria-labelledby="pills-finance-tab" tabindex="0">
+                <div class="row gy-4">
+                    <div class="col-lg-7">
+                        <div class="card shadow-none radius-12 bg-base border border-neutral-200 h-100 overflow-hidden">
+                            <div class="card-header border-bottom bg-base py-16 px-24 d-flex justify-content-between align-items-center">
+                                <h6 class="text-lg fw-semibold mb-0">Contribution History</h6>
+                                <button type="button" class="btn btn-sm btn-primary-600 radius-8" data-bs-toggle="modal" data-bs-target="#contributionModal">
+                                    <i class="ri-add-line"></i> Record New
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table bordered-table mb-0">
+                                        <thead>
+                                            <tr class="bg-base">
+                                                <th class="text-xs fw-bold">Date</th>
+                                                <th class="text-xs fw-bold">Type</th>
+                                                <th class="text-xs fw-bold text-end">Amount</th>
+                                                <th class="text-xs fw-bold text-end">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for contribution in person.contributions.all %}
+                                            <tr>
+                                                <td class="text-sm">{{ contribution.date|date:"M d, Y" }}</td>
+                                                <td><span class="badge bg-info-100 text-info-600 radius-pill text-xxs px-10">{{ contribution.get_type_display }}</span></td>
+                                                <td class="text-sm fw-bold text-end text-primary-600">{% if contribution.amount > 0 %}{{ school.currency }} {{ contribution.amount|floatformat:0 }}{% else %}-{% endif %}</td>
+                                                <td class="text-end">
+                                                    <form action="{% url 'alumni:delete_contribution' contribution.pk %}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this contribution?');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-icon border radius-8 text-danger-600 bg-transparent" title="Delete Contribution">
+                                                            <i class="ri-delete-bin-line"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr><td colspan="4" class="text-center py-40 text-secondary-light">No records found.</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card shadow-none radius-12 bg-base border border-neutral-200 h-100 overflow-hidden">
+                            <div class="card-header border-bottom bg-base py-16 px-24">
+                                <h6 class="text-lg fw-semibold mb-0">Published Spotlights</h6>
+                            </div>
+                            <div class="card-body p-24">
+                                <div class="d-flex flex-column gap-16">
+                                    {% for story in person.success_stories.all %}
+                                    <div class="p-16 radius-12 border bg-base transition-all hover-shadow-sm">
+                                        <h6 class="text-sm fw-bold mb-4 line-clamp-1">{{ story.title }}</h6>
+                                        <div class="d-flex align-items-center justify-content-between mt-8">
+                                            <span class="text-xxs text-secondary-light">{{ story.created_at|date:"M Y" }}</span>
+                                            <a href="{% url 'alumni:story_detail' story.pk %}" class="text-xs fw-bold text-primary-600">View <i class="ri-arrow-right-s-line"></i></a>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <p class="text-center py-20 text-secondary-light">No stories published yet.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Contribution Modal -->
+<div class="modal fade" id="contributionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content radius-16 border-0">
+            <div class="modal-header border-bottom p-24">
+                <h6 class="modal-title text-primary-light fw-bold">Record Contribution</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'alumni:add_contribution' person.pk %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-24">
+                    <div class="mb-20">
+                        <label class="form-label fw-bold text-sm">Contribution Type</label>
+                        <select name="type" class="form-select radius-8" required>
+                            <option value="DONATION">Donation</option>
+                            <option value="MENTORSHIP">Mentorship</option>
+                            <option value="GUEST_LECTURE">Guest Lecture</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-20">
+                        <label class="form-label fw-bold text-sm">Amount (if Donation)</label>
+                        <input type="number" name="amount" class="form-control radius-8" placeholder="0.00" step="0.01">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold text-sm">Notes / Description</label>
+                        <textarea name="notes" class="form-control radius-8" rows="3" placeholder="Brief details about the engagement..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-24">
+                    <button type="button" class="btn btn-secondary radius-8" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-600 radius-8 px-32 shadow-primary">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

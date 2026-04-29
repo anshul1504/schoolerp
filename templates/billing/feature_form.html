@@ -2,38 +2,40 @@
 
 {% block title %}Create Feature{% endblock %}
 {% block page_heading %}Create Feature{% endblock %}
-{% block page_copy %}Add a new feature toggle (used as a plan checkbox).{% endblock %}
-{% block page_eyebrow %}Billing{% endblock %}
+{% block breadcrumb_active %}Billing / Features / Create{% endblock %}
 
 {% block content %}
-  <div class="card">
+  <div class="card h-100 p-0 radius-12">
     <div class="card-body p-24">
-      <form method="post" class="row gy-3">
+      <form method="post" class="row gy-4">
         {% csrf_token %}
         <div class="col-md-6">
-          <label class="form-label">Name *</label>
-          <input type="text" name="name" class="form-control" required placeholder="Attendance Module">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Name <span class="text-danger-600">*</span></label>
+          <input type="text" name="name" class="form-control radius-8" required placeholder="e.g. Attendance Module">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Code *</label>
-          <input type="text" name="code" class="form-control" required placeholder="ATTENDANCE">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Code <span class="text-danger-600">*</span></label>
+          <input type="text" name="code" class="form-control radius-8" required placeholder="e.g. ATTENDANCE">
         </div>
         <div class="col-12">
-          <label class="form-label">Description</label>
-          <input type="text" name="description" class="form-control" placeholder="Enable student + teacher attendance workflows">
+          <label class="form-label fw-semibold text-primary-light text-sm mb-8">Description</label>
+          <input type="text" name="description" class="form-control radius-8" placeholder="Enable student + teacher attendance workflows">
         </div>
-        <div class="col-md-6 d-flex align-items-end">
-          <div class="form-check">
+        <div class="col-12 mt-24">
+          <div class="form-check style-check d-flex align-items-center">
             <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
-            <label class="form-check-label" for="is_active">Active</label>
+            <label class="form-check-label" for="is_active">Feature is active</label>
           </div>
         </div>
-        <div class="col-12 d-flex gap-10">
-          <button type="submit" class="btn btn-primary">Create</button>
-          <a href="/billing/features/" class="btn btn-outline-secondary">Cancel</a>
+        <div class="col-12 mt-32 d-flex gap-16">
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+            <iconify-icon icon="ri:save-line"></iconify-icon> Create Feature
+          </button>
+          <a href="/billing/features/" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <iconify-icon icon="ri:close-line"></iconify-icon> Cancel
+          </a>
         </div>
       </form>
     </div>
   </div>
 {% endblock %}
-

@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Operations | Platform Admin{% endblock %}
+
+{% block content %}
+<div class="platform-panel mb-4">
+    <div>
+        <h1 class="mb-2">System Operations & Cloud Gateway</h1>
+        <p class="mb-0 text-neutral-600">Manage platform-wide configurations, database backups, and system health.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <form method="post" action="{% url 'super-admin-backup-trigger' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary"><i class="ri-database-2-line me-1"></i>Run Database Backup</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- System Health -->
+    <div class="col-lg-4">
+        <article class="card radius-12 border-neutral-200 h-100">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">System Environment</h5>
+                <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Operating System</span>
+                    <span class="fw-medium">{{ sys_info.os }}</span>
+                </div>
+                <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Python Version</span>
+                    <span class="fw-medium">{{ sys_info.python }}</span>
+                </div>
+                <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Django Version</span>
+                    <span class="fw-medium">{{ sys_info.django }}</span>
+                </div>
+                <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Database Engine</span>
+                    <span class="fw-medium">{{ sys_info.db }}</span>
+                </div>
+                <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                    <span class="text-muted">Disk Usage</span>
+                    <div class="text-end">
+                        <span class="fw-medium">{{ sys_info.disk_usage }}</span>
+                        <div class="progress mt-1" style="height: 4px; width: 100px;">
+                            <div class="progress-bar bg-primary" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Memory Usage</span>
+                    <span class="fw-medium">{{ sys_info.memory_usage }}</span>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <!-- Cloud Gateway / Service Configuration -->
+    <div class="col-lg-8">
+        <article class="card radius-12 border-neutral-200 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Cloud Gateway Configuration</h5>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#configModal">
+                        <i class="ri-add-line"></i> Add Parameter
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                                <th>Description</th>
+                                <th>Updated</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for config in configs %}
+                            <tr>
+                                <td><code>{{ config.key }}</code></td>
+                                <td>
+                                    {% if config.is_secret %}
+                                        <span class="badge bg-light text-dark border"><i class="ri-lock-line me-1"></i>Encrypted</span>
+                                    {% else %}
+                                        {{ config.value|truncatechars:30 }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ config.description|default:"-" }}</td>
+                                <td>{{ config.updated_at|date:"M d, H:i" }}</td>
+                                <td class="text-end">
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_config">
+                                        <input type="hidden" name="config_id" value="{{ config.id }}">
+                                        <button type="submit" class="btn btn-sm btn-light text-danger" onclick="return confirm('Delete this config?')">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted italic">No service configurations found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Backup History -->
+    <div class="col-12">
+        <article class="card radius-12 border-neutral-200">
+            <div class="card-body">
+                <h5 class="fw-bold mb-4">Backup Management Ledger</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Filename</th>
+                                <th>Status</th>
+                                <th>Size</th>
+                                <th>Triggered By</th>
+                                <th class="text-end">Download</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for backup in backups %}
+                            <tr>
+                                <td>{{ backup.created_at|date:"M d, Y H:i:s" }}</td>
+                                <td class="fw-medium text-dark">{{ backup.filename }}</td>
+                                <td>
+                                    {% if backup.status == 'COMPLETED' %}
+                                        <span class="badge bg-success-soft text-success">Completed</span>
+                                    {% elif backup.status == 'PENDING' %}
+                                        <span class="badge bg-warning-soft text-warning">In Progress</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-soft text-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ backup.size_bytes|filesizeformat }}</td>
+                                <td>{{ backup.created_by.username|default:"System" }}</td>
+                                <td class="text-end">
+                                    {% if backup.file %}
+                                        <a href="{{ backup.file.url }}" class="btn btn-sm btn-outline-dark" download>
+                                            <i class="ri-download-cloud-2-line me-1"></i>Download
+                                        </a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="ri-database-2-line d-block mb-2" style="font-size: 2rem; opacity: 0.2;"></i>
+                                    No database backups available yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal fade" id="configModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_config">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Service Parameter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Key (e.g. AWS_S3_REGION)</label>
+                    <input type="text" name="key" class="form-control" placeholder="UPPERCASE_KEY" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Value</label>
+                    <textarea name="value" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="description" class="form-control" placeholder="Short note about this setting">
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="is_secret" id="secretSwitch">
+                    <label class="form-check-label" for="secretSwitch">Mask value in UI (Secret)</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Configuration</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

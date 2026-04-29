@@ -239,7 +239,7 @@
       <div class="academic-card__body">
         {% if academic_classes %}
           <table class="data-table">
-            <thead><tr><th class="sf-th-icon"></th><th>Class</th><th>Teacher</th><th>Room</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
+            <thead><tr><th class="text-xs text-secondary-light font-bold icon"></th><th>Class</th><th>Teacher</th><th>Room</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
             <tbody>
               {% for academic_class in academic_classes %}
                 <tr>
@@ -289,7 +289,7 @@
       <div class="academic-card__body">
         {% if academic_subjects %}
           <table class="data-table">
-            <thead><tr><th class="sf-th-icon"></th><th>Subject</th><th>Class</th><th>Type</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
+            <thead><tr><th class="text-xs text-secondary-light font-bold icon"></th><th>Subject</th><th>Class</th><th>Type</th>{% if can_manage_academics %}<th>Actions</th>{% endif %}</tr></thead>
             <tbody>
               {% for subject in academic_subjects %}
                 <tr>

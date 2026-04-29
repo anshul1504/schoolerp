@@ -1,0 +1,32 @@
+{% comment %}
+  Reusable Dashboard KPI Card
+  Expected variables:
+    - label: String
+    - value: String/Number
+    - trend: String
+    - icon: String (Iconify icon name)
+    - color_class: CSS class for icon background (e.g., bg-warning-600)
+    - gradient_class: CSS class for card background (e.g., gradient-bg-end-1)
+{% endcomment %}
+<div class="col-xxl-3 col-sm-6">
+    <div class="card shadow-1 radius-8 {{ gradient_class }} h-100">
+        <div class="card-body p-20">
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-16">
+                <div class="w-44-px h-44-px {{ color_class }} rounded-circle d-flex justify-content-center align-items-center">
+                    <iconify-icon icon="{{ icon }}" class="text-white text-2xl"></iconify-icon>
+                </div>
+                <p class="fw-medium text-primary-light mb-1">{{ label }}</p>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+                <h6 class="mb-0">{{ value }}</h6>
+                {% if trend %}
+                <p class="fw-medium text-sm text-primary-light mb-0 d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center gap-1 text-primary-600 text-sm fw-semibold">
+                        {{ trend }}
+                    </span>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

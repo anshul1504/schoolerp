@@ -30,7 +30,9 @@ class AcademicClass(models.Model):
 
 class AcademicSubject(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="academic_subjects")
-    academic_class = models.ForeignKey(AcademicClass, on_delete=models.CASCADE, related_name="subjects")
+    academic_class = models.ForeignKey(
+        AcademicClass, on_delete=models.CASCADE, related_name="subjects"
+    )
     name = models.CharField(max_length=120)
     code = models.CharField(max_length=30, blank=True)
     is_optional = models.BooleanField(default=False)
@@ -51,8 +53,12 @@ class TeacherAllocation(models.Model):
         on_delete=models.CASCADE,
         related_name="teaching_allocations",
     )
-    academic_class = models.ForeignKey(AcademicClass, on_delete=models.CASCADE, related_name="teacher_allocations")
-    subject = models.ForeignKey(AcademicSubject, on_delete=models.CASCADE, related_name="teacher_allocations")
+    academic_class = models.ForeignKey(
+        AcademicClass, on_delete=models.CASCADE, related_name="teacher_allocations"
+    )
+    subject = models.ForeignKey(
+        AcademicSubject, on_delete=models.CASCADE, related_name="teacher_allocations"
+    )
     is_class_lead = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

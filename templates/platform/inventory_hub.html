@@ -99,7 +99,7 @@
                     <button class="btn btn-success btn-sm" type="submit">Receive</button>
                   </form>
                 {% else %}
-                  <span class="status-pill status-pill--success">Received</span>
+                  <span class="badge status-pill--success">Received</span>
                 {% endif %}
               </td>
             </tr>
@@ -157,7 +157,7 @@
               <td>{{ row.issue_count }}</td>
               <td>{{ row.return_count }}</td>
               <td>{{ row.low_stock_count }}</td>
-              <td>{% if row.status == "Ready" %}<span class="status-pill status-pill--success">Ready</span>{% else %}<span class="status-pill status-pill--warning">Needs setup</span>{% endif %}</td>
+              <td>{% if row.status == "Ready" %}<span class="badge status-pill--success">Ready</span>{% else %}<span class="badge status-pill--warning">Needs setup</span>{% endif %}</td>
             </tr>
           {% empty %}
             <tr><td colspan="6" class="text-center text-muted">No schools found.</td></tr>

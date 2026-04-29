@@ -7,54 +7,134 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('schools', '0010_school_profile_fields'),
+        ("schools", "0010_school_profile_fields"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Enquiry',
+            name="Enquiry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('student_name', models.CharField(max_length=150)),
-                ('guardian_name', models.CharField(max_length=150)),
-                ('phone', models.CharField(max_length=20)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('interested_class', models.CharField(blank=True, max_length=100)),
-                ('source', models.CharField(choices=[('WALK_IN', 'Walk In'), ('CALL', 'Call'), ('WHATSAPP', 'WhatsApp'), ('EMAIL', 'Email'), ('REFERENCE', 'Reference'), ('WEBSITE', 'Website')], default='WALK_IN', max_length=20)),
-                ('status', models.CharField(choices=[('NEW', 'New'), ('FOLLOW_UP', 'Follow Up'), ('ADMISSION_IN_PROGRESS', 'Admission In Progress'), ('CLOSED', 'Closed')], default='NEW', max_length=30)),
-                ('follow_up_date', models.DateField(blank=True, null=True)),
-                ('notes', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_enquiries', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='enquiries', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("student_name", models.CharField(max_length=150)),
+                ("guardian_name", models.CharField(max_length=150)),
+                ("phone", models.CharField(max_length=20)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("interested_class", models.CharField(blank=True, max_length=100)),
+                (
+                    "source",
+                    models.CharField(
+                        choices=[
+                            ("WALK_IN", "Walk In"),
+                            ("CALL", "Call"),
+                            ("WHATSAPP", "WhatsApp"),
+                            ("EMAIL", "Email"),
+                            ("REFERENCE", "Reference"),
+                            ("WEBSITE", "Website"),
+                        ],
+                        default="WALK_IN",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("NEW", "New"),
+                            ("FOLLOW_UP", "Follow Up"),
+                            ("ADMISSION_IN_PROGRESS", "Admission In Progress"),
+                            ("CLOSED", "Closed"),
+                        ],
+                        default="NEW",
+                        max_length=30,
+                    ),
+                ),
+                ("follow_up_date", models.DateField(blank=True, null=True)),
+                ("notes", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_enquiries",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="enquiries",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['follow_up_date', '-created_at'],
+                "ordering": ["follow_up_date", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='VisitorLog',
+            name="VisitorLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('visitor_name', models.CharField(max_length=150)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('person_to_meet', models.CharField(blank=True, max_length=150)),
-                ('purpose', models.CharField(choices=[('ADMISSION', 'Admission Enquiry'), ('PARENT_MEETING', 'Parent Meeting'), ('DELIVERY', 'Delivery'), ('OFFICIAL', 'Official Work'), ('OTHER', 'Other')], default='OTHER', max_length=30)),
-                ('entry_time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('exit_time', models.DateTimeField(blank=True, null=True)),
-                ('remarks', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_visitor_logs', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='visitor_logs', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("visitor_name", models.CharField(max_length=150)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("person_to_meet", models.CharField(blank=True, max_length=150)),
+                (
+                    "purpose",
+                    models.CharField(
+                        choices=[
+                            ("ADMISSION", "Admission Enquiry"),
+                            ("PARENT_MEETING", "Parent Meeting"),
+                            ("DELIVERY", "Delivery"),
+                            ("OFFICIAL", "Official Work"),
+                            ("OTHER", "Other"),
+                        ],
+                        default="OTHER",
+                        max_length=30,
+                    ),
+                ),
+                ("entry_time", models.DateTimeField(default=django.utils.timezone.now)),
+                ("exit_time", models.DateTimeField(blank=True, null=True)),
+                ("remarks", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_visitor_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="visitor_logs",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-entry_time', '-created_at'],
+                "ordering": ["-entry_time", "-created_at"],
             },
         ),
     ]

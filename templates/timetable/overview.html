@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Class Timetable | School ERP{% endblock %}
+
+{% block extra_css %}
+<style>
+  .timetable-grid { width: 100%; border-collapse: collapse; min-width: 900px; }
+  .timetable-grid th, .timetable-grid td { border: 1px solid #f1f5f9; padding: 1.25rem; vertical-align: top; width: 14%; }
+  .timetable-grid th { background: #f8fafc; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .slot-item { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 0.75rem; border-radius: 12px; margin-bottom: 0.5rem; transition: transform 0.2s ease; }
+  .slot-item:hover { transform: scale(1.02); }
+  .slot-subject { font-weight: 800; font-size: 0.825rem; display: block; color: #1e3a8a; }
+  .slot-teacher { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+  .break-slot { background: #f1f5f9; color: #94a3b8; font-style: italic; font-size: 0.75rem; font-weight: 600; text-align: center; border-radius: 8px; padding: 0.5rem; }
+  .sf-card { background: #fff; border: 1px solid var(--sf-border); border-radius: 16px; margin-bottom: 24px; }
+  .sf-card__body { padding: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="platform-panel mb-4">
+  <div>
+    <h1 class="mb-2">Academic Timetable</h1>
+    <p class="mb-0 text-neutral-600">Plan and visualize weekly class schedules for {{ request.user.school.name }}.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-primary">Define Periods</button>
+  </div>
+</div>
+
+<article class="card radius-12 border-neutral-200 mb-4">
+  <div class="card-body">
+    <form method="get" class="row align-items-end g-3">
+      <div class="col-md-6">
+        <label class="form-label">Academic Class Selection</label>
+        <select name="class_id" class="form-select" onchange="this.form.submit()">
+          <option value="">-- Select Academic Class --</option>
+          {% for cls in academic_classes %}
+            <option value="{{ cls.id }}" {% if selected_class.id == cls.id %}selected{% endif %}>{{ cls.name }} - {{ cls.section }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+          <button type="submit" class="btn btn-primary w-100">Load Schedule</button>
+      </div>
+    </form>
+  </div>
+</article>
+
+{% if selected_class %}
+<article class="card radius-12 border-neutral-200">
+  <div class="card-body p-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="timetable-grid">
+        <thead>
+          <tr>
+            <th style="width: 100px;">Time</th>
+            {% for day in days %}
+              <th>{{ day|title }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for period in periods %}
+          <tr>
+            <td class="bg-light align-middle">
+                <div class="fw-bold">{{ period.name }}</div>
+                <small class="text-muted">{{ period.start_time|time:"H:i" }} - {{ period.end_time|time:"H:i" }}</small>
+            </td>
+            {% for day in days %}
+              <td class="p-2">
+                {% if period.is_break %}
+                    <div class="break-slot">LUNCH BREAK</div>
+                {% else %}
+                    {% for slot in slots %}
+                        {% if slot.day == day and slot.period_id == period.id %}
+                            <div class="slot-item shadow-sm">
+                                <span class="slot-subject">{{ slot.subject.name }}</span>
+                                <span class="slot-teacher">{{ slot.teacher.get_full_name|default:"TBA" }}</span>
+                                <div class="text-xs text-muted mt-2">Room: {{ slot.room_number|default:"-" }}</div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</article>
+{% else %}
+<div class="card radius-12 border-neutral-200 text-center py-5">
+    <h5 class="fw-bold">Select a class to view its weekly timetable.</h5>
+</div>
+{% endif %}
+{% endblock %}

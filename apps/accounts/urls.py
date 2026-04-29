@@ -1,10 +1,17 @@
-from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.urls import path
 
-from .views import activate_invitation, dashboard, login_verify, login_view, logout_view
-from .views_sso import sso_google_callback, sso_google_start
+from .views import (
+    activate_invitation,
+    admin_permission_hub,
+    dashboard,
+    login_verify,
+    login_view,
+    logout_view,
+)
 from .views_profile import profile_edit, profile_view
 from .views_register import register_placeholder
+from .views_sso import sso_google_callback, sso_google_start
 
 urlpatterns = [
     path("", login_view, name="login"),
@@ -13,16 +20,18 @@ urlpatterns = [
     path("sso/google/start/", sso_google_start, name="sso-google-start"),
     path("sso/google/callback/", sso_google_callback, name="sso-google-callback"),
     path("dashboard/", dashboard, name="dashboard"),
+    path("settings/permission-hub/", admin_permission_hub, name="admin-permission-hub"),
     path("logout/", logout_view, name="logout"),
     path("activate/<uuid:token>/", activate_invitation, name="activate-invitation"),
-
     path("profile/", profile_view, name="profile"),
     path("profile/edit/", profile_edit, name="profile-edit"),
-
     # Legacy demo link: keep a real page instead of 404.
     path("register.html", register_placeholder, name="register-placeholder"),
-
-    path("password-reset/", auth_views.PasswordResetView.as_view(template_name="accounts/password_reset_form.html"), name="password_reset"),
+    path(
+        "password-reset/",
+        auth_views.PasswordResetView.as_view(template_name="accounts/password_reset_form.html"),
+        name="password_reset",
+    ),
     path(
         "password-reset/done/",
         auth_views.PasswordResetDoneView.as_view(template_name="accounts/password_reset_done.html"),
@@ -30,12 +39,16 @@ urlpatterns = [
     ),
     path(
         "reset/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(template_name="accounts/password_reset_confirm.html"),
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="accounts/password_reset_confirm.html"
+        ),
         name="password_reset_confirm",
     ),
     path(
         "reset/done/",
-        auth_views.PasswordResetCompleteView.as_view(template_name="accounts/password_reset_complete.html"),
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="accounts/password_reset_complete.html"
+        ),
         name="password_reset_complete",
     ),
 ]

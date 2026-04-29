@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 DEFAULT_FEATURES = [
     ("Staff", "STAFF", "Staff directory and HR workflows"),
     ("Front Office", "FRONTOFFICE", "Reception, enquiries, visitor ops, campaigns"),
@@ -43,4 +42,3 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(seed_more_features_and_attach_to_plans, migrations.RunPython.noop),
     ]
-

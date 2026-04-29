@@ -106,4 +106,3 @@ def announcement_delete(request, id):
     obj.delete()
     messages.success(request, "Announcement deleted.")
     return redirect("/platform/announcements/")
-

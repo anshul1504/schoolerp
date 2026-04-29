@@ -1,21 +1,19 @@
+import csv
 from decimal import Decimal
 
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
+from weasyprint import HTML
 
-from apps.core.permissions import role_required
-from apps.core.permissions import has_permission
-from apps.core.ui import build_layout_context
-from apps.schools.models import School
+from apps.core.permissions import has_permission, role_required
 from apps.core.tenancy import school_scope_for_user, selected_school_for_request
+from apps.core.ui import build_layout_context
 from apps.students.models import Student
 
-from .models import FeePayment, FeeStructure, StudentFeeLedger
-
-import csv
-
+from .models import FeeDiscount, FeeFine, FeePayment, FeeStructure, StudentFeeLedger
 
 PAYMENT_MODE_OPTIONS = [choice[0] for choice in FeePayment.PAYMENT_MODE_CHOICES]
 FREQUENCY_OPTIONS = ["MONTHLY", "QUARTERLY", "YEARLY", "ONE_TIME"]
@@ -51,20 +49,27 @@ def fees_overview(request):
     payments = FeePayment.objects.select_related("school", "student", "ledger", "collected_by")
 
     if school:
-      structures = structures.filter(school=school)
-      ledgers = ledgers.filter(school=school)
-      payments = payments.filter(school=school)
-      students = Student.objects.filter(school=school, is_active=True).order_by("first_name", "last_name")
+        structures = structures.filter(school=school)
+        ledgers = ledgers.filter(school=school)
+        payments = payments.filter(school=school)
+        students = Student.objects.filter(school=school, is_active=True).order_by(
+            "first_name", "last_name"
+        )
     elif request.user.school_id:
-      structures = structures.filter(school_id=request.user.school_id)
-      ledgers = ledgers.filter(school_id=request.user.school_id)
-      payments = payments.filter(school_id=request.user.school_id)
-      students = Student.objects.filter(school_id=request.user.school_id, is_active=True).order_by("first_name", "last_name")
+        structures = structures.filter(school_id=request.user.school_id)
+        ledgers = ledgers.filter(school_id=request.user.school_id)
+        payments = payments.filter(school_id=request.user.school_id)
+        students = Student.objects.filter(
+            school_id=request.user.school_id, is_active=True
+        ).order_by("first_name", "last_name")
     else:
-      structures = structures.none()
-      ledgers = ledgers.none()
-      payments = payments.none()
-      students = Student.objects.none()
+        structures = structures.none()
+        ledgers = ledgers.none()
+        payments = payments.none()
+        students = Student.objects.none()
+
+    discounts = FeeDiscount.objects.filter(school=school) if school else FeeDiscount.objects.none()
+    fines = FeeFine.objects.filter(school=school) if school else FeeFine.objects.none()
 
     def sanitize_cell(value) -> str:
         text = str(value or "")
@@ -85,7 +90,9 @@ def fees_overview(request):
     dataset = (request.GET.get("dataset") or "").strip().lower()
     if export_format in {"csv", "excel"}:
         if is_owner:
-            messages.error(request, "Export access is restricted for School Owner in this workspace.")
+            messages.error(
+                request, "Export access is restricted for School Owner in this workspace."
+            )
             return redirect("/fees/")
 
         if school is None:
@@ -108,12 +115,25 @@ def fees_overview(request):
                 response = HttpResponse(content_type="text/csv")
                 response["Content-Disposition"] = 'attachment; filename="fee_ledgers.csv"'
                 writer = csv.writer(response)
-                writer.writerow(["id", "student", "billing_month", "fee_structure", "amount_due", "amount_paid", "due_date", "status"])
+                writer.writerow(
+                    [
+                        "id",
+                        "student",
+                        "billing_month",
+                        "fee_structure",
+                        "amount_due",
+                        "amount_paid",
+                        "due_date",
+                        "status",
+                    ]
+                )
                 for row in qs[:10000]:
                     writer.writerow(
                         [
                             row.id,
-                            sanitize_cell(f"{row.student.first_name} {row.student.last_name}".strip()),
+                            sanitize_cell(
+                                f"{row.student.first_name} {row.student.last_name}".strip()
+                            ),
                             sanitize_cell(row.billing_month),
                             sanitize_cell(row.fee_structure.name if row.fee_structure else ""),
                             sanitize_cell(row.amount_due),
@@ -160,7 +180,18 @@ def fees_overview(request):
                 response = HttpResponse(content_type="text/csv")
                 response["Content-Disposition"] = 'attachment; filename="fee_payments.csv"'
                 writer = csv.writer(response)
-                writer.writerow(["id", "student", "billing_month", "amount", "payment_date", "payment_mode", "reference_no", "collector"])
+                writer.writerow(
+                    [
+                        "id",
+                        "student",
+                        "billing_month",
+                        "amount",
+                        "payment_date",
+                        "payment_mode",
+                        "reference_no",
+                        "collector",
+                    ]
+                )
                 for row in qs[:10000]:
                     collector = row.collected_by.get_full_name() if row.collected_by else ""
                     if not collector and row.collected_by:
@@ -168,7 +199,9 @@ def fees_overview(request):
                     writer.writerow(
                         [
                             row.id,
-                            sanitize_cell(f"{row.student.first_name} {row.student.last_name}".strip()),
+                            sanitize_cell(
+                                f"{row.student.first_name} {row.student.last_name}".strip()
+                            ),
                             sanitize_cell(row.ledger.billing_month if row.ledger else ""),
                             sanitize_cell(row.amount),
                             sanitize_cell(row.payment_date),
@@ -249,7 +282,9 @@ def fees_overview(request):
 
         if action == "create_due":
             student = get_object_or_404(Student, id=request.POST.get("student"), school=school)
-            fee_structure = get_object_or_404(FeeStructure, id=request.POST.get("fee_structure"), school=school)
+            fee_structure = get_object_or_404(
+                FeeStructure, id=request.POST.get("fee_structure"), school=school
+            )
             billing_month = request.POST.get("billing_month", "").strip()
             due_date = request.POST.get("due_date")
             amount_due_raw = (request.POST.get("amount_due") or "").strip()
@@ -283,7 +318,9 @@ def fees_overview(request):
             return redirect(f"/fees/?school={school.id}")
 
         if action == "collect_payment":
-            ledger = get_object_or_404(StudentFeeLedger, id=request.POST.get("ledger"), school=school)
+            ledger = get_object_or_404(
+                StudentFeeLedger, id=request.POST.get("ledger"), school=school
+            )
             try:
                 amount = Decimal(request.POST.get("amount") or "0")
             except (ArithmeticError, ValueError):
@@ -323,11 +360,39 @@ def fees_overview(request):
     context["student_options"] = students
     context["payment_mode_options"] = PAYMENT_MODE_OPTIONS
     context["frequency_options"] = FREQUENCY_OPTIONS
+    context["fee_discounts"] = discounts
+    context["fee_fines"] = fines
     context["today"] = timezone.localdate()
     context["fees_stats"] = {
         "structures": structures.count(),
         "dues": ledgers.count(),
         "paid": ledgers.filter(status="PAID").count(),
-        "outstanding": sum(max((ledger.amount_due - ledger.amount_paid), Decimal("0")) for ledger in ledgers),
+        "outstanding": sum(
+            max((ledger.amount_due - ledger.amount_paid), Decimal("0")) for ledger in ledgers
+        ),
     }
     return render(request, "fees/overview.html", context)
+
+
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "ACCOUNTANT", "PARENT")
+def generate_receipt_pdf(request, payment_id):
+    payment = get_object_or_404(FeePayment, id=payment_id)
+
+    # Security check: Ensure the payment belongs to the user's school
+    if not request.user.role == "SUPER_ADMIN" and payment.school != request.user.school:
+        messages.error(request, "Unauthorized access to receipt.")
+        return redirect("fees_overview")
+
+    context = {
+        "payment": payment,
+        "student": payment.student,
+        "school": payment.school,
+    }
+
+    html_string = render_to_string("fees/receipt_pdf.html", context)
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="receipt_{payment.id}.pdf"'
+    return response

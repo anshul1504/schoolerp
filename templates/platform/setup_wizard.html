@@ -40,11 +40,11 @@
               <td><div class="fw-bold">{{ row.completed }}/{{ row.total }}</div><div class="text-muted small">{{ row.score }}%</div></td>
               <td>
                 {% if row.score == 100 %}
-                  <span class="status-pill status-pill--success">Ready</span>
+                  <span class="badge status-pill--success">Ready</span>
                 {% elif row.score >= 50 %}
-                  <span class="status-pill status-pill--warning">Partial</span>
+                  <span class="badge status-pill--warning">Partial</span>
                 {% else %}
-                  <span class="status-pill status-pill--danger">Needs setup</span>
+                  <span class="badge status-pill--danger">Needs setup</span>
                 {% endif %}
               </td>
               <td class="small">

@@ -6,78 +6,81 @@
 {% block page_copy %}Manage branches for {{ school.name }}. Main campus is used as default context in future modules.{% endblock %}
 
 {% block content %}
-  <div class="card mb-4">
-    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
-      <div>
-        <h6 class="mb-2">{{ school.name }}</h6>
-        <div class="text-neutral-600 text-sm">
-          Active campuses: {{ active_campus_count }}{% if campus_limit %} / {{ campus_limit }}{% endif %}
+  <section class="schools-page">
+    <div class="card mb-4">
+      <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
+        <div>
+          <h6 class="mb-2">{{ school.name }}</h6>
+          <div class="text-neutral-600 text-sm">
+            Active campuses: {{ active_campus_count }}{% if campus_limit %} / {{ campus_limit }}{% endif %}
+          </div>
+        </div>
+        <div class="d-flex gap-10 flex-wrap">
+          <a href="/schools/{{ school.id }}/" class="btn btn-outline-secondary radius-8 px-20 py-11">Back</a>
+          {% if not campus_limit or active_campus_count < campus_limit %}
+            <a href="/schools/{{ school.id }}/campuses/create/" class="btn btn-primary-600 radius-8 px-20 py-11">Add Campus</a>
+          {% endif %}
         </div>
       </div>
-      <div class="d-flex gap-10 flex-wrap">
-        <a href="/schools/{{ school.id }}/" class="btn btn-outline-secondary">Back</a>
-        {% if not campus_limit or active_campus_count < campus_limit %}
-          <a href="/schools/{{ school.id }}/campuses/create/" class="btn btn-primary-600">Add Campus</a>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-24">
+        {% if campuses %}
+          <div class="table-responsive">
+            <table class="table bordered-table mb-0" id="dataTable" data-page-length="10">
+              <thead>
+                <tr>
+                  <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 60px;">S.No</th>
+                  <th scope="col" class="text-xs text-secondary-light font-bold">Campus</th>
+                  <th scope="col" class="text-xs text-secondary-light font-bold">Contact</th>
+                  <th scope="col" class="text-xs text-secondary-light font-bold" style="width: 120px;">Status</th>
+                  <th scope="col" class="text-xs text-secondary-light font-bold text-end" style="width: 150px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in campuses %}
+                  <tr>
+                    <td class="text-muted text-sm">{{ forloop.counter }}</td>
+                    <td>
+                      <div class="fw-semibold">
+                        {{ c.name }}
+                        {% if c.is_main %}
+                          <span class="badge bg-primary ms-2">Main</span>
+                        {% endif %}
+                      </div>
+                      <div class="text-neutral-500 text-sm">
+                        {% if c.city or c.state %}{{ c.city }}{% if c.city and c.state %}, {% endif %}{{ c.state }}{% else %}-{% endif %}
+                        {% if c.code %} - {{ c.code }}{% endif %}
+                      </div>
+                    </td>
+                    <td class="text-neutral-600 text-sm">
+                      <div>{{ c.email|default:"-" }}</div>
+                      <div>{{ c.phone|default:"-" }}</div>
+                    </td>
+                    <td>
+                      {% if c.is_active %}
+                        <span class="badge bg-success">Active</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Inactive</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-primary-600 radius-8" href="/schools/{{ school.id }}/campuses/{{ c.id }}/edit/">Edit</a>
+                      <form method="post" action="/schools/{{ school.id }}/campuses/{{ c.id }}/delete/" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger radius-8">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-neutral-600 text-sm">No campuses yet. Create one to start onboarding with branches.</div>
         {% endif %}
       </div>
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-body p-24">
-      {% if campuses %}
-        <div class="table-responsive">
-          <table class="table align-middle">
-            <thead>
-              <tr>
-                <th>Campus</th>
-                <th>Contact</th>
-                <th>Status</th>
-                <th class="text-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for c in campuses %}
-                <tr>
-                  <td>
-                    <div class="fw-semibold">
-                      {{ c.name }}
-                      {% if c.is_main %}
-                        <span class="badge bg-primary ms-2">Main</span>
-                      {% endif %}
-                    </div>
-                    <div class="text-neutral-500 text-sm">
-                      {% if c.city or c.state %}{{ c.city }}{% if c.city and c.state %}, {% endif %}{{ c.state }}{% else %}-{% endif %}
-                      {% if c.code %} • {{ c.code }}{% endif %}
-                    </div>
-                  </td>
-                  <td class="text-neutral-600 text-sm">
-                    <div>{{ c.email|default:"-" }}</div>
-                    <div>{{ c.phone|default:"-" }}</div>
-                  </td>
-                  <td>
-                    {% if c.is_active %}
-                      <span class="badge bg-success">Active</span>
-                    {% else %}
-                      <span class="badge bg-warning text-dark">Inactive</span>
-                    {% endif %}
-                  </td>
-                  <td class="text-end">
-                    <a class="btn btn-sm btn-outline-primary" href="/schools/{{ school.id }}/campuses/{{ c.id }}/edit/">Edit</a>
-                    <form method="post" action="/schools/{{ school.id }}/campuses/{{ c.id }}/delete/" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                    </form>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="text-neutral-600 text-sm">No campuses yet. Create one to start onboarding with branches.</div>
-      {% endif %}
-    </div>
-  </div>
+  </section>
 {% endblock %}
-

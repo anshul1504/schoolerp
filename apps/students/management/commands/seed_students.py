@@ -3,7 +3,7 @@ import string
 import uuid
 from datetime import timedelta
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -12,28 +12,94 @@ from django.utils import timezone
 from apps.schools.models import School
 from apps.students.models import Student
 
-
 FIRST_NAMES = [
-    "Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Reyansh", "Muhammad", "Sai", "Ayaan", "Krishna",
-    "Ishaan", "Shaurya", "Atharv", "Dhruv", "Kabir", "Rohan", "Anaya", "Diya", "Ira", "Myra",
-    "Aadhya", "Aarohi", "Sara", "Kiara", "Nisha", "Pooja", "Riya", "Sanya", "Naina", "Meera",
+    "Aarav",
+    "Vivaan",
+    "Aditya",
+    "Vihaan",
+    "Arjun",
+    "Reyansh",
+    "Muhammad",
+    "Sai",
+    "Ayaan",
+    "Krishna",
+    "Ishaan",
+    "Shaurya",
+    "Atharv",
+    "Dhruv",
+    "Kabir",
+    "Rohan",
+    "Anaya",
+    "Diya",
+    "Ira",
+    "Myra",
+    "Aadhya",
+    "Aarohi",
+    "Sara",
+    "Kiara",
+    "Nisha",
+    "Pooja",
+    "Riya",
+    "Sanya",
+    "Naina",
+    "Meera",
 ]
 
 LAST_NAMES = [
-    "Sharma", "Verma", "Gupta", "Singh", "Kumar", "Patel", "Mehta", "Jain", "Shah", "Khan",
-    "Yadav", "Chauhan", "Mishra", "Das", "Roy", "Nair", "Iyer", "Reddy", "Joshi", "Bose",
+    "Sharma",
+    "Verma",
+    "Gupta",
+    "Singh",
+    "Kumar",
+    "Patel",
+    "Mehta",
+    "Jain",
+    "Shah",
+    "Khan",
+    "Yadav",
+    "Chauhan",
+    "Mishra",
+    "Das",
+    "Roy",
+    "Nair",
+    "Iyer",
+    "Reddy",
+    "Joshi",
+    "Bose",
 ]
 
 SECTIONS = ["A", "B", "C", "D"]
 
 CLASS_NAMES = [
-    "Pre-Nursery", "Nursery", "LKG", "UKG",
-    "Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6",
-    "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12",
+    "Pre-Nursery",
+    "Nursery",
+    "LKG",
+    "UKG",
+    "Class 1",
+    "Class 2",
+    "Class 3",
+    "Class 4",
+    "Class 5",
+    "Class 6",
+    "Class 7",
+    "Class 8",
+    "Class 9",
+    "Class 10",
+    "Class 11",
+    "Class 12",
 ]
 
 GUARDIAN_RELATIONS = ["Father", "Mother", "Guardian", "Uncle", "Aunt"]
-OCCUPATIONS = ["Teacher", "Business", "Service", "Self-employed", "Farmer", "Doctor", "Engineer", "Homemaker"]
+OCCUPATIONS = [
+    "Teacher",
+    "Business",
+    "Service",
+    "Self-employed",
+    "Farmer",
+    "Doctor",
+    "Engineer",
+    "Homemaker",
+]
 
 
 def _rand_phone():
@@ -43,7 +109,12 @@ def _rand_phone():
 def _academic_years(now_year=None):
     year = now_year or timezone.now().year
     # Example: 2025-26, 2024-25, 2023-24
-    return [f"{year-1}-{str(year % 100).zfill(2)}", f"{year-2}-{str((year-1) % 100).zfill(2)}", f"{year-3}-{str((year-2) % 100).zfill(2)}"]
+    return [
+        f"{year - 1}-{str(year % 100).zfill(2)}",
+        f"{year - 2}-{str((year - 1) % 100).zfill(2)}",
+        f"{year - 3}-{str((year - 2) % 100).zfill(2)}",
+    ]
+
 
 def _slugify_email_part(value: str) -> str:
     return "".join(ch for ch in (value or "").lower() if ch.isalnum())
@@ -92,7 +163,9 @@ def _write_simple_xlsx(path: Path, headers, rows):
 
     shared_strings_xml = [
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="{0}" uniqueCount="{0}">'.format(len(strings)),
+        '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="{0}" uniqueCount="{0}">'.format(
+            len(strings)
+        ),
     ]
     # Build after we’ve seen all values
 
@@ -113,7 +186,7 @@ def _write_simple_xlsx(path: Path, headers, rows):
 
     # Now finalize sharedStrings.xml
     for value in strings:
-        shared_strings_xml.append("<si><t>{}</t></si>".format(xml_escape(value)))
+        shared_strings_xml.append(f"<si><t>{xml_escape(value)}</t></si>")
     shared_strings_xml.append("</sst>")
 
     content_types = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -158,15 +231,48 @@ class Command(BaseCommand):
     help = "Seed demo students for testing (safe, role-agnostic)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--count", type=int, default=1000, help="Number of students to create (default: 1000)")
-        parser.add_argument("--school-id", type=int, default=None, help="Seed only for a specific School ID")
-        parser.add_argument("--per-school", type=int, default=None, help="Seed N students per active school (overrides --count)")
-        parser.add_argument("--prefix", type=str, default="SEED", help="Admission number prefix (default: SEED)")
-        parser.add_argument("--dry-run", action="store_true", help="Show what would be created without writing to DB")
-        parser.add_argument("--purge", action="store_true", help="Delete previously seeded students for the target school(s)")
-        parser.add_argument("--make-import-samples", action="store_true", help="Generate sample import CSV + XLSX files in --out-dir")
-        parser.add_argument("--out-dir", type=str, default=".", help="Output directory for sample files (default: current dir)")
-        parser.add_argument("--sample-rows", type=int, default=50, help="Rows to write in sample import files (default: 50)")
+        parser.add_argument(
+            "--count", type=int, default=1000, help="Number of students to create (default: 1000)"
+        )
+        parser.add_argument(
+            "--school-id", type=int, default=None, help="Seed only for a specific School ID"
+        )
+        parser.add_argument(
+            "--per-school",
+            type=int,
+            default=None,
+            help="Seed N students per active school (overrides --count)",
+        )
+        parser.add_argument(
+            "--prefix", type=str, default="SEED", help="Admission number prefix (default: SEED)"
+        )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Show what would be created without writing to DB",
+        )
+        parser.add_argument(
+            "--purge",
+            action="store_true",
+            help="Delete previously seeded students for the target school(s)",
+        )
+        parser.add_argument(
+            "--make-import-samples",
+            action="store_true",
+            help="Generate sample import CSV + XLSX files in --out-dir",
+        )
+        parser.add_argument(
+            "--out-dir",
+            type=str,
+            default=".",
+            help="Output directory for sample files (default: current dir)",
+        )
+        parser.add_argument(
+            "--sample-rows",
+            type=int,
+            default=50,
+            help="Rows to write in sample import files (default: 50)",
+        )
 
     def handle(self, *args, **options):
         count = max(1, int(options["count"] or 1))
@@ -189,7 +295,9 @@ class Command(BaseCommand):
             return
 
         if purge and not dry_run:
-            deleted = Student.objects.filter(school_id__in=[s.id for s in schools], admission_no__startswith=f"{prefix}/").delete()[0]
+            deleted = Student.objects.filter(
+                school_id__in=[s.id for s in schools], admission_no__startswith=f"{prefix}/"
+            ).delete()[0]
             self.stdout.write(f"Purged {deleted} seeded students (prefix {prefix}/).")
 
         if per_school is not None:
@@ -206,7 +314,9 @@ class Command(BaseCommand):
         total_to_create = sum(n for _, n in targets)
         years = _academic_years()
 
-        self.stdout.write(f"Seeding {total_to_create} students across {len(schools)} school(s). dry_run={dry_run}")
+        self.stdout.write(
+            f"Seeding {total_to_create} students across {len(schools)} school(s). dry_run={dry_run}"
+        )
 
         students_to_create = []
         today = timezone.now().date()
@@ -249,7 +359,9 @@ class Command(BaseCommand):
 
                 guardian_name = f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}"
                 guardian_phone = _rand_phone()
-                guardian_email = _maybe_email(guardian_name.split(" ", 1)[0], guardian_name.split(" ", 1)[1])
+                guardian_email = _maybe_email(
+                    guardian_name.split(" ", 1)[0], guardian_name.split(" ", 1)[1]
+                )
                 relation = random.choice(GUARDIAN_RELATIONS)
 
                 # Roll numbers: sequential per (school, year, class, section)
@@ -287,11 +399,19 @@ class Command(BaseCommand):
                         guardian_occupation=random.choice(OCCUPATIONS),
                         father_name=father_name,
                         father_phone=father_phone,
-                        father_email=_maybe_email(father_name.split(" ", 1)[0], father_name.split(" ", 1)[1], domain="guardian.test"),
+                        father_email=_maybe_email(
+                            father_name.split(" ", 1)[0],
+                            father_name.split(" ", 1)[1],
+                            domain="guardian.test",
+                        ),
                         father_occupation=random.choice(OCCUPATIONS),
                         mother_name=mother_name,
                         mother_phone=mother_phone,
-                        mother_email=_maybe_email(mother_name.split(" ", 1)[0], mother_name.split(" ", 1)[1], domain="guardian.test"),
+                        mother_email=_maybe_email(
+                            mother_name.split(" ", 1)[0],
+                            mother_name.split(" ", 1)[1],
+                            domain="guardian.test",
+                        ),
                         mother_occupation=random.choice(OCCUPATIONS),
                         admission_date=admission_date,
                         leaving_date=leaving_date,
@@ -349,7 +469,7 @@ class Command(BaseCommand):
                 last = random.choice(LAST_NAMES)
                 admission_date = today - timedelta(days=random.randint(0, 520))
                 month = str(admission_date.month).zfill(2)
-                admission_no = f"{prefix}/{academic_year}/{month}/{str(idx+1).zfill(6)}"
+                admission_no = f"{prefix}/{academic_year}/{month}/{str(idx + 1).zfill(6)}"
                 guardian_name = f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}"
                 sample.append(
                     [
@@ -375,7 +495,11 @@ class Command(BaseCommand):
                         random.choice(OCCUPATIONS),
                         guardian_name,
                         _rand_phone(),
-                        _maybe_email(guardian_name.split(" ", 1)[0], guardian_name.split(" ", 1)[1], domain="guardian.test"),
+                        _maybe_email(
+                            guardian_name.split(" ", 1)[0],
+                            guardian_name.split(" ", 1)[1],
+                            domain="guardian.test",
+                        ),
                         random.choice(OCCUPATIONS),
                         random.choice(GUARDIAN_RELATIONS),
                         rand_addr(),
@@ -392,7 +516,7 @@ class Command(BaseCommand):
             with csv_path.open("w", encoding="utf-8", newline="") as f:
                 f.write(",".join(headers) + "\n")
                 for row in sample:
-                    f.write(",".join('"%s"' % str(v).replace('"', '""') for v in row) + "\n")
+                    f.write(",".join('"{}"'.format(str(v).replace('"', '""')) for v in row) + "\n")
 
             # XLSX (minimal zip)
             _write_simple_xlsx(xlsx_path, headers, sample)

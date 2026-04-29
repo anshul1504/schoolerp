@@ -1,74 +1,149 @@
 {% extends "base.html" %}
 
 {% block title %}Billing Plans{% endblock %}
-{% block page_heading %}Billing Plans{% endblock %}
-{% block page_copy %}Manage subscription plans for SchoolFlow.{% endblock %}
-{% block page_eyebrow %}Super Admin{% endblock %}
+{% block page_heading %}Subscription Plans{% endblock %}
+{% block breadcrumb_active %}Billing / Plans{% endblock %}
+
+{% block heading_actions %}
+<div class="d-flex align-items-center gap-3">
+    <form method="post" action="/billing/plans/seed-defaults/" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary d-flex align-items-center gap-2">
+            <iconify-icon icon="ri:seedling-line"></iconify-icon>
+            Seed Defaults
+        </button>
+    </form>
+    <a href="/billing/plans/create/" class="btn btn-primary d-flex align-items-center gap-2">
+        <iconify-icon icon="ri:add-line"></iconify-icon>
+        Create Plan
+    </a>
+</div>
+{% endblock %}
 
 {% block content %}
-  <div class="card mb-24">
-    <div class="card-body p-24 d-flex flex-wrap align-items-center justify-content-between gap-12">
-      <div>
-        <h6 class="mb-4">Subscription Plans</h6>
-        <p class="text-neutral-600 text-sm mb-0">Create plans and assign them to schools.</p>
-      </div>
-      <div class="d-flex gap-10">
-        <a href="/billing/schools/" class="btn btn-outline-secondary">School Subscriptions</a>
-        <a href="/billing/features/" class="btn btn-outline-secondary">Features</a>
-        <a href="/billing/invoices/" class="btn btn-outline-secondary">Invoices</a>
-        <form method="post" action="/billing/plans/seed-defaults/" class="d-inline">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-outline-primary">Seed Default Plans</button>
-        </form>
-        <a href="/billing/plans/create/" class="btn btn-primary">Create Plan</a>
-      </div>
-    </div>
-  </div>
+<div class="card h-100">
+    <div class="card-body p-0 dataTable-wrapper">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+                <!-- Nav Links for Billing Module -->
+                <div class="btn-group" role="group">
+                    <a href="/billing/plans/" class="btn btn-primary">Plans</a>
+                    <a href="/billing/features/" class="btn btn-outline-primary">Features</a>
+                    <a href="/billing/schools/" class="btn btn-outline-primary">Subscriptions</a>
+                    <a href="/billing/invoices/" class="btn btn-outline-primary">Invoices</a>
+                    <a href="/billing/coupons/" class="btn btn-outline-primary">Coupons</a>
+                    <a href="/billing/webhooks/" class="btn btn-outline-primary">Webhooks</a>
+                </div>
+            </div>
+        </div>
 
-  <div class="card">
-    <div class="card-body p-24">
-      <div class="table-responsive">
-        <table class="table align-middle">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Monthly</th>
-              <th>Limits</th>
-              <th>Status</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for plan in plans %}
-              <tr>
-                <td><strong>{{ plan.name }}</strong></td>
-                <td class="text-muted">{{ plan.code }}</td>
-                <td>Rs {{ plan.price_monthly }}</td>
-                <td class="text-muted text-sm">{{ plan.max_students }} students • {{ plan.max_campuses }} campuses</td>
-                <td>
-                  {% if plan.is_active %}
-                    <span class="badge bg-success">Active</span>
-                  {% else %}
-                    <span class="badge bg-secondary">Inactive</span>
-                  {% endif %}
-                </td>
-                <td class="text-end">
-                  <div class="d-inline-flex gap-2">
-                    <a href="/billing/plans/{{ plan.id }}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <form method="post" action="/billing/plans/{{ plan.id }}/delete/" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="6" class="text-center text-muted">No plans yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+        <div class="p-0 table-responsive">
+            <table class="table bordered-table mb-0 data-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Plan Name</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Monthly Price</th>
+                        <th scope="col">Limits</th>
+                        <th scope="col">Features</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plan in plans %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <h6 class="text-md mb-0 fw-medium">{{ plan.name }}</h6>
+                                    <span class="text-xs text-secondary-light">{{ plan.get_tier_display }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="text-primary-600">{{ plan.code }}</span></td>
+                        <td>
+                            <span class="fw-semibold">Rs {{ plan.price_monthly }}</span>
+                            <br><small class="text-secondary-light">{{ plan.get_billing_mode_display }}</small>
+                        </td>
+                        <td>
+                            <span class="d-block text-secondary-light text-sm">{{ plan.max_students }} students</span>
+                            <span class="d-block text-secondary-light text-sm">{{ plan.max_campuses }} campuses</span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1 max-w-200-px">
+                                {% for feature in plan.features.all %}
+                                <span class="bg-primary-50 text-primary-600 px-12 py-2 radius-4 text-xs">{{ feature.name }}</span>
+                                {% empty %}
+                                <span class="text-secondary-light text-xs italic">No specific features</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if plan.is_active %}
+                            <span class="bg-success-100 text-success-600 px-16 py-4 radius-4 fw-medium text-sm">Active</span>
+                            {% else %}
+                            <span class="bg-danger-100 text-danger-600 px-16 py-4 radius-4 fw-medium text-sm">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <a href="/billing/plans/{{ plan.id }}/edit/" class="w-32-px h-32-px bg-primary-light text-primary-600 rounded-circle d-inline-flex align-items-center justify-content-center hover-bg-primary-600 hover-text-white transition-2">
+                                    <iconify-icon icon="ri:edit-2-line"></iconify-icon>
+                                </a>
+                                <form method="post" action="/billing/plans/{{ plan.id }}/delete/" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this plan?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-32-px h-32-px bg-danger-light text-danger-600 rounded-circle d-inline-flex align-items-center justify-content-center hover-bg-danger-600 hover-text-white transition-2 border-0">
+                                        <iconify-icon icon="ri:delete-bin-line"></iconify-icon>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-24 text-secondary-light">
+                            No plans created yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if plans.has_other_pages %}
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-20 py-12 border-top border-neutral-200">
+            <span class="text-secondary-light text-sm">
+                Showing {{ plans.start_index }} to {{ plans.end_index }} of {{ plans.paginator.count }} entries
+            </span>
+            <ul class="pagination mb-0 d-flex gap-2">
+                {% if plans.has_previous %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ plans.previous_page_number }}">Prev</a>
+                </li>
+                {% endif %}
+
+                {% for num in plans.paginator.page_range %}
+                    {% if plans.number == num %}
+                    <li class="page-item">
+                        <span class="page-link px-12 py-8 rounded bg-primary-600 text-white">{{ num }}</span>
+                    </li>
+                    {% elif num > plans.number|add:'-3' and num < plans.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if plans.has_next %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ plans.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
-  </div>
+</div>
 {% endblock %}

@@ -5,43 +5,66 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('students', '0002_student_photo_studentdocument'),
+        ("students", "0002_student_photo_studentdocument"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='StudentPromotion',
+            name="StudentPromotion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('from_class', models.CharField(max_length=100)),
-                ('from_section', models.CharField(max_length=50)),
-                ('to_class', models.CharField(max_length=100)),
-                ('to_section', models.CharField(max_length=50)),
-                ('promoted_on', models.DateField()),
-                ('note', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='promotions', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("from_class", models.CharField(max_length=100)),
+                ("from_section", models.CharField(max_length=50)),
+                ("to_class", models.CharField(max_length=100)),
+                ("to_section", models.CharField(max_length=50)),
+                ("promoted_on", models.DateField()),
+                ("note", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="promotions",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-promoted_on', '-created_at'],
+                "ordering": ["-promoted_on", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='TransferCertificate',
+            name="TransferCertificate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('certificate_no', models.CharField(max_length=50, unique=True)),
-                ('issue_date', models.DateField()),
-                ('reason', models.TextField(blank=True)),
-                ('destination_school', models.CharField(blank=True, max_length=255)),
-                ('is_issued', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('student', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='transfer_certificate', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("certificate_no", models.CharField(max_length=50, unique=True)),
+                ("issue_date", models.DateField()),
+                ("reason", models.TextField(blank=True)),
+                ("destination_school", models.CharField(blank=True, max_length=255)),
+                ("is_issued", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "student",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="transfer_certificate",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-issue_date', '-created_at'],
+                "ordering": ["-issue_date", "-created_at"],
             },
         ),
     ]

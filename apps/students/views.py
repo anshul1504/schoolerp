@@ -1,9 +1,11 @@
 import csv
+import xml.etree.ElementTree as ET
 from datetime import date as dt_date
 from io import StringIO
+from urllib.parse import urlencode
 from zipfile import ZipFile
-import xml.etree.ElementTree as ET
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -11,19 +13,26 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template
 from django.utils import timezone
-from urllib.parse import urlencode
-from django.conf import settings
 
-from apps.core.permissions import has_permission, role_required
-from apps.core.ui import build_layout_context
+from apps.academics.models import AcademicYear, ClassMaster, SectionMaster
 from apps.attendance.models import StudentAttendance
 from apps.communication.models import Notice
+from apps.core.permissions import has_permission, role_required
+from apps.core.ui import build_layout_context
+from apps.core.upload_validation import (
+    DEFAULT_DOCUMENT_POLICY,
+    DEFAULT_IMAGE_POLICY,
+    UploadPolicy,
+    antivirus_scan,
+    validate_upload,
+)
 from apps.exams.models import ExamMark
 from apps.fees.models import StudentFeeLedger
-from apps.schools.models import School
+from apps.frontoffice.models import Enquiry
 from apps.schools.limits import active_student_limit_for_school
-from apps.academics.models import AcademicYear, ClassMaster, SectionMaster
+from apps.schools.models import School
 
+from .documents import completeness_score, missing_documents
 from .models import (
     AdmissionWorkflowEvent,
     Guardian,
@@ -41,10 +50,6 @@ from .models import (
     TransferCertificate,
     TransferCertificateRequest,
 )
-from apps.frontoffice.models import Enquiry
-from .documents import completeness_score, missing_documents
-from apps.core.upload_validation import DEFAULT_DOCUMENT_POLICY, DEFAULT_IMAGE_POLICY, UploadPolicy, antivirus_scan, validate_upload
-
 
 CLASS_OPTIONS = [
     "Pre-Nursery",
@@ -200,9 +205,13 @@ def _student_form_master_options(*, school=None):
         }
 
     years = list(
-        AcademicYear.objects.filter(school=school).order_by("-start_date", "-id").values_list("name", flat=True)
+        AcademicYear.objects.filter(school=school)
+        .order_by("-start_date", "-id")
+        .values_list("name", flat=True)
     )
-    class_names = list(ClassMaster.objects.filter(school=school).order_by("name").values_list("name", flat=True))
+    class_names = list(
+        ClassMaster.objects.filter(school=school).order_by("name").values_list("name", flat=True)
+    )
     section_names = list(
         SectionMaster.objects.filter(school=school).order_by("name").values_list("name", flat=True)
     )
@@ -299,7 +308,9 @@ def _validate_student_minimum(payload):
 
 def _student_payload_from_request(request, *, is_update=False, school=None):
     academic_year = request.POST.get("academic_year", "").strip() or _current_academic_year()
-    admission_no = request.POST.get("admission_no", "").strip() or _generate_admission_number(academic_year, school=school)
+    admission_no = request.POST.get("admission_no", "").strip() or _generate_admission_number(
+        academic_year, school=school
+    )
     guardian_phone = _phone_with_india_code(request.POST["guardian_phone"])
     admission_date_raw = request.POST.get("admission_date", "")
     admission_date = _parse_date_iso(admission_date_raw) or admission_date_raw
@@ -310,7 +321,8 @@ def _student_payload_from_request(request, *, is_update=False, school=None):
         "middle_name": request.POST.get("middle_name", "").strip(),
         "last_name": request.POST.get("last_name", "").strip(),
         "gender": request.POST["gender"],
-        "date_of_birth": _parse_date_iso(request.POST.get("date_of_birth")) or (request.POST.get("date_of_birth") or None),
+        "date_of_birth": _parse_date_iso(request.POST.get("date_of_birth"))
+        or (request.POST.get("date_of_birth") or None),
         "blood_group": request.POST.get("blood_group", "").strip(),
         "class_name": request.POST["class_name"],
         "section": request.POST["section"],
@@ -357,7 +369,8 @@ def _student_payload_from_request(request, *, is_update=False, school=None):
         "relation_with_student": request.POST.get("relation_with_student", "").strip(),
         "guardian_address": request.POST.get("guardian_address", "").strip(),
         "admission_date": admission_date,
-        "leaving_date": _parse_date_iso(request.POST.get("leaving_date")) or (request.POST.get("leaving_date") or None),
+        "leaving_date": _parse_date_iso(request.POST.get("leaving_date"))
+        or (request.POST.get("leaving_date") or None),
         "current_address": request.POST.get("current_address", "").strip(),
         "current_address_line1": request.POST.get("current_address_line1", "").strip(),
         "current_address_line2": request.POST.get("current_address_line2", "").strip(),
@@ -395,7 +408,10 @@ def _student_payload_from_request(request, *, is_update=False, school=None):
         "mess_plan": request.POST.get("mess_plan", "").strip(),
         "student_username": admission_no,
         "student_password": "",
-        "parent_username": "".join(character for character in guardian_phone if character.isdigit())[-10:] or admission_no,
+        "parent_username": "".join(
+            character for character in guardian_phone if character.isdigit()
+        )[-10:]
+        or admission_no,
         "parent_password": "",
     }
 
@@ -463,14 +479,18 @@ def _export_sample_students_excel():
     rows = []
     for row in _sample_import_dataset():
         rows.append("<tr>" + "".join(f"<td>{value}</td>" for value in row) + "</tr>")
-    response.write(f"<table><thead><tr>{header_cells}</tr></thead><tbody>{''.join(rows)}</tbody></table>")
+    response.write(
+        f"<table><thead><tr>{header_cells}</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+    )
     return response
 
 
 def _build_student_payload(row):
     academic_year = row.get("academic_year", "").strip() or _current_academic_year()
     admission_no = row.get("admission_no", "").strip() or _generate_admission_number(academic_year)
-    admission_date = _parse_date_iso(row.get("admission_date")) or (row.get("admission_date", "").strip() or timezone.now().date())
+    admission_date = _parse_date_iso(row.get("admission_date")) or (
+        row.get("admission_date", "").strip() or timezone.now().date()
+    )
     return {
         "admission_no": admission_no,
         "academic_year": academic_year,
@@ -478,7 +498,8 @@ def _build_student_payload(row):
         "middle_name": row.get("middle_name", "").strip(),
         "last_name": row.get("last_name", "").strip(),
         "gender": (row.get("gender", "MALE").strip().upper() or "MALE"),
-        "date_of_birth": _parse_date_iso(row.get("date_of_birth")) or (row.get("date_of_birth", "").strip() or None),
+        "date_of_birth": _parse_date_iso(row.get("date_of_birth"))
+        or (row.get("date_of_birth", "").strip() or None),
         "blood_group": row.get("blood_group", "").strip(),
         "class_name": row.get("class_name", "").strip(),
         "section": row.get("section", "").strip() or "A",
@@ -506,7 +527,8 @@ def _build_student_payload(row):
         "guardian_occupation": row.get("guardian_occupation", "").strip(),
         "relation_with_student": row.get("relation_with_student", "").strip(),
         "admission_date": admission_date,
-        "leaving_date": _parse_date_iso(row.get("leaving_date")) or (row.get("leaving_date", "").strip() or None),
+        "leaving_date": _parse_date_iso(row.get("leaving_date"))
+        or (row.get("leaving_date", "").strip() or None),
         "current_address": row.get("current_address", "").strip(),
         "permanent_address": row.get("permanent_address", "").strip(),
         "is_active": str(row.get("is_active", "True")).strip().lower() not in {"false", "0", "no"},
@@ -525,9 +547,7 @@ def _parse_xlsx_file(uploaded_file):
         shared_strings = []
         if "xl/sharedStrings.xml" in workbook.namelist():
             root = ET.fromstring(workbook.read("xl/sharedStrings.xml"))
-            shared_strings = [
-                "".join(node.itertext()) for node in root.findall("main:si", ns)
-            ]
+            shared_strings = ["".join(node.itertext()) for node in root.findall("main:si", ns)]
         sheet_root = ET.fromstring(workbook.read("xl/worksheets/sheet1.xml"))
         parsed_rows = []
         for row in sheet_root.findall(".//main:sheetData/main:row", ns):
@@ -544,7 +564,7 @@ def _parse_xlsx_file(uploaded_file):
         headers = [header.strip() for header in parsed_rows[0]]
         for values in parsed_rows[1:]:
             padded = values + [""] * (len(headers) - len(values))
-            rows.append(dict(zip(headers, padded)))
+            rows.append(dict(zip(headers, padded, strict=False)))
     return rows
 
 
@@ -608,7 +628,18 @@ def _capture_profile_edit_history(student, *, actor, old_values, new_values):
     )
 
 
-def _log_class_change(student, *, actor, from_class, from_section, to_class, to_section, source="MANUAL", reason="", changed_on=None):
+def _log_class_change(
+    student,
+    *,
+    actor,
+    from_class,
+    from_section,
+    to_class,
+    to_section,
+    source="MANUAL",
+    reason="",
+    changed_on=None,
+):
     if from_class == to_class and from_section == to_section:
         return
     StudentClassChangeHistory.objects.create(
@@ -631,53 +662,58 @@ def _export_students_csv(students):
     writer = csv.writer(response)
     writer.writerow(["school_name", *EXPORT_COLUMNS])
     for student in students:
-        writer.writerow([
-            student.school.name,
-            student.admission_no,
-            student.first_name,
-            student.middle_name,
-            student.last_name,
-            student.gender,
-            _format_date(student.date_of_birth),
-            student.blood_group,
-            student.class_name,
-            student.section,
-            student.roll_number,
-            student.student_phone,
-            student.email,
-            student.aadhar_number,
-            student.religion,
-            student.category,
-            student.mother_tongue,
-            student.previous_school,
-            student.play_school_name,
-            student.medical_conditions,
-            student.father_name,
-            student.father_phone,
-            student.father_email,
-            student.father_occupation,
-            student.mother_name,
-            student.mother_phone,
-            student.mother_email,
-            student.mother_occupation,
-            student.guardian_name,
-            student.guardian_phone,
-            student.guardian_email,
-            student.guardian_occupation,
-            student.relation_with_student,
-            _format_date(student.admission_date),
-            _format_date(student.leaving_date),
-            student.current_address,
-            student.permanent_address,
-            "True" if student.is_active else "False",
-        ])
+        writer.writerow(
+            [
+                student.school.name,
+                student.admission_no,
+                student.first_name,
+                student.middle_name,
+                student.last_name,
+                student.gender,
+                _format_date(student.date_of_birth),
+                student.blood_group,
+                student.class_name,
+                student.section,
+                student.roll_number,
+                student.student_phone,
+                student.email,
+                student.aadhar_number,
+                student.religion,
+                student.category,
+                student.mother_tongue,
+                student.previous_school,
+                student.play_school_name,
+                student.medical_conditions,
+                student.father_name,
+                student.father_phone,
+                student.father_email,
+                student.father_occupation,
+                student.mother_name,
+                student.mother_phone,
+                student.mother_email,
+                student.mother_occupation,
+                student.guardian_name,
+                student.guardian_phone,
+                student.guardian_email,
+                student.guardian_occupation,
+                student.relation_with_student,
+                _format_date(student.admission_date),
+                _format_date(student.leaving_date),
+                student.current_address,
+                student.permanent_address,
+                "True" if student.is_active else "False",
+            ]
+        )
     return response
 
 
 def _export_students_excel(students):
     response = HttpResponse(content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="students_export.xls"'
-    header_cells = "".join(f"<th>{column.replace('_', ' ').title()}</th>" for column in ["school_name", *EXPORT_COLUMNS])
+    header_cells = "".join(
+        f"<th>{column.replace('_', ' ').title()}</th>"
+        for column in ["school_name", *EXPORT_COLUMNS]
+    )
     rows = []
     for student in students:
         values = [
@@ -721,16 +757,26 @@ def _export_students_excel(students):
             "True" if student.is_active else "False",
         ]
         rows.append("<tr>" + "".join(f"<td>{value}</td>" for value in values) + "</tr>")
-    response.write(f"<table><thead><tr>{header_cells}</tr></thead><tbody>{''.join(rows)}</tbody></table>")
+    response.write(
+        f"<table><thead><tr>{header_cells}</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+    )
     return response
 
 
 def _student_queryset_for_user(user):
     if user.role == "SUPER_ADMIN":
-        return Student.objects.select_related("school").prefetch_related("documents", "promotions").all()
+        return (
+            Student.objects.select_related("school")
+            .prefetch_related("documents", "promotions")
+            .all()
+        )
 
     if user.school_id:
-        return Student.objects.select_related("school").prefetch_related("documents", "promotions").filter(school_id=user.school_id)
+        return (
+            Student.objects.select_related("school")
+            .prefetch_related("documents", "promotions")
+            .filter(school_id=user.school_id)
+        )
 
     return Student.objects.none()
 
@@ -738,16 +784,28 @@ def _student_queryset_for_user(user):
 def _student_permission_flags(user):
     role = getattr(user, "role", "")
     can_manage_students = has_permission(user, "students.manage")
-    can_promote_students = role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "VICE_PRINCIPAL", "ACADEMIC_COORDINATOR", "HOD"}
+    elevated_student_ops_roles = {
+        "SUPER_ADMIN",
+        "SCHOOL_OWNER",
+        "ADMIN",
+        "MANAGEMENT_TRUSTEE",
+        "PRINCIPAL",
+        "VICE_PRINCIPAL",
+        "ACADEMIC_COORDINATOR",
+        "HOD",
+    }
+    can_promote_students = can_manage_students and role in elevated_student_ops_roles
     return {
         "can_manage_students": can_manage_students,
         "can_promote_students": can_promote_students,
-        "can_delete_students": role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"},
+        "can_delete_students": can_manage_students and role in elevated_student_ops_roles,
     }
 
 
 def _student_full_name(student):
-    return f"{student.first_name} {student.middle_name} {student.last_name}".replace("  ", " ").strip()
+    return f"{student.first_name} {student.middle_name} {student.last_name}".replace(
+        "  ", " "
+    ).strip()
 
 
 def _student_operations_summary(student):
@@ -762,14 +820,24 @@ def _student_operations_summary(student):
         needs_attention.append("Admission documents pending")
     if not student.photo:
         needs_attention.append("Profile photo pending")
-    if student.medical_conditions or student.allergies or student.chronic_disease or student.disability:
+    if (
+        student.medical_conditions
+        or student.allergies
+        or student.chronic_disease
+        or student.disability
+    ):
         needs_attention.append("Medical support noted")
     return {
         "document_count": document_count,
         "required_docs_uploaded": required_docs_uploaded,
         "transport_enabled": bool(student.transport_required),
         "hostel_enabled": bool(student.hostel_required),
-        "medical_flag": bool(student.medical_conditions or student.allergies or student.chronic_disease or student.disability),
+        "medical_flag": bool(
+            student.medical_conditions
+            or student.allergies
+            or student.chronic_disease
+            or student.disability
+        ),
         "account_ready": bool(student.student_username and student.parent_username),
         "needs_attention": needs_attention,
     }
@@ -785,7 +853,11 @@ def _student_erp_summary(student):
         audience__in={"ALL", "STUDENTS"},
     )
     present_count = attendance_entries.filter(status="PRESENT").count()
-    attendance_rate = int((present_count / attendance_entries.count()) * 100) if attendance_entries.exists() else 0
+    attendance_rate = (
+        int((present_count / attendance_entries.count()) * 100)
+        if attendance_entries.exists()
+        else 0
+    )
     total_due = sum(max((ledger.amount_due - ledger.amount_paid), 0) for ledger in fee_ledgers)
     total_marks = sum(mark.marks_obtained for mark in exam_marks)
     average_marks = round(total_marks / exam_marks.count(), 2) if exam_marks.exists() else 0
@@ -807,7 +879,9 @@ def _student_workflow_summary(student):
     return [
         {
             "label": "Admission Profile",
-            "status": "Done" if student.admission_no and student.first_name and student.class_name else "Pending",
+            "status": "Done"
+            if student.admission_no and student.first_name and student.class_name
+            else "Pending",
             "complete": bool(student.admission_no and student.first_name and student.class_name),
             "description": "Student admission, class placement, and base profile are saved.",
             "url": f"/students/{student.id}/edit/",
@@ -852,9 +926,18 @@ def _student_completion_status(student):
     operations = _student_operations_summary(student)
     basic_score = completeness_score(student, required="basic")
     checks = {
-        "profile": bool(student.first_name and student.admission_no and student.class_name and student.section),
-        "guardian": bool(student.guardian_name and student.guardian_phone and student.relation_with_student),
-        "contact": bool(student.current_city and student.current_state and student.current_pincode and student.emergency_contact),
+        "profile": bool(
+            student.first_name and student.admission_no and student.class_name and student.section
+        ),
+        "guardian": bool(
+            student.guardian_name and student.guardian_phone and student.relation_with_student
+        ),
+        "contact": bool(
+            student.current_city
+            and student.current_state
+            and student.current_pincode
+            and student.emergency_contact
+        ),
         "documents": basic_score["present"] == basic_score["total"],
         "id_ready": bool(student.first_name and student.admission_no and student.class_name),
     }
@@ -982,8 +1065,10 @@ def _id_card_settings_from_request(request):
         "text_color": source.get("text_color", preset_values["text_color"]),
         "back_background": source.get("back_background", preset_values["back_background"]),
         "back_text_color": source.get("back_text_color", preset_values["back_text_color"]),
-        "card_title": source.get("card_title", preset_values["card_title"]).strip() or preset_values["card_title"],
-        "footer_text": source.get("footer_text", preset_values["footer_text"]).strip() or preset_values["footer_text"],
+        "card_title": source.get("card_title", preset_values["card_title"]).strip()
+        or preset_values["card_title"],
+        "footer_text": source.get("footer_text", preset_values["footer_text"]).strip()
+        or preset_values["footer_text"],
         "show_guardian": _truthy_setting(source, "show_guardian", default=True),
         "show_address": _truthy_setting(source, "show_address", default=False),
         "show_dob": _truthy_setting(source, "show_dob", default=True),
@@ -1009,7 +1094,16 @@ def _selected_student_ids_from_request(request, *, source=None):
     return sorted(set(ids))
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN",
+    "SCHOOL_OWNER",
+    "ADMIN",
+    "PRINCIPAL",
+    "TEACHER",
+    "RECEPTIONIST",
+    "ADMISSION_COUNSELOR",
+    "CAREER_COUNSELOR",
+)
 def student_list(request):
     if not has_permission(request.user, "students.view"):
         messages.error(request, "You do not have permission to view students.")
@@ -1122,7 +1216,11 @@ def student_list(request):
         context["section_options"] = master["section_options"]
     else:
         context["academic_year_options"] = sorted(
-            [year for year in filtered_students.values_list("academic_year", flat=True).distinct() if year],
+            [
+                year
+                for year in filtered_students.values_list("academic_year", flat=True).distinct()
+                if year
+            ],
             reverse=True,
         )
         context["class_options"] = CLASS_OPTIONS
@@ -1157,6 +1255,8 @@ def student_list(request):
         }
     )
     context["view_mode"] = view_mode
+    context["can_use_classwise_view"] = request.user.role != "SCHOOL_OWNER"
+    context["can_bulk_select_students"] = request.user.role != "SCHOOL_OWNER"
     context["student_stats"] = {
         "total": filtered_students.count(),
         "active": filtered_students.filter(is_active=True).count(),
@@ -1164,19 +1264,33 @@ def student_list(request):
         "classes": filtered_students.values("class_name").distinct().count(),
     }
     workflow_all_students = list(filtered_students)
-    context["student_stats"]["complete"] = sum(1 for student in workflow_all_students if _student_completion_status(student)["label"] == "Complete")
-    context["student_stats"]["in_progress"] = sum(1 for student in workflow_all_students if _student_completion_status(student)["label"] == "In Progress")
+    context["student_stats"]["complete"] = sum(
+        1
+        for student in workflow_all_students
+        if _student_completion_status(student)["label"] == "Complete"
+    )
+    context["student_stats"]["in_progress"] = sum(
+        1
+        for student in workflow_all_students
+        if _student_completion_status(student)["label"] == "In Progress"
+    )
     context["student_stats"]["documents_ready"] = sum(
-        1 for student in workflow_all_students if completeness_score(student, required="basic")["percent"] == 100
+        1
+        for student in workflow_all_students
+        if completeness_score(student, required="basic")["percent"] == 100
     )
     context["student_stats"]["support_needed"] = sum(
-        1 for student in workflow_all_students if _student_operations_summary(student)["medical_flag"] or _student_operations_summary(student)["transport_enabled"] or _student_operations_summary(student)["hostel_enabled"]
+        1
+        for student in workflow_all_students
+        if _student_operations_summary(student)["medical_flag"]
+        or _student_operations_summary(student)["transport_enabled"]
+        or _student_operations_summary(student)["hostel_enabled"]
     )
     context.update(_student_permission_flags(request.user))
     return render(request, "students/list.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
 def student_detail(request, slug):
     if not has_permission(request.user, "students.view"):
         messages.error(request, "You do not have permission to view students.")
@@ -1190,20 +1304,26 @@ def student_detail(request, slug):
     context["student_operations"] = _student_operations_summary(student)
     context["student_workflow"] = _student_completion_status(student)
     context["student_erp_summary"] = _student_erp_summary(student)
-    context["student_history"] = StudentHistoryEvent.objects.select_related("actor").filter(student=student)[:20]
-    context["admission_workflow_events"] = student.admission_workflow_events.select_related("actor").all()[:10]
+    context["student_history"] = StudentHistoryEvent.objects.select_related("actor").filter(
+        student=student
+    )[:20]
+    context["admission_workflow_events"] = student.admission_workflow_events.select_related(
+        "actor"
+    ).all()[:10]
     context["profile_edit_events"] = student.profile_edit_history.select_related("actor").all()[:10]
     context["class_change_events"] = student.class_change_history.select_related("actor").all()[:10]
     context["pending_tc_requests_count"] = student.tc_requests.filter(status="PENDING").count()
     context["discipline_open_count"] = student.discipline_incidents.filter(status="OPEN").count()
     context["health_record_count"] = student.health_records.count()
-    context["compliance_pending_count"] = student.compliance_reminders.filter(status="PENDING").count()
+    context["compliance_pending_count"] = student.compliance_reminders.filter(
+        status="PENDING"
+    ).count()
     context["communication_log_count"] = student.communication_logs.count()
     context.update(_student_permission_flags(request.user))
     return render(request, "students/detail.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
 def student_detail_pdf(request, slug):
     if not has_permission(request.user, "students.view"):
         messages.error(request, "You do not have permission to view students.")
@@ -1212,7 +1332,9 @@ def student_detail_pdf(request, slug):
     try:
         from weasyprint import HTML
     except ModuleNotFoundError:
-        messages.error(request, "WeasyPrint is not installed in the active project environment yet.")
+        messages.error(
+            request, "WeasyPrint is not installed in the active project environment yet."
+        )
         return redirect(f"/students/{student.slug}/")
 
     template = get_template("students/detail_pdf.html")
@@ -1222,7 +1344,9 @@ def student_detail_pdf(request, slug):
     }
     html = template.render(context)
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="student-{student.admission_no.replace("/", "-")}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="student-{student.admission_no.replace("/", "-")}.pdf"'
+    )
     base_url = request.build_absolute_uri("/")
 
     try:
@@ -1235,13 +1359,17 @@ def student_detail_pdf(request, slug):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_id_card_designer(request):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
         return redirect("/students/")
     selected_ids = _selected_student_ids_from_request(request, source=request.GET)
-    students = _student_queryset_for_user(request.user).filter(id__in=selected_ids).order_by("class_name", "section", "first_name")
+    students = (
+        _student_queryset_for_user(request.user)
+        .filter(id__in=selected_ids)
+        .order_by("class_name", "section", "first_name")
+    )
 
     if not students.exists():
         messages.error(request, "Select at least one student to design ID cards.")
@@ -1263,14 +1391,18 @@ def student_id_card_designer(request):
     return render(request, "students/id_card_designer.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_id_cards_pdf(request):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
         return redirect("/students/")
     source = request.POST if request.method == "POST" else request.GET
     selected_ids = _selected_student_ids_from_request(request, source=source)
-    students = _student_queryset_for_user(request.user).filter(id__in=selected_ids).order_by("class_name", "section", "first_name")
+    students = (
+        _student_queryset_for_user(request.user)
+        .filter(id__in=selected_ids)
+        .order_by("class_name", "section", "first_name")
+    )
 
     if not students.exists():
         messages.error(request, "Select at least one student to generate ID cards.")
@@ -1284,7 +1416,9 @@ def student_id_cards_pdf(request):
     try:
         from weasyprint import HTML
     except ModuleNotFoundError:
-        messages.error(request, "WeasyPrint is not installed in the active project environment yet.")
+        messages.error(
+            request, "WeasyPrint is not installed in the active project environment yet."
+        )
         return redirect("/students/")
 
     template = get_template("students/id_cards_pdf.html")
@@ -1299,7 +1433,9 @@ def student_id_cards_pdf(request):
     response = HttpResponse(content_type="application/pdf")
     school_code = getattr(selected_school, "code", "") or "school"
     date_str = timezone.localdate().isoformat()
-    response["Content-Disposition"] = f'attachment; filename="{school_code}-student-print-sheet-{date_str}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="{school_code}-student-print-sheet-{date_str}.pdf"'
+    )
 
     try:
         pdf_bytes = HTML(string=html, base_url=request.build_absolute_uri("/")).write_pdf()
@@ -1311,7 +1447,7 @@ def student_id_cards_pdf(request):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_create(request):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1334,7 +1470,11 @@ def student_create(request):
                 validate_upload(
                     request.FILES.get("photo"),
                     policy=UploadPolicy(
-                        max_bytes=int(getattr(settings, "MAX_STUDENT_PHOTO_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)),
+                        max_bytes=int(
+                            getattr(
+                                settings, "MAX_STUDENT_PHOTO_BYTES", DEFAULT_IMAGE_POLICY.max_bytes
+                            )
+                        ),
                         allowed_extensions={".png", ".jpg", ".jpeg", ".webp"},
                         allowed_image_formats={"PNG", "JPEG", "WEBP"},
                     ),
@@ -1342,7 +1482,11 @@ def student_create(request):
                 )
             )
             doc_policy = UploadPolicy(
-                max_bytes=int(getattr(settings, "MAX_STUDENT_DOCUMENT_BYTES", DEFAULT_DOCUMENT_POLICY.max_bytes)),
+                max_bytes=int(
+                    getattr(
+                        settings, "MAX_STUDENT_DOCUMENT_BYTES", DEFAULT_DOCUMENT_POLICY.max_bytes
+                    )
+                ),
                 allowed_extensions=DEFAULT_DOCUMENT_POLICY.allowed_extensions,
                 allowed_image_formats=DEFAULT_DOCUMENT_POLICY.allowed_image_formats,
             )
@@ -1355,7 +1499,9 @@ def student_create(request):
                 ("income_certificate", "Income certificate"),
                 ("passport_photo", "Passport photo"),
             ]:
-                upload_errors.extend(validate_upload(request.FILES.get(field), policy=doc_policy, kind=label))
+                upload_errors.extend(
+                    validate_upload(request.FILES.get(field), policy=doc_policy, kind=label)
+                )
                 if request.FILES.get(field):
                     upload_errors.extend(antivirus_scan(request.FILES.get(field), kind=label))
 
@@ -1366,7 +1512,9 @@ def student_create(request):
 
             payload = _student_payload_from_request(request, school=school)
             # Enforce per-school admission number uniqueness at UI level (DB constraint exists too).
-            if Student.objects.filter(school=school, admission_no=payload.get("admission_no", "")).exists():
+            if Student.objects.filter(
+                school=school, admission_no=payload.get("admission_no", "")
+            ).exists():
                 messages.error(request, "Admission number already exists for this school.")
                 return redirect("/students/create/")
             errors = _validate_student_minimum(payload)
@@ -1377,7 +1525,9 @@ def student_create(request):
 
             if request.user.role != "SUPER_ADMIN":
                 if not _can_add_active_students(school, 1):
-                    messages.error(request, "Student limit reached for your current subscription plan.")
+                    messages.error(
+                        request, "Student limit reached for your current subscription plan."
+                    )
                     return redirect("/students/")
             student = Student.objects.create(school=school, **payload)
             source_enquiry_id = (request.POST.get("source_enquiry") or "").strip()
@@ -1412,7 +1562,8 @@ def student_create(request):
 
     context = build_layout_context(request.user, current_section="students")
     context["school_options"] = [request.user.school] if request.user.school_id else []
-    if request.user.role == "SUPER_ADMIN":
+    context["can_choose_school"] = request.user.role == "SUPER_ADMIN"
+    if context["can_choose_school"]:
         context["school_options"] = School.objects.filter(is_active=True).order_by("name")
 
     # Use masters for the selected school (or user's school). Create form is school-scoped for non-super-admin.
@@ -1421,7 +1572,10 @@ def student_create(request):
         # For super admin, allow optional preselect via ?school=<id>
         school_qs_raw = (request.GET.get("school") or "").strip()
         if school_qs_raw.isdigit():
-            selected_school = School.objects.filter(id=int(school_qs_raw), is_active=True).first() or selected_school
+            selected_school = (
+                School.objects.filter(id=int(school_qs_raw), is_active=True).first()
+                or selected_school
+            )
     master = _student_form_master_options(school=selected_school)
     context["academic_year_options"] = master["academic_year_options"]
     context["class_options"] = master["class_options"]
@@ -1434,13 +1588,15 @@ def student_create(request):
     context["stream_options"] = STREAM_OPTIONS
     context["admission_status_options"] = ADMISSION_STATUS_OPTIONS
     context["default_academic_year"] = _current_academic_year()
-    context["next_admission_no"] = _generate_admission_number(context["default_academic_year"], school=selected_school)
+    context["next_admission_no"] = _generate_admission_number(
+        context["default_academic_year"], school=selected_school
+    )
     context["today"] = timezone.now().date()
     context["prefill"] = _prefill_student_form(request)
     return render(request, "students/create.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_import(request):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1470,12 +1626,22 @@ def student_import(request):
                     remaining_slots = _remaining_active_student_slots(school)
                 for row in rows:
                     payload = _build_student_payload(row)
-                    if not payload["first_name"] or not payload["class_name"] or not payload["guardian_name"]:
+                    if (
+                        not payload["first_name"]
+                        or not payload["class_name"]
+                        or not payload["guardian_name"]
+                    ):
                         continue
-                    existing = Student.objects.filter(school=school, admission_no=payload["admission_no"]).only("id", "is_active").first()
+                    existing = (
+                        Student.objects.filter(school=school, admission_no=payload["admission_no"])
+                        .only("id", "is_active")
+                        .first()
+                    )
                     is_new = existing is None
                     will_be_active = bool(payload.get("is_active", True))
-                    activating_existing = bool(existing and (not existing.is_active) and will_be_active)
+                    activating_existing = bool(
+                        existing and (not existing.is_active) and will_be_active
+                    )
                     consuming_slot = bool(will_be_active and (is_new or activating_existing))
 
                     if remaining_slots is not None and consuming_slot:
@@ -1491,7 +1657,13 @@ def student_import(request):
                     )
                     if created:
                         created_count += 1
-                        created_student = Student.objects.filter(school=school, admission_no=payload["admission_no"]).only("id", "school_id").first()
+                        created_student = (
+                            Student.objects.filter(
+                                school=school, admission_no=payload["admission_no"]
+                            )
+                            .only("id", "school_id")
+                            .first()
+                        )
                         if created_student:
                             _log_student_history(
                                 created_student,
@@ -1502,7 +1674,13 @@ def student_import(request):
                             )
                     else:
                         updated_count += 1
-                        updated_student = Student.objects.filter(school=school, admission_no=payload["admission_no"]).only("id", "school_id").first()
+                        updated_student = (
+                            Student.objects.filter(
+                                school=school, admission_no=payload["admission_no"]
+                            )
+                            .only("id", "school_id")
+                            .first()
+                        )
                         if updated_student:
                             _log_student_history(
                                 updated_student,
@@ -1518,22 +1696,31 @@ def student_import(request):
                         parts.append(f"{created_count} created")
                     if updated_count:
                         parts.append(f"{updated_count} updated")
-                    messages.success(request, "Students imported successfully: " + ", ".join(parts) + ".")
+                    messages.success(
+                        request, "Students imported successfully: " + ", ".join(parts) + "."
+                    )
                 if skipped_limit:
-                    messages.error(request, f"{skipped_limit} rows skipped because your student limit is reached.")
+                    messages.error(
+                        request,
+                        f"{skipped_limit} rows skipped because your student limit is reached.",
+                    )
             except Exception:
-                messages.error(request, "We could not import that file. Please use the export headers and try again.")
+                messages.error(
+                    request,
+                    "We could not import that file. Please use the export headers and try again.",
+                )
         return redirect("/students/")
 
     context = build_layout_context(request.user, current_section="students")
     context["school_options"] = [request.user.school] if request.user.school_id else []
-    if request.user.role == "SUPER_ADMIN":
+    context["can_choose_school"] = request.user.role == "SUPER_ADMIN"
+    if context["can_choose_school"]:
         context["school_options"] = School.objects.filter(is_active=True).order_by("name")
     context["sample_headers"] = EXPORT_COLUMNS
     return render(request, "students/import.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_import_sample(request, file_type):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1546,7 +1733,7 @@ def student_import_sample(request, file_type):
     return redirect("/students/import/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_update(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1559,7 +1746,9 @@ def student_update(request, slug):
             validate_upload(
                 request.FILES.get("photo"),
                 policy=UploadPolicy(
-                    max_bytes=int(getattr(settings, "MAX_STUDENT_PHOTO_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)),
+                    max_bytes=int(
+                        getattr(settings, "MAX_STUDENT_PHOTO_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)
+                    ),
                     allowed_extensions={".png", ".jpg", ".jpeg", ".webp"},
                     allowed_image_formats={"PNG", "JPEG", "WEBP"},
                 ),
@@ -1567,7 +1756,9 @@ def student_update(request, slug):
             )
         )
         doc_policy = UploadPolicy(
-            max_bytes=int(getattr(settings, "MAX_STUDENT_DOCUMENT_BYTES", DEFAULT_DOCUMENT_POLICY.max_bytes)),
+            max_bytes=int(
+                getattr(settings, "MAX_STUDENT_DOCUMENT_BYTES", DEFAULT_DOCUMENT_POLICY.max_bytes)
+            ),
             allowed_extensions=DEFAULT_DOCUMENT_POLICY.allowed_extensions,
             allowed_image_formats=DEFAULT_DOCUMENT_POLICY.allowed_image_formats,
         )
@@ -1580,7 +1771,9 @@ def student_update(request, slug):
             ("income_certificate", "Income certificate"),
             ("passport_photo", "Passport photo"),
         ]:
-            upload_errors.extend(validate_upload(request.FILES.get(field), policy=doc_policy, kind=label))
+            upload_errors.extend(
+                validate_upload(request.FILES.get(field), policy=doc_policy, kind=label)
+            )
             if request.FILES.get(field):
                 upload_errors.extend(antivirus_scan(request.FILES.get(field), kind=label))
 
@@ -1592,7 +1785,11 @@ def student_update(request, slug):
         payload = _student_payload_from_request(request, is_update=True)
         # Admission number updates are allowed via edit form; keep per-school uniqueness enforced.
         if payload.get("admission_no") and payload["admission_no"] != student.admission_no:
-            if Student.objects.filter(school=student.school, admission_no=payload["admission_no"]).exclude(id=student.id).exists():
+            if (
+                Student.objects.filter(school=student.school, admission_no=payload["admission_no"])
+                .exclude(id=student.id)
+                .exists()
+            ):
                 messages.error(request, "Admission number already exists for this school.")
                 return redirect(f"/students/{student.slug}/edit/")
         errors = _validate_student_minimum(payload)
@@ -1604,7 +1801,9 @@ def student_update(request, slug):
             wants_active = payload.get("is_active", student.is_active)
             if wants_active and not student.is_active:
                 if not _can_add_active_students(student.school, 1):
-                    messages.error(request, "Student limit reached for your current subscription plan.")
+                    messages.error(
+                        request, "Student limit reached for your current subscription plan."
+                    )
                     return redirect(f"/students/{student.id}/edit/")
 
         tracked_fields = {
@@ -1623,7 +1822,9 @@ def student_update(request, slug):
         for field, value in payload.items():
             setattr(student, field, value)
         student.save()
-        _capture_profile_edit_history(student, actor=request.user, old_values=tracked_fields, new_values=payload)
+        _capture_profile_edit_history(
+            student, actor=request.user, old_values=tracked_fields, new_values=payload
+        )
         _log_class_change(
             student,
             actor=request.user,
@@ -1660,7 +1861,7 @@ def student_update(request, slug):
     return render(request, "students/edit.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_documents(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1674,7 +1875,11 @@ def student_documents(request, slug):
             messages.error(request, "Document title and file are both required.")
         else:
             doc_policy = UploadPolicy(
-                max_bytes=int(getattr(settings, "MAX_STUDENT_DOCUMENT_BYTES", DEFAULT_DOCUMENT_POLICY.max_bytes)),
+                max_bytes=int(
+                    getattr(
+                        settings, "MAX_STUDENT_DOCUMENT_BYTES", DEFAULT_DOCUMENT_POLICY.max_bytes
+                    )
+                ),
                 allowed_extensions=DEFAULT_DOCUMENT_POLICY.allowed_extensions,
                 allowed_image_formats=DEFAULT_DOCUMENT_POLICY.allowed_image_formats,
             )
@@ -1699,7 +1904,7 @@ def student_documents(request, slug):
     return render(request, "students/documents.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_guardians(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1741,29 +1946,40 @@ def student_guardians(request, slug):
                 guardian.save(update_fields=["email"])
 
         if is_primary:
-            StudentGuardian.objects.filter(student=student, is_primary=True).exclude(id=link.id).update(is_primary=False)
+            StudentGuardian.objects.filter(student=student, is_primary=True).exclude(
+                id=link.id
+            ).update(is_primary=False)
             link.is_primary = True
 
         link.save()
-        _log_student_history(student, actor=request.user, action="UPDATED", message="Guardian saved.")
+        _log_student_history(
+            student, actor=request.user, action="UPDATED", message="Guardian saved."
+        )
         messages.success(request, "Guardian saved.")
         return redirect(f"/students/{student.slug}/guardians/")
 
-    guardian_links = StudentGuardian.objects.select_related("guardian").filter(student=student).order_by("-is_primary", "id")
+    guardian_links = (
+        StudentGuardian.objects.select_related("guardian")
+        .filter(student=student)
+        .order_by("-is_primary", "id")
+    )
     context = build_layout_context(request.user, current_section="students")
     context["student"] = student
     context["guardian_links"] = guardian_links
     return render(request, "students/guardians.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_promotion(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
         return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
 
-    if hasattr(student, "transfer_certificate") or (getattr(student, "admission_status", "") or "").strip().lower() == "transferred":
+    if (
+        hasattr(student, "transfer_certificate")
+        or (getattr(student, "admission_status", "") or "").strip().lower() == "transferred"
+    ):
         messages.error(request, "This student is already transferred. Promotion is not allowed.")
         return redirect(f"/students/{student.slug}/")
 
@@ -1775,14 +1991,18 @@ def student_promotion(request, slug):
             messages.error(request, "To class, section, and promoted date are required.")
             return redirect(f"/students/{student.slug}/promotion/")
         if to_class == student.class_name and to_section == student.section:
-            messages.error(request, "Promotion target must be different from the current class/section.")
+            messages.error(
+                request, "Promotion target must be different from the current class/section."
+            )
             return redirect(f"/students/{student.slug}/promotion/")
 
         if student.admission_date and promoted_on < student.admission_date:
             messages.error(request, "Promotion date cannot be before admission date.")
             return redirect(f"/students/{student.slug}/promotion/")
 
-        if StudentPromotion.objects.filter(student=student, promoted_on=promoted_on, to_class=to_class, to_section=to_section).exists():
+        if StudentPromotion.objects.filter(
+            student=student, promoted_on=promoted_on, to_class=to_class, to_section=to_section
+        ).exists():
             messages.error(request, "A promotion with the same target and date already exists.")
             return redirect(f"/students/{student.slug}/promotion/")
 
@@ -1835,7 +2055,7 @@ def student_promotion(request, slug):
     return render(request, "students/promotion.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_transfer_certificate(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -1865,7 +2085,9 @@ def student_transfer_certificate(request, slug):
             messages.success(request, "TC request submitted successfully.")
             return redirect(f"/students/{student.slug}/tc/requests/")
 
-        certificate_no = (request.POST.get("certificate_no") or "").strip() or _generate_tc_number(student)
+        certificate_no = (request.POST.get("certificate_no") or "").strip() or _generate_tc_number(
+            student
+        )
         issue_date = _parse_date_iso(request.POST.get("issue_date"))
         if not certificate_no or not issue_date:
             messages.error(request, "Certificate number and issue date are required.")
@@ -1884,7 +2106,14 @@ def student_transfer_certificate(request, slug):
         student.admission_status = "Transferred"
         student.leaving_date = issue_date
         student.transfer_certificate_number = tc.certificate_no
-        student.save(update_fields=["is_active", "admission_status", "leaving_date", "transfer_certificate_number"])
+        student.save(
+            update_fields=[
+                "is_active",
+                "admission_status",
+                "leaving_date",
+                "transfer_certificate_number",
+            ]
+        )
         TransferCertificateRequest.objects.filter(student=student, status="PENDING").update(
             status="APPROVED",
             reviewed_by=request.user if request.user.is_authenticated else None,
@@ -1903,21 +2132,30 @@ def student_transfer_certificate(request, slug):
 
     context = build_layout_context(request.user, current_section="students")
     context["student"] = student
-    context["suggested_tc_number"] = student.transfer_certificate.certificate_no if hasattr(student, "transfer_certificate") else _generate_tc_number(student)
+    context["suggested_tc_number"] = (
+        student.transfer_certificate.certificate_no
+        if hasattr(student, "transfer_certificate")
+        else _generate_tc_number(student)
+    )
     context["today"] = timezone.now().date()
     context["pending_tc_requests_count"] = student.tc_requests.filter(status="PENDING").count()
     return render(request, "students/tc.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_admission_workflow(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     if request.method == "POST" and has_permission(request.user, "students.manage"):
         stage = (request.POST.get("stage") or "").strip()
         status = (request.POST.get("status") or "").strip() or "IN_PROGRESS"
         note = (request.POST.get("note") or "").strip()
         if stage:
-            _log_admission_workflow(student, actor=request.user, stage=stage, status=status, note=note)
+            _log_admission_workflow(
+                student, actor=request.user, stage=stage, status=status, note=note
+            )
             _log_student_history(
                 student,
                 actor=request.user,
@@ -1937,8 +2175,11 @@ def student_admission_workflow(request, slug):
     return render(request, "students/workflow.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_history_timeline(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     context = build_layout_context(request.user, current_section="students")
     context["student"] = student
@@ -1949,14 +2190,19 @@ def student_history_timeline(request, slug):
     return render(request, "students/history_timeline.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_tc_requests(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     if request.method == "POST" and has_permission(request.user, "students.manage"):
         request_id = (request.POST.get("request_id") or "").strip()
         action = (request.POST.get("decision") or "").strip().upper()
         if request_id.isdigit() and action in {"APPROVED", "REJECTED", "CLOSED"}:
-            tc_request = get_object_or_404(TransferCertificateRequest, id=int(request_id), student=student)
+            tc_request = get_object_or_404(
+                TransferCertificateRequest, id=int(request_id), student=student
+            )
             tc_request.status = action
             tc_request.review_note = (request.POST.get("review_note") or "").strip()
             tc_request.reviewed_by = request.user if request.user.is_authenticated else None
@@ -1979,8 +2225,11 @@ def student_tc_requests(request, slug):
     return render(request, "students/tc_requests.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
 def student_discipline(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     can_manage = has_permission(request.user, "students.manage")
     if request.method == "POST" and can_manage:
@@ -2017,8 +2266,11 @@ def student_discipline(request, slug):
     return render(request, "students/discipline.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
 def student_health(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     can_manage = has_permission(request.user, "students.manage")
     if request.method == "POST" and can_manage:
@@ -2054,8 +2306,11 @@ def student_health(request, slug):
     return render(request, "students/health.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
 def student_compliance(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     can_manage = has_permission(request.user, "students.manage")
     if request.method == "POST" and can_manage:
@@ -2090,8 +2345,11 @@ def student_compliance(request, slug):
     return render(request, "students/compliance.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "TEACHER")
 def student_communication_logs(request, slug):
+    if not has_permission(request.user, "students.view"):
+        messages.error(request, "You do not have permission to view students.")
+        return redirect("/students/")
     student = get_object_or_404(_student_queryset_for_user(request.user), slug=slug)
     can_manage = has_permission(request.user, "students.manage")
     if request.method == "POST" and can_manage:
@@ -2119,13 +2377,15 @@ def student_communication_logs(request, slug):
 
     context = build_layout_context(request.user, current_section="students")
     context["student"] = student
-    context["communication_logs"] = student.communication_logs.select_related("created_by").all()[:100]
+    context["communication_logs"] = student.communication_logs.select_related("created_by").all()[
+        :100
+    ]
     context["communication_channel_choices"] = StudentCommunicationLog.CHANNEL_CHOICES
     context.update(_student_permission_flags(request.user))
     return render(request, "students/communication_logs.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_transfer_certificate_pdf(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -2139,7 +2399,9 @@ def student_transfer_certificate_pdf(request, slug):
     try:
         from weasyprint import HTML
     except ModuleNotFoundError:
-        messages.error(request, "WeasyPrint is not installed in the active project environment yet.")
+        messages.error(
+            request, "WeasyPrint is not installed in the active project environment yet."
+        )
         return redirect(f"/students/{student.slug}/tc/")
 
     template = get_template("students/tc_pdf.html")
@@ -2150,7 +2412,9 @@ def student_transfer_certificate_pdf(request, slug):
     }
     html = template.render(context)
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="tc-{student.transfer_certificate.certificate_no.replace("/", "-")}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="tc-{student.transfer_certificate.certificate_no.replace("/", "-")}.pdf"'
+    )
 
     try:
         pdf_bytes = HTML(string=html, base_url=request.build_absolute_uri("/")).write_pdf()
@@ -2162,7 +2426,7 @@ def student_transfer_certificate_pdf(request, slug):
     return response
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_delete(request, slug):
     if not has_permission(request.user, "students.manage"):
         messages.error(request, "You do not have permission to manage students.")
@@ -2183,19 +2447,21 @@ def student_delete(request, slug):
 
     messages.error(request, "Invalid delete request.")
     return redirect(f"/students/{student.slug}/")
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
+
+
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
 def student_detail_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     return redirect(f"/students/{student.slug}/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "TEACHER", "RECEPTIONIST")
 def student_detail_pdf_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     return redirect(f"/students/{student.slug}/pdf/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_update_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     if request.method == "POST":
@@ -2203,7 +2469,7 @@ def student_update_by_id(request, id):
     return redirect(f"/students/{student.slug}/edit/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL", "RECEPTIONIST")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
 def student_documents_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     if request.method == "POST":
@@ -2211,7 +2477,7 @@ def student_documents_by_id(request, id):
     return redirect(f"/students/{student.slug}/documents/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_promotion_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     if request.method == "POST":
@@ -2219,7 +2485,7 @@ def student_promotion_by_id(request, id):
     return redirect(f"/students/{student.slug}/promotion/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_transfer_certificate_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     if request.method == "POST":
@@ -2227,13 +2493,13 @@ def student_transfer_certificate_by_id(request, id):
     return redirect(f"/students/{student.slug}/tc/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_transfer_certificate_pdf_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     return redirect(f"/students/{student.slug}/tc/pdf/")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "PRINCIPAL")
+@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL")
 def student_delete_by_id(request, id):
     student = get_object_or_404(_student_queryset_for_user(request.user), id=id)
     if request.method == "POST":

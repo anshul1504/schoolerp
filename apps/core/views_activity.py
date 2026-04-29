@@ -4,15 +4,13 @@ import io
 from pathlib import Path
 
 from django.conf import settings
-from django.http import HttpResponse
-from django.http import FileResponse
+from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
-from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect
-from django.shortcuts import render
+from django.db.models import Count, Q
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
-from django.core.files.base import ContentFile
 
 from apps.core.models import ActivityLog, AuditLogExport, EntityChangeLog
 from apps.core.permissions import permission_required, role_required
@@ -89,7 +87,20 @@ def _filtered_logs(request):
 def _export_csv_bytes(logs_qs):
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["created_at", "actor", "actor_email", "school", "action", "method", "path", "status_code", "ip_address", "view_name"])
+    writer.writerow(
+        [
+            "created_at",
+            "actor",
+            "actor_email",
+            "school",
+            "action",
+            "method",
+            "path",
+            "status_code",
+            "ip_address",
+            "view_name",
+        ]
+    )
     row_count = 0
     for log in logs_qs.order_by("-created_at")[:100000]:
         writer.writerow(
@@ -126,7 +137,18 @@ def activity_list(request):
         response["Content-Disposition"] = 'attachment; filename="activity_log.xls"'
         header_cells = "".join(
             f"<th>{column.replace('_', ' ').title()}</th>"
-            for column in ["created_at", "actor", "actor_email", "school", "action", "method", "path", "status_code", "ip_address", "view_name"]
+            for column in [
+                "created_at",
+                "actor",
+                "actor_email",
+                "school",
+                "action",
+                "method",
+                "path",
+                "status_code",
+                "ip_address",
+                "view_name",
+            ]
         )
         rows = []
         for log in logs.order_by("-created_at")[:10000]:
@@ -144,17 +166,32 @@ def activity_list(request):
                 f"<td>{_esc_html(_sanitize_export_cell(log.view_name))}</td>"
                 "</tr>"
             )
-        response.write(f"<table><thead><tr>{header_cells}</tr></thead><tbody>{''.join(rows)}</tbody></table>")
+        response.write(
+            f"<table><thead><tr>{header_cells}</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+        )
         return response
 
-    paginator = Paginator(logs, 50)
+    ordered_logs = logs.order_by("-created_at")
+    stats = ordered_logs.aggregate(
+        total_count=Count("id"),
+        success_count=Count("id", filter=Q(status_code__lt=400)),
+        error_count=Count("id", filter=Q(status_code__gte=400)),
+    )
+
+    paginator = Paginator(ordered_logs, 50)
     page = paginator.get_page(request.GET.get("page") or 1)
+    page_start = ((page.number - 1) * paginator.per_page) + 1 if paginator.count else 0
+    page_end = page_start + len(page.object_list) - 1 if paginator.count else 0
 
     context = build_layout_context(request.user, current_section="activity")
     context.update(
         {
             "page_obj": page,
             "filters": filters,
+            "method_choices": ["POST", "PUT", "PATCH", "DELETE"],
+            "stats": stats,
+            "page_start": page_start,
+            "page_end": page_end,
         }
     )
     return render(request, "activity/list.html", context)
@@ -164,8 +201,16 @@ def activity_list(request):
 @permission_required("activity.view")
 def activity_exports_list(request):
     exports = AuditLogExport.objects.select_related("created_by").all()[:200]
+    previous_sha = ""
+    export_rows = []
+    for item in exports:
+        chain_ok = True
+        if previous_sha and item.prev_sha256 != previous_sha:
+            chain_ok = False
+        export_rows.append({"item": item, "chain_ok": chain_ok})
+        previous_sha = item.sha256
     context = build_layout_context(request.user, current_section="activity")
-    context.update({"exports": exports})
+    context.update({"exports": export_rows})
     return render(request, "activity/exports.html", context)
 
 
@@ -242,6 +287,19 @@ def activity_change_log_list(request):
     if object_id:
         logs = logs.filter(object_id=object_id)
 
+    ordered_logs = logs.order_by("-created_at")
+    paginator = Paginator(ordered_logs, 50)
+    page = paginator.get_page(request.GET.get("page") or 1)
+    page_start = ((page.number - 1) * paginator.per_page) + 1 if paginator.count else 0
+    page_end = page_start + len(page.object_list) - 1 if paginator.count else 0
+
     context = build_layout_context(request.user, current_section="activity")
-    context.update({"logs": logs[:200], "filters": {"entity": entity, "object_id": object_id}})
+    context.update(
+        {
+            "page_obj": page,
+            "filters": {"entity": entity, "object_id": object_id},
+            "page_start": page_start,
+            "page_end": page_end,
+        }
+    )
     return render(request, "activity/change_logs.html", context)

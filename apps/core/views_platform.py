@@ -1,5 +1,5 @@
-from datetime import datetime, time, timedelta
 from calendar import monthrange
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -9,38 +9,94 @@ from django.db.models.functions import TruncMonth
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
+from apps.academics.models import (
+    AcademicClass,
+    AcademicSubject,
+    AcademicYear,
+    ClassMaster,
+    SectionMaster,
+    TeacherAllocation,
+)
 from apps.accounts.models import User, UserInvitation
-from apps.core.models import ActivityLog, AuthSecurityEvent, RBACChangeEvent, SupportTicket, BillingWebhookEvent
-from apps.core.permissions import permission_required, role_required
-from apps.core.ui import build_layout_context, get_role_config
-from apps.schools.models import School, SchoolDomain, SchoolSubscription, SubscriptionInvoice
-from apps.schools.models import ImplementationProject
-from apps.schools.models import Campus, SchoolCommunicationSettings
-from apps.academics.models import AcademicClass, AcademicSubject, TeacherAllocation, AcademicYear, ClassMaster, SectionMaster
-from apps.fees.models import StudentFeeLedger
-from apps.fees.models import FeeStructure
-from apps.fees.models import FeePayment
-from apps.attendance.models import AttendanceSession
-from apps.exams.models import Exam
-from apps.communication.models import Notice
-from apps.students.models import Student
 from apps.admissions.models import AdmissionApplication
-from apps.frontoffice.models import Enquiry, VisitorLog, MeetingRequest, MessageCampaign
+from apps.attendance.models import AttendanceSession
+from apps.communication.models import Notice
 from apps.core.models import (
-    PlatformSettings,
-    ScheduledReport,
-    ReportTemplate,
-    TransportRoute,
-    TransportAssignment,
-    HostelRoom,
-    HostelAllocation,
-    LibraryBook,
-    LibraryIssue,
+    ActivityLog,
+    AuthSecurityEvent,
+    BillingWebhookEvent,
     InventoryItem,
     InventoryMovement,
-    InventoryVendor,
     InventoryPurchaseOrder,
+    InventoryVendor,
+    LabBooking,
+    LabEquipment,
+    LabRoom,
+    PlatformSettings,
+    RBACChangeEvent,
+    ReportTemplate,
+    ScheduledReport,
+    ServiceConfiguration,
     ServiceRefundEvent,
+    SupportTicket,
+    SystemBackup,
+)
+from apps.core.permissions import permission_required, role_required
+from apps.core.ui import build_layout_context, get_role_config
+from apps.exams.models import Exam
+from apps.fees.models import FeePayment, FeeStructure, StudentFeeLedger
+from apps.frontoffice.models import (
+    Enquiry,
+    MeetingRequest,
+    MessageDeliveryLog,
+    VisitorLog,
+)
+from apps.hostel.models import (
+    Bed as HostelBed,
+)
+from apps.hostel.models import (
+    Hostel,
+    HostelAllocation,
+)
+from apps.hostel.models import (
+    Room as HostelRoom,
+)
+from apps.library.models import (
+    Author as LibraryAuthor,
+)
+from apps.library.models import (
+    Book as LibraryBook,
+)
+from apps.library.models import (
+    BookIssue as LibraryIssue,
+)
+from apps.library.models import (
+    Category as LibraryCategory,
+)
+from apps.schools.models import (
+    Campus,
+    ImplementationProject,
+    School,
+    SchoolCommunicationSettings,
+    SchoolDomain,
+    SchoolSubscription,
+    SubscriptionInvoice,
+)
+from apps.students.models import Student
+from apps.transport.models import (
+    Driver as TransportDriver,
+)
+from apps.transport.models import (
+    Route as TransportRoute,
+)
+from apps.transport.models import (
+    Stop as TransportStop,
+)
+from apps.transport.models import (
+    TransportAllocation as TransportAssignment,
+)
+from apps.transport.models import (
+    Vehicle as TransportVehicle,
 )
 
 
@@ -120,15 +176,21 @@ def _ensure_service_fee_ledger(student, school, service_code, service_name, amou
 def _create_refund_event(student, school, service_type, source, source_ref=""):
     today = timezone.localdate()
     billing_month = f"{today.year}-{today.month:02d}"
-    fee_structure = FeeStructure.objects.filter(school=school, class_name=service_type, is_active=True).first()
+    fee_structure = FeeStructure.objects.filter(
+        school=school, class_name=service_type, is_active=True
+    ).first()
     if not fee_structure:
         return None
-    ledger = StudentFeeLedger.objects.filter(
-        school=school,
-        student=student,
-        fee_structure=fee_structure,
-        billing_month=billing_month,
-    ).order_by("-id").first()
+    ledger = (
+        StudentFeeLedger.objects.filter(
+            school=school,
+            student=student,
+            fee_structure=fee_structure,
+            billing_month=billing_month,
+        )
+        .order_by("-id")
+        .first()
+    )
     if not ledger:
         return None
     total_days = monthrange(today.year, today.month)[1]
@@ -169,27 +231,71 @@ def _school_maturity_snapshot(school):
     attendance_sessions = AttendanceSession.objects.filter(school=school).count()
     exams = Exam.objects.filter(school=school).count()
     ledgers = StudentFeeLedger.objects.filter(school=school).count()
-    support_open = SupportTicket.objects.filter(school=school).exclude(status__in=["RESOLVED", "CLOSED"]).count()
+    support_open = (
+        SupportTicket.objects.filter(school=school)
+        .exclude(status__in=["RESOLVED", "CLOSED"])
+        .count()
+    )
     implementation = ImplementationProject.objects.filter(school=school).first()
 
     checks = [
-        {"key": "profile", "label": "School profile", "done": bool(school.name and school.code and school.email and school.phone), "weight": 10},
+        {
+            "key": "profile",
+            "label": "School profile",
+            "done": bool(school.name and school.code and school.email and school.phone),
+            "weight": 10,
+        },
         {"key": "campus", "label": "Main campus", "done": campus_count > 0, "weight": 8},
-        {"key": "comm", "label": "Communication settings", "done": bool(comm and (comm.smtp_enabled or comm.whatsapp_enabled)), "weight": 12},
-        {"key": "subscription", "label": "Subscription active", "done": bool(subscription and subscription.status == "ACTIVE"), "weight": 10},
+        {
+            "key": "comm",
+            "label": "Communication settings",
+            "done": bool(comm and (comm.smtp_enabled or comm.whatsapp_enabled)),
+            "weight": 12,
+        },
+        {
+            "key": "subscription",
+            "label": "Subscription active",
+            "done": bool(subscription and subscription.status == "ACTIVE"),
+            "weight": 10,
+        },
         {"key": "domain", "label": "Domain mapped", "done": domain_count > 0, "weight": 8},
         {"key": "year", "label": "Academic year", "done": bool(current_year), "weight": 10},
-        {"key": "class_master", "label": "Class master", "done": class_master_count > 0, "weight": 8},
-        {"key": "section_master", "label": "Section master", "done": section_master_count > 0, "weight": 8},
+        {
+            "key": "class_master",
+            "label": "Class master",
+            "done": class_master_count > 0,
+            "weight": 8,
+        },
+        {
+            "key": "section_master",
+            "label": "Section master",
+            "done": section_master_count > 0,
+            "weight": 8,
+        },
         {"key": "classes", "label": "Academic classes", "done": class_count > 0, "weight": 8},
         {"key": "subjects", "label": "Subjects", "done": subject_count > 0, "weight": 6},
-        {"key": "allocations", "label": "Teacher allocations", "done": allocation_count > 0, "weight": 10},
+        {
+            "key": "allocations",
+            "label": "Teacher allocations",
+            "done": allocation_count > 0,
+            "weight": 10,
+        },
         {"key": "notices", "label": "First notice", "done": notices_count > 0, "weight": 4},
-        {"key": "attendance", "label": "Attendance started", "done": attendance_sessions > 0, "weight": 4},
+        {
+            "key": "attendance",
+            "label": "Attendance started",
+            "done": attendance_sessions > 0,
+            "weight": 4,
+        },
         {"key": "exams", "label": "Exams started", "done": exams > 0, "weight": 2},
         {"key": "fees", "label": "Fee ledgers", "done": ledgers > 0, "weight": 2},
         {"key": "support", "label": "Open support", "done": support_open == 0, "weight": 4},
-        {"key": "implementation", "label": "Implementation complete", "done": bool(implementation and implementation.status == "DONE"), "weight": 6},
+        {
+            "key": "implementation",
+            "label": "Implementation complete",
+            "done": bool(implementation and implementation.status == "DONE"),
+            "weight": 6,
+        },
     ]
     total_weight = sum(item["weight"] for item in checks) or 1
     achieved = sum(item["weight"] for item in checks if item["done"])
@@ -227,21 +333,33 @@ def platform_home(request):
     now = timezone.now()
     today = now.date()
     start_month = today.replace(day=1)
-    months = _month_labels((start_month.replace(day=1) - timedelta(days=150)).replace(day=1), count=6)
+    months = _month_labels(
+        (start_month.replace(day=1) - timedelta(days=150)).replace(day=1), count=6
+    )
 
     schools = School.objects.order_by("-created_at")
     users = User.objects.select_related("school").order_by("-date_joined")
     invites = UserInvitation.objects.select_related("user", "user__school").order_by("-created_at")
     activity = ActivityLog.objects.select_related("actor", "school").order_by("-created_at")
-    subscriptions = SchoolSubscription.objects.select_related("school", "plan").order_by("-created_at")
+    subscriptions = SchoolSubscription.objects.select_related("school", "plan").order_by(
+        "-created_at"
+    )
     invoices = SubscriptionInvoice.objects.select_related("school", "plan").order_by("-created_at")
-    support_tickets = SupportTicket.objects.select_related("school", "assigned_to", "created_by").order_by("-updated_at")
+    support_tickets = SupportTicket.objects.select_related(
+        "school", "assigned_to", "created_by"
+    ).order_by("-updated_at")
     security_events = AuthSecurityEvent.objects.order_by("-created_at")
     domains = SchoolDomain.objects.select_related("school").order_by("-created_at")
 
     issued_invoices = invoices.exclude(status="VOID")
-    paid_total = _money(issued_invoices.filter(status="PAID").aggregate(total=Sum("total_amount"))["total"])
-    outstanding_total = _money(issued_invoices.filter(status__in=["DRAFT", "ISSUED"]).aggregate(total=Sum("total_amount"))["total"])
+    paid_total = _money(
+        issued_invoices.filter(status="PAID").aggregate(total=Sum("total_amount"))["total"]
+    )
+    outstanding_total = _money(
+        issued_invoices.filter(status__in=["DRAFT", "ISSUED"]).aggregate(total=Sum("total_amount"))[
+            "total"
+        ]
+    )
 
     subscription_status = list(
         subscriptions.values("status").annotate(total=Count("id")).order_by("status")
@@ -250,7 +368,10 @@ def platform_home(request):
         support_tickets.values("status").annotate(total=Count("id")).order_by("status")
     )
     activity_methods = list(
-        activity.exclude(method="").values("method").annotate(total=Count("id")).order_by("-total")[:6]
+        activity.exclude(method="")
+        .values("method")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:6]
     )
 
     context = build_layout_context(request.user, current_section="platform")
@@ -266,7 +387,9 @@ def platform_home(request):
                 "subscriptions_active": subscriptions.filter(status="ACTIVE").count(),
                 "subscriptions_past_due": subscriptions.filter(status="PAST_DUE").count(),
                 "open_support": support_tickets.exclude(status__in=["RESOLVED", "CLOSED"]).count(),
-                "security_failures_24h": security_events.filter(created_at__gte=now - timedelta(hours=24), success=False).count(),
+                "security_failures_24h": security_events.filter(
+                    created_at__gte=now - timedelta(hours=24), success=False
+                ).count(),
                 "domains_active": domains.filter(is_active=True).count(),
                 "paid_total": paid_total,
                 "outstanding_total": outstanding_total,
@@ -275,9 +398,13 @@ def platform_home(request):
                 "months": [month.strftime("%b") for month in months],
                 "school_growth": _monthly_counts(School.objects.all(), "created_at", months),
                 "user_growth": _monthly_counts(User.objects.all(), "date_joined", months),
-                "subscription_status_labels": [row["status"].replace("_", " ").title() for row in subscription_status],
+                "subscription_status_labels": [
+                    row["status"].replace("_", " ").title() for row in subscription_status
+                ],
                 "subscription_status_values": [row["total"] for row in subscription_status],
-                "support_status_labels": [row["status"].replace("_", " ").title() for row in support_status],
+                "support_status_labels": [
+                    row["status"].replace("_", " ").title() for row in support_status
+                ],
                 "support_status_values": [row["total"] for row in support_status],
                 "activity_method_labels": [row["method"] for row in activity_methods],
                 "activity_method_values": [row["total"] for row in activity_methods],
@@ -317,7 +444,9 @@ def platform_rollout(request):
                 "in_progress": sum(1 for t in tasks if t.status == "IN_PROGRESS"),
                 "blocked": sum(1 for t in tasks if t.status == "BLOCKED"),
                 "done": sum(1 for t in tasks if t.status == "DONE"),
-                "done_pct": round((sum(1 for t in tasks if t.status == "DONE") / total * 100), 1) if total else 0,
+                "done_pct": round((sum(1 for t in tasks if t.status == "DONE") / total * 100), 1)
+                if total
+                else 0,
             }
         )
 
@@ -336,23 +465,49 @@ def platform_rollout(request):
 @role_required("SUPER_ADMIN")
 @permission_required("platform.view")
 def super_admin_hub(request):
-    recent_activity = ActivityLog.objects.select_related("actor", "school").order_by("-created_at")[:8]
+    recent_activity = ActivityLog.objects.select_related("actor", "school").order_by("-created_at")[
+        :8
+    ]
     recent_rbac = RBACChangeEvent.objects.select_related("actor").order_by("-created_at")[:8]
     recent_security = AuthSecurityEvent.objects.order_by("-created_at")[:8]
     now = timezone.now()
     today = now.date()
 
-    overdue_invoices = SubscriptionInvoice.objects.filter(status="ISSUED", due_date__isnull=False, due_date__lt=today).count()
-    invoices_issued_7d = SubscriptionInvoice.objects.filter(created_at__gte=now - timedelta(days=7)).exclude(status="VOID").count()
-    invoices_paid_7d = SubscriptionInvoice.objects.filter(created_at__gte=now - timedelta(days=7), status="PAID").count()
-    collection_rate_7d = round((invoices_paid_7d / invoices_issued_7d) * 100, 1) if invoices_issued_7d else 100.0
+    overdue_invoices = SubscriptionInvoice.objects.filter(
+        status="ISSUED", due_date__isnull=False, due_date__lt=today
+    ).count()
+    invoices_issued_7d = (
+        SubscriptionInvoice.objects.filter(created_at__gte=now - timedelta(days=7))
+        .exclude(status="VOID")
+        .count()
+    )
+    invoices_paid_7d = SubscriptionInvoice.objects.filter(
+        created_at__gte=now - timedelta(days=7), status="PAID"
+    ).count()
+    collection_rate_7d = (
+        round((invoices_paid_7d / invoices_issued_7d) * 100, 1) if invoices_issued_7d else 100.0
+    )
 
-    webhook_processed_24h = BillingWebhookEvent.objects.filter(created_at__gte=now - timedelta(hours=24), processed_at__isnull=False).count()
-    webhook_failed_24h = BillingWebhookEvent.objects.filter(created_at__gte=now - timedelta(hours=24)).exclude(process_error="").count()
-    webhook_success_rate_24h = round(((webhook_processed_24h - webhook_failed_24h) / webhook_processed_24h) * 100, 1) if webhook_processed_24h else 100.0
+    webhook_processed_24h = BillingWebhookEvent.objects.filter(
+        created_at__gte=now - timedelta(hours=24), processed_at__isnull=False
+    ).count()
+    webhook_failed_24h = (
+        BillingWebhookEvent.objects.filter(created_at__gte=now - timedelta(hours=24))
+        .exclude(process_error="")
+        .count()
+    )
+    webhook_success_rate_24h = (
+        round(((webhook_processed_24h - webhook_failed_24h) / webhook_processed_24h) * 100, 1)
+        if webhook_processed_24h
+        else 100.0
+    )
 
     past_due_subscriptions = SchoolSubscription.objects.filter(status="PAST_DUE").count()
-    urgent_open_support = SupportTicket.objects.filter(priority="URGENT").exclude(status__in=["RESOLVED", "CLOSED"]).count()
+    urgent_open_support = (
+        SupportTicket.objects.filter(priority="URGENT")
+        .exclude(status__in=["RESOLVED", "CLOSED"])
+        .count()
+    )
 
     if overdue_invoices == 0 and webhook_failed_24h == 0 and collection_rate_7d >= 85:
         sla_state = "GREEN"
@@ -395,24 +550,139 @@ def super_admin_hub(request):
 @permission_required("platform.view")
 def super_admin_pages_index(request):
     pages = [
-        {"group": "Core", "label": "Super Admin Hub", "url": "/super-admin/", "icon": "ri-dashboard-line", "desc": "Control tower and SLA signals"},
-        {"group": "Core", "label": "Platform Command Center", "url": "/platform/", "icon": "ri-line-chart-line", "desc": "Global metrics, charts, and queues"},
-        {"group": "Core", "label": "Rollout Board", "url": "/platform/rollout/", "icon": "ri-road-map-line", "desc": "Implementation tracker across schools"},
-        {"group": "Core", "label": "Pages Index", "url": "/super-admin/pages/", "icon": "ri-apps-2-line", "desc": "All super admin pages in one list"},
-        {"group": "Governance", "label": "Role Sheet", "url": "/super-admin/roles/", "icon": "ri-shield-user-line", "desc": "Role completion and module coverage"},
-        {"group": "Governance", "label": "Gap Sheet", "url": "/super-admin/gaps/", "icon": "ri-alert-line", "desc": "Pending areas and system gaps"},
-        {"group": "Governance", "label": "Decision Dashboard", "url": "/super-admin/decision/", "icon": "ri-focus-3-line", "desc": "Priority ranking and execution focus"},
-        {"group": "Governance", "label": "Setup Wizard", "url": "/super-admin/setup/", "icon": "ri-settings-3-line", "desc": "School readiness and onboarding"},
-        {"group": "Operations", "label": "Transport", "url": "/super-admin/transport/", "icon": "ri-bus-line", "desc": "Routes, assignments, releases"},
-        {"group": "Operations", "label": "Hostel", "url": "/super-admin/hostel/", "icon": "ri-hotel-bed-line", "desc": "Rooms, allocations, releases"},
-        {"group": "Operations", "label": "Library", "url": "/super-admin/library/", "icon": "ri-book-open-line", "desc": "Issue, return, lost, fines"},
-        {"group": "Operations", "label": "Inventory", "url": "/super-admin/inventory/", "icon": "ri-inbox-archive-line", "desc": "Stock and movement ledger"},
-        {"group": "Operations", "label": "Fee Reconciliation", "url": "/super-admin/fees/", "icon": "ri-money-rupee-circle-line", "desc": "Fees control and monitoring"},
-        {"group": "Platform Ops", "label": "Security", "url": "/platform/security/", "icon": "ri-shield-flash-line", "desc": "Security event stream"},
-        {"group": "Platform Ops", "label": "Support", "url": "/platform/support/", "icon": "ri-customer-service-2-line", "desc": "Ticket operations"},
-        {"group": "Platform Ops", "label": "Domains", "url": "/platform/domains/", "icon": "ri-global-line", "desc": "Domain mapping controls"},
-        {"group": "Platform Ops", "label": "Tokens", "url": "/platform/tokens/", "icon": "ri-key-2-line", "desc": "API token lifecycle"},
-        {"group": "Platform Ops", "label": "Announcements", "url": "/platform/announcements/", "icon": "ri-notification-3-line", "desc": "Platform-wide notices"},
+        {
+            "group": "Core",
+            "label": "Super Admin Hub",
+            "url": "/super-admin/",
+            "icon": "ri-dashboard-line",
+            "desc": "Control tower and SLA signals",
+        },
+        {
+            "group": "Core",
+            "label": "Platform Command Center",
+            "url": "/platform/",
+            "icon": "ri-line-chart-line",
+            "desc": "Global metrics, charts, and queues",
+        },
+        {
+            "group": "Core",
+            "label": "Rollout Board",
+            "url": "/platform/rollout/",
+            "icon": "ri-road-map-line",
+            "desc": "Implementation tracker across schools",
+        },
+        {
+            "group": "Core",
+            "label": "Pages Index",
+            "url": "/super-admin/pages/",
+            "icon": "ri-apps-2-line",
+            "desc": "All super admin pages in one list",
+        },
+        {
+            "group": "Governance",
+            "label": "Role Sheet",
+            "url": "/super-admin/roles/",
+            "icon": "ri-shield-user-line",
+            "desc": "Role completion and module coverage",
+        },
+        {
+            "group": "Governance",
+            "label": "Gap Sheet",
+            "url": "/super-admin/gaps/",
+            "icon": "ri-alert-line",
+            "desc": "Pending areas and system gaps",
+        },
+        {
+            "group": "Governance",
+            "label": "Decision Dashboard",
+            "url": "/super-admin/decision/",
+            "icon": "ri-focus-3-line",
+            "desc": "Priority ranking and execution focus",
+        },
+        {
+            "group": "Governance",
+            "label": "Setup Wizard",
+            "url": "/super-admin/setup/",
+            "icon": "ri-settings-3-line",
+            "desc": "School readiness and onboarding",
+        },
+        {
+            "group": "Operations",
+            "label": "Transport",
+            "url": "/super-admin/transport/",
+            "icon": "ri-bus-line",
+            "desc": "Routes, assignments, releases",
+        },
+        {
+            "group": "Operations",
+            "label": "Hostel",
+            "url": "/super-admin/hostel/",
+            "icon": "ri-hotel-bed-line",
+            "desc": "Rooms, allocations, releases",
+        },
+        {
+            "group": "Operations",
+            "label": "Library",
+            "url": "/super-admin/library/",
+            "icon": "ri-book-open-line",
+            "desc": "Issue, return, lost, fines",
+        },
+        {
+            "group": "Operations",
+            "label": "Inventory",
+            "url": "/super-admin/inventory/",
+            "icon": "ri-inbox-archive-line",
+            "desc": "Stock and movement ledger",
+        },
+        {
+            "group": "Operations",
+            "label": "Fee Reconciliation",
+            "url": "/super-admin/fees/",
+            "icon": "ri-money-rupee-circle-line",
+            "desc": "Fees control and monitoring",
+        },
+        {
+            "group": "Platform Ops",
+            "label": "Security",
+            "url": "/platform/security/",
+            "icon": "ri-shield-flash-line",
+            "desc": "Security event stream",
+        },
+        {
+            "group": "Platform Ops",
+            "label": "Support",
+            "url": "/platform/support/",
+            "icon": "ri-customer-service-2-line",
+            "desc": "Ticket operations",
+        },
+        {
+            "group": "Platform Ops",
+            "label": "Domains",
+            "url": "/platform/domains/",
+            "icon": "ri-global-line",
+            "desc": "Domain mapping controls",
+        },
+        {
+            "group": "Platform Ops",
+            "label": "Tokens",
+            "url": "/platform/tokens/",
+            "icon": "ri-key-2-line",
+            "desc": "API token lifecycle",
+        },
+        {
+            "group": "Platform Ops",
+            "label": "Announcements",
+            "url": "/platform/announcements/",
+            "icon": "ri-notification-3-line",
+            "desc": "Platform-wide notices",
+        },
+        {
+            "group": "Platform Ops",
+            "label": "System Ops & Backups",
+            "url": "/super-admin/system/",
+            "icon": "ri-cpu-line",
+            "desc": "Cloud gateway, health, and DB backups",
+        },
     ]
     groups = {}
     for page in pages:
@@ -432,20 +702,50 @@ def _module_state_snapshot():
         "schools": "GREEN" if School.objects.exists() else "YELLOW",
         "admissions": "GREEN" if AdmissionApplication.objects.exists() else "YELLOW",
         "users": "GREEN" if User.objects.count() > 1 else "YELLOW",
-        "academics": "GREEN" if AcademicClass.objects.exists() and AcademicSubject.objects.exists() else "YELLOW",
+        "academics": "GREEN"
+        if AcademicClass.objects.exists() and AcademicSubject.objects.exists()
+        else "YELLOW",
         "staff": "YELLOW",
         "attendance": "YELLOW" if AttendanceSession.objects.exists() else "RED",
-        "fees": "YELLOW" if StudentFeeLedger.objects.exists() or FeePayment.objects.exists() else "RED",
+        "fees": "YELLOW"
+        if StudentFeeLedger.objects.exists() or FeePayment.objects.exists()
+        else "RED",
         "exams": "YELLOW" if Exam.objects.exists() else "RED",
         "communication": "YELLOW" if Notice.objects.exists() else "RED",
-        "frontoffice": "GREEN" if Enquiry.objects.exists() or VisitorLog.objects.exists() or MeetingRequest.objects.exists() else "YELLOW",
+        "frontoffice": "GREEN"
+        if Enquiry.objects.exists()
+        or VisitorLog.objects.exists()
+        or MeetingRequest.objects.exists()
+        else "YELLOW",
         "billing": "YELLOW" if SubscriptionInvoice.objects.exists() else "RED",
-        "transport": "GREEN" if TransportRoute.objects.filter(is_active=True).exists() and TransportAssignment.objects.filter(active=True).exists() else "YELLOW" if TransportRoute.objects.filter(is_active=True).exists() else "RED",
-        "hostel": "GREEN" if HostelRoom.objects.filter(is_active=True).exists() and HostelAllocation.objects.filter(active=True).exists() else "YELLOW" if HostelRoom.objects.filter(is_active=True).exists() else "RED",
-        "library": "GREEN" if LibraryBook.objects.filter(is_active=True).exists() and LibraryIssue.objects.exists() else "YELLOW" if LibraryBook.objects.filter(is_active=True).exists() else "RED",
-        "inventory": "GREEN" if InventoryItem.objects.filter(is_active=True).exists() and InventoryMovement.objects.exists() else "YELLOW" if InventoryItem.objects.filter(is_active=True).exists() else "RED",
+        "transport": "GREEN"
+        if TransportRoute.objects.filter(is_active=True).exists()
+        and TransportAssignment.objects.filter(is_active=True).exists()
+        else "YELLOW"
+        if TransportRoute.objects.filter(is_active=True).exists()
+        else "RED",
+        "hostel": "GREEN"
+        if HostelRoom.objects.filter(is_active=True).exists()
+        and HostelAllocation.objects.filter(is_active=True).exists()
+        else "YELLOW"
+        if HostelRoom.objects.filter(is_active=True).exists()
+        else "RED",
+        "library": "GREEN"
+        if LibraryBook.objects.filter(is_active=True).exists()
+        and LibraryIssue.objects.filter(status="ISSUED").exists()
+        else "YELLOW"
+        if LibraryBook.objects.filter(is_active=True).exists()
+        else "RED",
+        "inventory": "GREEN"
+        if InventoryItem.objects.filter(is_active=True).exists()
+        and InventoryMovement.objects.exists()
+        else "YELLOW"
+        if InventoryItem.objects.filter(is_active=True).exists()
+        else "RED",
         "activity": "GREEN" if ActivityLog.objects.exists() else "YELLOW",
-        "reports": "YELLOW" if ScheduledReport.objects.exists() or ReportTemplate.objects.exists() else "YELLOW",
+        "reports": "YELLOW"
+        if ScheduledReport.objects.exists() or ReportTemplate.objects.exists()
+        else "YELLOW",
         "settings": "GREEN" if PlatformSettings.objects.exists() else "YELLOW",
     }
 
@@ -453,7 +753,9 @@ def _module_state_snapshot():
 def _build_role_rows():
     module_state = _module_state_snapshot()
     role_rows = []
-    role_counts = dict(User.objects.values("role").annotate(total=Count("id")).values_list("role", "total"))
+    role_counts = dict(
+        User.objects.values("role").annotate(total=Count("id")).values_list("role", "total")
+    )
     for value, label in User.ROLE_CHOICES:
         role_stub = type("RoleStub", (), {"role": value})
         sections = list(get_role_config(role_stub).get("sections", set()))
@@ -485,14 +787,24 @@ def _build_role_rows():
                 "yellow": yellow_modules,
                 "red": red_modules,
                 "white": 0,
-                "blue": 1 if value in {"RECEPTIONIST", "ROLE_PERMISSION_MANAGER", "REPORT_VIEWER", "SUPER_ADMIN"} else 0,
+                "blue": 1
+                if value
+                in {"RECEPTIONIST", "ROLE_PERMISSION_MANAGER", "REPORT_VIEWER", "SUPER_ADMIN"}
+                else 0,
                 "assigned_users": role_counts.get(value, 0),
                 "tracked_modules": ", ".join(tracked_sections),
                 "tracked_section_keys": tracked_sections,
                 "module_state": {key: module_state.get(key, "YELLOW") for key in tracked_sections},
             }
         )
-    role_rows.sort(key=lambda item: (item["status"] != "Pending", item["status"] != "Partial", -item["completion_pct"], item["label"]))
+    role_rows.sort(
+        key=lambda item: (
+            item["status"] != "Pending",
+            item["status"] != "Partial",
+            -item["completion_pct"],
+            item["label"],
+        )
+    )
     return role_rows
 
 
@@ -522,7 +834,9 @@ def super_admin_role_detail(request, role):
     module_rows = []
     for module_key in row["tracked_section_keys"]:
         state = row["module_state"].get(module_key, "YELLOW")
-        module_rows.append({"module": module_key, "state": state, "needs_work": state in {"YELLOW", "RED"}})
+        module_rows.append(
+            {"module": module_key, "state": state, "needs_work": state in {"YELLOW", "RED"}}
+        )
     context["role_row"] = row
     context["module_rows"] = module_rows
     return render(request, "platform/role_detail.html", context)
@@ -532,17 +846,61 @@ def super_admin_role_detail(request, role):
 @permission_required("platform.view")
 def super_admin_gap_sheet(request):
     gap_rows = [
-        {"name": "Parent portal maturity", "status": "RED", "detail": "Child switching, summary cards, alerts, and parent-first workflow."},
-        {"name": "Student portal maturity", "status": "RED", "detail": "Student-first dashboard, notices, results, and document tasks."},
-        {"name": "Academic control center", "status": "YELLOW", "detail": "Timetable, lesson plan, syllabus progress, substitution, and calendar."},
-        {"name": "Transport operations", "status": "RED", "detail": "Routes, trips, vehicle assignment, and daily run sheets."},
-        {"name": "Hostel operations", "status": "RED", "detail": "Rooms, occupancy, attendance, mess, and leave workflows."},
-        {"name": "Library circulation", "status": "RED", "detail": "Issue/return, fines, due alerts, and student borrowing history."},
-        {"name": "Lab operations", "status": "RED", "detail": "Lab booking, equipment, and session workflow."},
-        {"name": "Inventory lifecycle", "status": "YELLOW", "detail": "Stock movement, issue/return, low-stock alerts, and approvals."},
-        {"name": "Fee reconciliation", "status": "YELLOW", "detail": "Day-close, refunds, concessions, and payment gateway lifecycle."},
-        {"name": "Communication delivery tracking", "status": "YELLOW", "detail": "Delivery logs, read status, retries, and channel-wise failures."},
-        {"name": "Setup wizard", "status": "GREEN", "detail": "School onboarding flow for classes, staff, subjects, fees, and comms."},
+        {
+            "name": "Parent portal maturity",
+            "status": "RED",
+            "detail": "Child switching, summary cards, alerts, and parent-first workflow.",
+        },
+        {
+            "name": "Student portal maturity",
+            "status": "RED",
+            "detail": "Student-first dashboard, notices, results, and document tasks.",
+        },
+        {
+            "name": "Academic control center",
+            "status": "YELLOW",
+            "detail": "Timetable, lesson plan, syllabus progress, substitution, and calendar.",
+        },
+        {
+            "name": "Transport operations",
+            "status": "RED",
+            "detail": "Routes, trips, vehicle assignment, and daily run sheets.",
+        },
+        {
+            "name": "Hostel operations",
+            "status": "RED",
+            "detail": "Rooms, occupancy, attendance, mess, and leave workflows.",
+        },
+        {
+            "name": "Library circulation",
+            "status": "RED",
+            "detail": "Issue/return, fines, due alerts, and student borrowing history.",
+        },
+        {
+            "name": "Lab operations",
+            "status": "RED",
+            "detail": "Lab booking, equipment, and session workflow.",
+        },
+        {
+            "name": "Inventory lifecycle",
+            "status": "YELLOW",
+            "detail": "Stock movement, issue/return, low-stock alerts, and approvals.",
+        },
+        {
+            "name": "Fee reconciliation",
+            "status": "YELLOW",
+            "detail": "Day-close, refunds, concessions, and payment gateway lifecycle.",
+        },
+        {
+            "name": "Communication delivery tracking",
+            "status": "YELLOW",
+            "detail": "Delivery logs, read status, retries, and channel-wise failures.",
+        },
+        {
+            "name": "Setup wizard",
+            "status": "GREEN",
+            "detail": "School onboarding flow for classes, staff, subjects, fees, and comms.",
+        },
     ]
     context = build_layout_context(request.user, current_section="platform")
     context["gap_rows"] = gap_rows
@@ -554,9 +912,15 @@ def super_admin_gap_sheet(request):
 def super_admin_academics(request):
     schools = School.objects.order_by("name")
     current_years = AcademicYear.objects.filter(is_current=True).select_related("school")
-    classes = AcademicClass.objects.select_related("school", "class_teacher").order_by("school__name", "name", "section")
-    subjects = AcademicSubject.objects.select_related("school", "academic_class").order_by("school__name", "academic_class__name", "name")
-    allocations = TeacherAllocation.objects.select_related("school", "teacher", "academic_class", "subject").order_by("school__name", "academic_class__name", "subject__name")
+    classes = AcademicClass.objects.select_related("school", "class_teacher").order_by(
+        "school__name", "name", "section"
+    )
+    subjects = AcademicSubject.objects.select_related("school", "academic_class").order_by(
+        "school__name", "academic_class__name", "name"
+    )
+    allocations = TeacherAllocation.objects.select_related(
+        "school", "teacher", "academic_class", "subject"
+    ).order_by("school__name", "academic_class__name", "subject__name")
 
     context = build_layout_context(request.user, current_section="platform")
     context.update(
@@ -600,7 +964,9 @@ def super_admin_decision_dashboard(request):
                 "notices": snapshot["notices_count"],
                 "domains": snapshot["domain_count"],
                 "support_open": snapshot["support_open"],
-                "subscription_status": snapshot["subscription"].status if snapshot["subscription"] else "NONE",
+                "subscription_status": snapshot["subscription"].status
+                if snapshot["subscription"]
+                else "NONE",
             }
         )
 
@@ -629,9 +995,13 @@ def super_admin_setup_wizard(request):
                 "completed": snapshot["completed"],
                 "total": snapshot["total"],
                 "score": snapshot["score"],
-                "steps": [{"label": item["label"], "done": item["done"]} for item in snapshot["checks"]],
+                "steps": [
+                    {"label": item["label"], "done": item["done"]} for item in snapshot["checks"]
+                ],
                 "current_year": snapshot["current_year"],
-                "subscription_status": snapshot["subscription"].status if snapshot["subscription"] else "NONE",
+                "subscription_status": snapshot["subscription"].status
+                if snapshot["subscription"]
+                else "NONE",
                 "campus_count": snapshot["campus_count"],
                 "domain_count": snapshot["domain_count"],
                 "class_master_count": snapshot["class_master_count"],
@@ -666,33 +1036,52 @@ def super_admin_transport(request):
             route_name = (request.POST.get("route_name") or "").strip()
             vehicle_number = (request.POST.get("vehicle_number") or "").strip()
             driver_name = (request.POST.get("driver_name") or "").strip()
-            attendant_name = (request.POST.get("attendant_name") or "").strip()
             stops_raw = (request.POST.get("stops") or "").strip()
-            if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+            if (
+                not school_id.isdigit()
+                or not School.objects.filter(id=int(school_id), is_active=True).exists()
+            ):
                 messages.error(request, "Valid school is required.")
             elif not route_code:
                 messages.error(request, "Route code is required.")
-            elif TransportRoute.objects.filter(school_id=int(school_id), route_code=route_code).exists():
-                messages.error(request, "Route code already exists for this school.")
             else:
-                stops = [item.strip() for item in stops_raw.split(",") if item.strip()]
-                TransportRoute.objects.create(
-                    school_id=int(school_id),
-                    route_code=route_code,
-                    route_name=route_name,
-                    vehicle_number=vehicle_number,
-                    driver_name=driver_name,
-                    attendant_name=attendant_name,
-                    stops=stops,
-                    is_active=True,
+                school = School.objects.get(id=int(school_id))
+                vehicle = None
+                if vehicle_number:
+                    vehicle, _ = TransportVehicle.objects.get_or_create(
+                        school=school, vehicle_no=vehicle_number
+                    )
+                    if driver_name and not vehicle.driver:
+                        driver, _ = TransportDriver.objects.get_or_create(
+                            school=school,
+                            license_number=f"DL-{vehicle_number}",
+                            defaults={"full_name": driver_name},
+                        )
+                        vehicle.driver = driver
+                        vehicle.save()
+
+                route_name_value = f"{route_code} - {route_name}".strip()
+                route_name_value = route_name_value.removeprefix("- ").removesuffix(" -")
+                route = TransportRoute.objects.create(
+                    school=school, name=route_name_value, vehicle=vehicle
                 )
+                stops = [item.strip() for item in stops_raw.split(",") if item.strip()]
+                for i, stop_name in enumerate(stops):
+                    TransportStop.objects.create(
+                        route=route,
+                        name=stop_name,
+                        order=i,
+                        pickup_time=time(8, 0),
+                        drop_time=time(14, 0),
+                    )
+
                 messages.success(request, "Transport route created.")
                 return redirect("/super-admin/transport/")
         elif action == "assign_student":
             school_id = (request.POST.get("school_id") or "").strip()
             route_id = (request.POST.get("route_id") or "").strip()
             student_id = (request.POST.get("student_id") or "").strip()
-            pickup_stop = (request.POST.get("pickup_stop") or "").strip()
+            pickup_stop_name = (request.POST.get("pickup_stop") or "").strip()
             fee_amount_raw = (request.POST.get("fee_amount") or "500").strip()
             try:
                 fee_amount = Decimal(fee_amount_raw or "0")
@@ -702,24 +1091,29 @@ def super_admin_transport(request):
                 messages.error(request, "School, route, and student are required.")
             else:
                 school_id_i = int(school_id)
-                route = TransportRoute.objects.filter(id=int(route_id), school_id=school_id_i, is_active=True).first()
-                student = Student.objects.filter(id=int(student_id), school_id=school_id_i, is_active=True).first()
+                route = TransportRoute.objects.filter(
+                    id=int(route_id), school_id=school_id_i
+                ).first()
+                student = Student.objects.filter(
+                    id=int(student_id), school_id=school_id_i, is_active=True
+                ).first()
                 if not route or not student:
                     messages.error(request, "Invalid route or student selection.")
-                elif TransportAssignment.objects.filter(route=route, student=student, active=True).exists():
-                    messages.error(request, "Student is already assigned to this route.")
-                elif TransportAssignment.objects.filter(student=student, active=True).exists():
+                elif TransportAssignment.objects.filter(student=student, is_active=True).exists():
                     messages.error(request, "Student already has an active route assignment.")
                 else:
+                    stop = TransportStop.objects.filter(route=route, name=pickup_stop_name).first()
+                    if not stop:
+                        stop = TransportStop.objects.filter(route=route).first()
+
                     TransportAssignment.objects.create(
-                        school_id=school_id_i,
                         route=route,
                         student=student,
-                        pickup_stop=pickup_stop,
-                        active=True,
+                        stop=stop,
+                        is_active=True,
                     )
                     student.transport_required = True
-                    student.route_number = route.route_code
+                    student.route_number = route.name[:20]
                     student.save(update_fields=["transport_required", "route_number"])
                     _ensure_service_fee_ledger(
                         student=student,
@@ -735,19 +1129,22 @@ def super_admin_transport(request):
             if not assignment_id.isdigit():
                 messages.error(request, "Invalid assignment.")
             else:
-                assignment = TransportAssignment.objects.select_related("student").filter(id=int(assignment_id), active=True).first()
+                assignment = (
+                    TransportAssignment.objects.select_related("student", "route__school")
+                    .filter(id=int(assignment_id), is_active=True)
+                    .first()
+                )
                 if not assignment:
                     messages.error(request, "Active assignment not found.")
                 else:
-                    assignment.active = False
-                    assignment.released_on = timezone.localdate()
-                    assignment.save(update_fields=["active", "released_on"])
+                    assignment.is_active = False
+                    assignment.save(update_fields=["is_active"])
                     assignment.student.transport_required = False
                     assignment.student.route_number = ""
                     assignment.student.save(update_fields=["transport_required", "route_number"])
                     _create_refund_event(
                         student=assignment.student,
-                        school=assignment.school,
+                        school=assignment.route.school,
                         service_type="TRANSPORT",
                         source="transport_release",
                         source_ref=assignment.id,
@@ -762,8 +1159,14 @@ def super_admin_transport(request):
     for route in routes:
         routes_by_school.setdefault(route.school_id, []).append(route)
 
-    total_transport_students = Student.objects.filter(transport_required=True, is_active=True).count()
-    active_assignments = TransportAssignment.objects.select_related("school", "route", "student").filter(active=True).order_by("-created_at")
+    total_transport_students = Student.objects.filter(
+        transport_required=True, is_active=True
+    ).count()
+    active_assignments = (
+        TransportAssignment.objects.select_related("school", "route", "student")
+        .filter(active=True)
+        .order_by("-created_at")
+    )
     assignments_by_school = {}
     for assignment in active_assignments:
         assignments_by_school.setdefault(assignment.school_id, []).append(assignment)
@@ -772,26 +1175,28 @@ def super_admin_transport(request):
     for school in schools:
         school_routes = routes_by_school.get(school.id, [])
         school_assignments = assignments_by_school.get(school.id, [])
-        transport_students = Student.objects.filter(school=school, transport_required=True, is_active=True)
-        route_numbers = sorted({r.route_code for r in school_routes if r.route_code})
-        bus_numbers = sorted({r.vehicle_number for r in school_routes if r.vehicle_number})
-        pickups = sorted({stop for r in school_routes for stop in (r.stops or []) if stop})
+        transport_students = Student.objects.filter(
+            school=school, transport_required=True, is_active=True
+        )
+        route_names = sorted({r.name for r in school_routes if r.name})
+        bus_numbers = sorted({r.vehicle.vehicle_no for r in school_routes if r.vehicle})
+        pickups = sorted({s.name for r in school_routes for s in r.stops.all() if s.name})
         rows.append(
             {
                 "school": school,
                 "transport_students": transport_students.count(),
                 "route_records": len(school_routes),
-                "route_count": len(route_numbers),
+                "route_count": len(route_names),
                 "bus_count": len(bus_numbers),
                 "pickup_count": len(pickups),
                 "assignment_count": len(school_assignments),
-                "routes": route_numbers[:8],
+                "routes": route_names[:8],
                 "buses": bus_numbers[:8],
                 "pickups": pickups[:8],
-                "status": "Ready" if route_numbers and bus_numbers and school_assignments else "Needs setup",
+                "status": "Ready" if route_names and school_assignments else "Needs setup",
             }
         )
-        total_routes.update(route_numbers)
+        total_routes.update(route_names)
         total_buses.update(bus_numbers)
 
     rows.sort(key=lambda item: (-item["transport_students"], item["school"].name))
@@ -806,8 +1211,12 @@ def super_admin_transport(request):
         "needs_setup": sum(1 for row in rows if row["status"] == "Needs setup"),
     }
     context["schools"] = schools.filter(is_active=True)
-    context["transport_routes"] = routes.order_by("school__name", "route_code")[:300]
-    context["transport_students"] = Student.objects.filter(is_active=True).select_related("school").order_by("first_name", "last_name")[:400]
+    context["transport_routes"] = routes.order_by("school__name", "name")[:300]
+    context["transport_students"] = (
+        Student.objects.filter(is_active=True)
+        .select_related("school")
+        .order_by("first_name", "last_name")[:400]
+    )
     context["open_transport_assignments"] = active_assignments[:200]
     context["transport_rows"] = rows
     return render(request, "platform/transport_hub.html", context)
@@ -822,38 +1231,41 @@ def super_admin_hostel(request):
             school_id = (request.POST.get("school_id") or "").strip()
             room_number = (request.POST.get("room_number") or "").strip()
             block_name = (request.POST.get("block_name") or "").strip()
-            warden_name = (request.POST.get("warden_name") or "").strip()
-            mess_plan = (request.POST.get("mess_plan") or "").strip()
             try:
                 bed_capacity = int((request.POST.get("bed_capacity") or "1").strip())
             except Exception:
                 bed_capacity = 0
-            if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+            if (
+                not school_id.isdigit()
+                or not School.objects.filter(id=int(school_id), is_active=True).exists()
+            ):
                 messages.error(request, "Valid school is required.")
             elif not room_number:
                 messages.error(request, "Room number is required.")
             elif bed_capacity <= 0:
                 messages.error(request, "Bed capacity should be greater than 0.")
-            elif HostelRoom.objects.filter(school_id=int(school_id), room_number=room_number).exists():
-                messages.error(request, "Room number already exists for this school.")
             else:
-                HostelRoom.objects.create(
-                    school_id=int(school_id),
+                school = School.objects.get(id=int(school_id))
+                hostel, _ = Hostel.objects.get_or_create(
+                    school=school, name=f"Hostel {school.code}", defaults={"hostel_type": "COED"}
+                )
+                room = HostelRoom.objects.create(
+                    hostel=hostel,
                     room_number=room_number,
-                    block_name=block_name,
-                    bed_capacity=bed_capacity,
-                    occupied_beds=0,
-                    warden_name=warden_name,
-                    mess_plan=mess_plan,
+                    room_type=block_name,
+                    capacity=bed_capacity,
                     is_active=True,
                 )
+                for i in range(1, bed_capacity + 1):
+                    HostelBed.objects.create(room=room, bed_number=str(i))
+
                 messages.success(request, "Hostel room created.")
                 return redirect("/super-admin/hostel/")
         elif action == "allocate_student":
             school_id = (request.POST.get("school_id") or "").strip()
             room_id = (request.POST.get("room_id") or "").strip()
             student_id = (request.POST.get("student_id") or "").strip()
-            bed_label = (request.POST.get("bed_label") or "").strip()
+            _bed_label = (request.POST.get("bed_label") or "").strip()
             fee_amount_raw = (request.POST.get("fee_amount") or "1200").strip()
             try:
                 fee_amount = Decimal(fee_amount_raw or "0")
@@ -863,32 +1275,39 @@ def super_admin_hostel(request):
                 messages.error(request, "School, room, and student are required.")
             else:
                 school_id_i = int(school_id)
-                room = HostelRoom.objects.filter(id=int(room_id), school_id=school_id_i, is_active=True).first()
-                student = Student.objects.filter(id=int(student_id), school_id=school_id_i, is_active=True).first()
+                room = HostelRoom.objects.filter(
+                    id=int(room_id), hostel__school_id=school_id_i, is_active=True
+                ).first()
+                student = Student.objects.filter(
+                    id=int(student_id), school_id=school_id_i, is_active=True
+                ).first()
                 if not room or not student:
                     messages.error(request, "Invalid room or student selection.")
-                elif room.occupied_beds >= room.bed_capacity:
+                elif room.beds.filter(is_occupied=True).count() >= room.capacity:
                     messages.error(request, "Selected room is full.")
-                elif HostelAllocation.objects.filter(room=room, student=student, active=True).exists():
-                    messages.error(request, "Student already assigned to this room.")
-                elif HostelAllocation.objects.filter(student=student, active=True).exists():
+                elif HostelAllocation.objects.filter(student=student, is_active=True).exists():
                     messages.error(request, "Student already has active hostel allocation.")
                 else:
                     with transaction.atomic():
+                        bed = room.beds.filter(is_occupied=False).first()
+                        if not bed:
+                            messages.error(request, "No available beds.")
+                            return redirect("/super-admin/hostel/")
+
                         HostelAllocation.objects.create(
-                            school_id=school_id_i,
-                            room=room,
                             student=student,
-                            bed_label=bed_label,
-                            active=True,
+                            hostel=room.hostel,
+                            room=room,
+                            bed=bed,
+                            is_active=True,
                         )
-                        room.occupied_beds = room.occupied_beds + 1
-                        room.save(update_fields=["occupied_beds", "updated_at"])
+                        bed.is_occupied = True
+                        bed.save(update_fields=["is_occupied"])
                         student.hostel_required = True
                         student.save(update_fields=["hostel_required"])
                         _ensure_service_fee_ledger(
                             student=student,
-                            school=room.school,
+                            school=room.hostel.school,
                             service_code="HOSTEL",
                             service_name="Hostel Service",
                             amount=fee_amount,
@@ -900,21 +1319,27 @@ def super_admin_hostel(request):
             if not allocation_id.isdigit():
                 messages.error(request, "Invalid hostel allocation.")
             else:
-                allocation = HostelAllocation.objects.select_related("room", "student").filter(id=int(allocation_id), active=True).first()
+                allocation = (
+                    HostelAllocation.objects.select_related(
+                        "room", "student", "bed", "hostel__school"
+                    )
+                    .filter(id=int(allocation_id), is_active=True)
+                    .first()
+                )
                 if not allocation:
                     messages.error(request, "Active allocation not found.")
                 else:
                     with transaction.atomic():
-                        allocation.active = False
-                        allocation.released_on = timezone.localdate()
-                        allocation.save(update_fields=["active", "released_on"])
-                        allocation.room.occupied_beds = max(0, allocation.room.occupied_beds - 1)
-                        allocation.room.save(update_fields=["occupied_beds", "updated_at"])
+                        allocation.is_active = False
+                        allocation.save(update_fields=["is_active"])
+                        if allocation.bed:
+                            allocation.bed.is_occupied = False
+                            allocation.bed.save(update_fields=["is_occupied"])
                         allocation.student.hostel_required = False
                         allocation.student.save(update_fields=["hostel_required"])
                         _create_refund_event(
                             student=allocation.student,
-                            school=allocation.school,
+                            school=allocation.hostel.school,
                             service_type="HOSTEL",
                             source="hostel_release",
                             source_ref=allocation.id,
@@ -923,26 +1348,31 @@ def super_admin_hostel(request):
                     return redirect("/super-admin/hostel/")
 
     schools = School.objects.order_by("name")
-    rooms = HostelRoom.objects.select_related("school").filter(is_active=True)
+    rooms = HostelRoom.objects.select_related("hostel__school").filter(is_active=True)
     rooms_by_school = {}
     for room in rooms:
-        rooms_by_school.setdefault(room.school_id, []).append(room)
+        rooms_by_school.setdefault(room.hostel.school_id, []).append(room)
 
     rows = []
-    active_allocations = HostelAllocation.objects.select_related("school", "room", "student").filter(active=True).order_by("-created_at")
+    active_allocations = (
+        HostelAllocation.objects.select_related("hostel__school", "room", "student")
+        .filter(is_active=True)
+        .order_by("-id")
+    )
     allocations_by_school = {}
     for allocation in active_allocations:
-        allocations_by_school.setdefault(allocation.school_id, []).append(allocation)
+        allocations_by_school.setdefault(allocation.hostel.school_id, []).append(allocation)
     total_hostel_students = Student.objects.filter(hostel_required=True, is_active=True).count()
     total_rooms = set()
     total_wardens = set()
     for school in schools:
-        hostel_students = Student.objects.filter(school=school, hostel_required=True, is_active=True)
+        hostel_students = Student.objects.filter(
+            school=school, hostel_required=True, is_active=True
+        )
         school_rooms = rooms_by_school.get(school.id, [])
         school_allocations = allocations_by_school.get(school.id, [])
         room_numbers = sorted({r.room_number for r in school_rooms if r.room_number})
-        warden_names = sorted({r.warden_name for r in school_rooms if r.warden_name})
-        mess_plans = sorted({r.mess_plan for r in school_rooms if r.mess_plan})
+        warden_names = sorted({r.hostel.warden_name for r in school_rooms if r.hostel.warden_name})
         rows.append(
             {
                 "school": school,
@@ -950,12 +1380,12 @@ def super_admin_hostel(request):
                 "room_records": len(school_rooms),
                 "room_count": len(room_numbers),
                 "warden_count": len(warden_names),
-                "mess_count": len(mess_plans),
+                "mess_count": 0,
                 "allocation_count": len(school_allocations),
                 "rooms": room_numbers[:8],
                 "wardens": warden_names[:8],
-                "mess_plans": mess_plans[:8],
-                "status": "Ready" if room_numbers and warden_names and school_allocations else "Needs setup",
+                "mess_plans": [],
+                "status": "Ready" if room_numbers and school_allocations else "Needs setup",
             }
         )
         total_rooms.update(room_numbers)
@@ -973,8 +1403,12 @@ def super_admin_hostel(request):
         "needs_setup": sum(1 for row in rows if row["status"] == "Needs setup"),
     }
     context["schools"] = schools.filter(is_active=True)
-    context["hostel_rooms"] = rooms.order_by("school__name", "room_number")[:300]
-    context["hostel_students"] = Student.objects.filter(is_active=True).select_related("school").order_by("first_name", "last_name")[:400]
+    context["hostel_rooms"] = rooms.order_by("hostel__school__name", "room_number")[:300]
+    context["hostel_students"] = (
+        Student.objects.filter(is_active=True)
+        .select_related("school")
+        .order_by("first_name", "last_name")[:400]
+    )
     context["open_hostel_allocations"] = active_allocations[:200]
     context["hostel_rows"] = rows
     return render(request, "platform/hostel_hub.html", context)
@@ -989,27 +1423,38 @@ def super_admin_library(request):
             school_id = (request.POST.get("school_id") or "").strip()
             accession_no = (request.POST.get("accession_no") or "").strip()
             title = (request.POST.get("title") or "").strip()
-            author = (request.POST.get("author") or "").strip()
-            category = (request.POST.get("category") or "").strip()
+            author_name = (request.POST.get("author") or "").strip()
+            category_name = (request.POST.get("category") or "").strip()
             try:
                 total_copies = int((request.POST.get("total_copies") or "1").strip())
             except Exception:
                 total_copies = 0
-            if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+            if (
+                not school_id.isdigit()
+                or not School.objects.filter(id=int(school_id), is_active=True).exists()
+            ):
                 messages.error(request, "Valid school is required.")
             elif not accession_no or not title:
                 messages.error(request, "Accession and title are required.")
             elif total_copies <= 0:
                 messages.error(request, "Total copies should be greater than 0.")
-            elif LibraryBook.objects.filter(school_id=int(school_id), accession_no=accession_no).exists():
-                messages.error(request, "Accession number already exists for this school.")
             else:
+                school = School.objects.get(id=int(school_id))
+                category = None
+                if category_name:
+                    category, _ = LibraryCategory.objects.get_or_create(
+                        school=school, name=category_name
+                    )
+                author = None
+                if author_name:
+                    author, _ = LibraryAuthor.objects.get_or_create(school=school, name=author_name)
+
                 LibraryBook.objects.create(
-                    school_id=int(school_id),
-                    accession_no=accession_no,
+                    school=school,
                     title=title,
-                    author=author,
+                    isbn=accession_no,
                     category=category,
+                    author=author,
                     total_copies=total_copies,
                     available_copies=total_copies,
                     is_active=True,
@@ -1025,23 +1470,33 @@ def super_admin_library(request):
                 messages.error(request, "School, book, and student are required.")
             else:
                 school_id_i = int(school_id)
-                book = LibraryBook.objects.filter(id=int(book_id), school_id=school_id_i, is_active=True).first()
-                student = Student.objects.filter(id=int(student_id), school_id=school_id_i, is_active=True).first()
+                book = LibraryBook.objects.filter(
+                    id=int(book_id), school_id=school_id_i, is_active=True
+                ).first()
+                student = Student.objects.filter(
+                    id=int(student_id), school_id=school_id_i, is_active=True
+                ).first()
                 if not book or not student:
                     messages.error(request, "Invalid book or student selection.")
                 elif book.available_copies <= 0:
                     messages.error(request, "No available copies for selected book.")
                 else:
+                    due_date = timezone.localdate() + timedelta(days=14)
+                    if due_on_raw:
+                        try:
+                            due_date = datetime.strptime(due_on_raw, "%Y-%m-%d").date()
+                        except ValueError:
+                            pass
+
                     LibraryIssue.objects.create(
-                        school_id=school_id_i,
                         book=book,
                         student=student,
                         status="ISSUED",
-                        issued_on=timezone.localdate(),
-                        due_on=due_on_raw or None,
+                        issue_date=timezone.localdate(),
+                        due_date=due_date,
                     )
                     book.available_copies = max(0, book.available_copies - 1)
-                    book.save(update_fields=["available_copies", "updated_at"])
+                    book.save(update_fields=["available_copies"])
                     messages.success(request, "Book issued.")
                     return redirect("/super-admin/library/")
         elif action == "return_book":
@@ -1054,20 +1509,26 @@ def super_admin_library(request):
             if not issue_id.isdigit():
                 messages.error(request, "Invalid issue record.")
             else:
-                issue = LibraryIssue.objects.select_related("book").filter(id=int(issue_id), status="ISSUED").first()
+                issue = (
+                    LibraryIssue.objects.select_related("book")
+                    .filter(id=int(issue_id), status="ISSUED")
+                    .first()
+                )
                 if not issue:
                     messages.error(request, "Issue record not found or already closed.")
                 else:
                     auto_fine = Decimal("0")
-                    if issue.due_on and timezone.localdate() > issue.due_on:
-                        overdue_days = (timezone.localdate() - issue.due_on).days
+                    if issue.due_date and timezone.localdate() > issue.due_date:
+                        overdue_days = (timezone.localdate() - issue.due_date).days
                         auto_fine = Decimal(overdue_days)
                     issue.status = "RETURNED"
-                    issue.returned_on = timezone.localdate()
+                    issue.return_date = timezone.localdate()
                     issue.fine_amount = max(fine_amount, auto_fine)
-                    issue.save(update_fields=["status", "returned_on", "fine_amount"])
-                    issue.book.available_copies = min(issue.book.total_copies, issue.book.available_copies + 1)
-                    issue.book.save(update_fields=["available_copies", "updated_at"])
+                    issue.save(update_fields=["status", "return_date", "fine_amount"])
+                    issue.book.available_copies = min(
+                        issue.book.total_copies, issue.book.available_copies + 1
+                    )
+                    issue.book.save(update_fields=["available_copies"])
                     messages.success(request, "Book returned.")
                     return redirect("/super-admin/library/")
         elif action == "mark_lost":
@@ -1080,17 +1541,23 @@ def super_admin_library(request):
             if not issue_id.isdigit():
                 messages.error(request, "Invalid issue record.")
             else:
-                issue = LibraryIssue.objects.select_related("book").filter(id=int(issue_id), status="ISSUED").first()
+                issue = (
+                    LibraryIssue.objects.select_related("book")
+                    .filter(id=int(issue_id), status="ISSUED")
+                    .first()
+                )
                 if not issue:
                     messages.error(request, "Issue record not found or already closed.")
                 else:
                     issue.status = "LOST"
-                    issue.returned_on = timezone.localdate()
+                    issue.return_date = timezone.localdate()
                     issue.fine_amount = fine_amount
-                    issue.save(update_fields=["status", "returned_on", "fine_amount"])
+                    issue.save(update_fields=["status", "return_date", "fine_amount"])
                     issue.book.total_copies = max(0, issue.book.total_copies - 1)
-                    issue.book.available_copies = min(issue.book.available_copies, issue.book.total_copies)
-                    issue.book.save(update_fields=["total_copies", "available_copies", "updated_at"])
+                    issue.book.available_copies = min(
+                        issue.book.available_copies, issue.book.total_copies
+                    )
+                    issue.book.save(update_fields=["total_copies", "available_copies"])
                     messages.success(request, "Issue marked as lost.")
                     return redirect("/super-admin/library/")
 
@@ -1103,11 +1570,11 @@ def super_admin_library(request):
     rows = []
     total_students = Student.objects.filter(is_active=True).count()
     total_books = books.count()
-    issues = LibraryIssue.objects.select_related("school", "book", "student").all()
+    issues = LibraryIssue.objects.select_related("book__school", "book", "student").all()
     issues_by_school = {}
     open_issues = []
     for issue in issues:
-        issues_by_school.setdefault(issue.school_id, []).append(issue)
+        issues_by_school.setdefault(issue.book.school_id, []).append(issue)
         if issue.status == "ISSUED":
             open_issues.append(issue)
     for school in schools:
@@ -1116,7 +1583,7 @@ def super_admin_library(request):
         issued = sum(1 for i in school_issues if i.status == "ISSUED")
         returned = sum(1 for i in school_issues if i.status == "RETURNED")
         lost = sum(1 for i in school_issues if i.status == "LOST")
-        fine_count = sum(i.fine_amount for i in school_issues)
+        fine_count = sum((i.fine_amount or Decimal("0")) for i in school_issues)
         rows.append(
             {
                 "school": school,
@@ -1143,7 +1610,11 @@ def super_admin_library(request):
     }
     context["schools"] = schools.filter(is_active=True)
     context["library_books"] = books[:200]
-    context["library_students"] = Student.objects.filter(is_active=True).select_related("school").order_by("first_name", "last_name")[:300]
+    context["library_students"] = (
+        Student.objects.filter(is_active=True)
+        .select_related("school")
+        .order_by("first_name", "last_name")[:300]
+    )
     context["open_library_issues"] = open_issues[:150]
     context["library_rows"] = rows
     return render(request, "platform/library_hub.html", context)
@@ -1152,20 +1623,102 @@ def super_admin_library(request):
 @role_required("SUPER_ADMIN")
 @permission_required("platform.view")
 def super_admin_lab(request):
+    if request.method == "POST":
+        action = (request.POST.get("action") or "create_lab").strip()
+        if action == "create_lab":
+            school_id = (request.POST.get("school_id") or "").strip()
+            room_number = (request.POST.get("room_number") or "").strip()
+            name = (request.POST.get("name") or "").strip()
+            in_charge_name = (request.POST.get("in_charge_name") or "").strip()
+            try:
+                capacity = int((request.POST.get("capacity") or "30").strip())
+            except Exception:
+                capacity = 30
+            if (
+                not school_id.isdigit()
+                or not School.objects.filter(id=int(school_id), is_active=True).exists()
+            ):
+                messages.error(request, "Valid school is required.")
+            elif not room_number or not name:
+                messages.error(request, "Room number and name are required.")
+            elif LabRoom.objects.filter(school_id=int(school_id), room_number=room_number).exists():
+                messages.error(request, "Room number already exists for this school.")
+            else:
+                LabRoom.objects.create(
+                    school_id=int(school_id),
+                    room_number=room_number,
+                    name=name,
+                    capacity=capacity,
+                    in_charge_name=in_charge_name,
+                    is_active=True,
+                )
+                messages.success(request, "Lab room created.")
+                return redirect("/super-admin/lab/")
+        elif action == "create_equipment":
+            school_id = (request.POST.get("school_id") or "").strip()
+            lab_id = (request.POST.get("lab_id") or "").strip()
+            name = (request.POST.get("name") or "").strip()
+            sku = (request.POST.get("sku") or "").strip()
+            try:
+                quantity = int((request.POST.get("quantity") or "1").strip())
+            except Exception:
+                quantity = 1
+            if not (school_id.isdigit() and lab_id.isdigit()):
+                messages.error(request, "School and lab are required.")
+            elif not name:
+                messages.error(request, "Equipment name is required.")
+            else:
+                school_id_i = int(school_id)
+                lab = LabRoom.objects.filter(
+                    id=int(lab_id), school_id=school_id_i, is_active=True
+                ).first()
+                if not lab:
+                    messages.error(request, "Invalid lab selection.")
+                else:
+                    LabEquipment.objects.create(
+                        school_id=school_id_i,
+                        lab=lab,
+                        name=name,
+                        sku=sku,
+                        quantity=quantity,
+                        is_active=True,
+                    )
+                    messages.success(request, "Equipment added to lab.")
+                    return redirect("/super-admin/lab/")
+
     schools = School.objects.order_by("name")
+    labs = LabRoom.objects.select_related("school").filter(is_active=True)
+    equipments = LabEquipment.objects.select_related("school", "lab").filter(is_active=True)
+    bookings = LabBooking.objects.select_related("school", "lab", "booked_by").all()
+
+    labs_by_school = {}
+    for lab in labs:
+        labs_by_school.setdefault(lab.school_id, []).append(lab)
+
+    equipments_by_school = {}
+    for eq in equipments:
+        equipments_by_school.setdefault(eq.school_id, []).append(eq)
+
+    bookings_by_school = {}
+    for booking in bookings:
+        bookings_by_school.setdefault(booking.school_id, []).append(booking)
+
     rows = []
     total_students = 0
     for school in schools:
         students = Student.objects.filter(school=school, is_active=True)
+        school_labs = labs_by_school.get(school.id, [])
+        school_equipments = equipments_by_school.get(school.id, [])
+        school_bookings = bookings_by_school.get(school.id, [])
+
         rows.append(
             {
                 "school": school,
                 "students": students.count(),
-                "lab_booking_count": 0,
-                "equipment_count": 0,
-                "session_count": 0,
-                "status": "Needs setup",
-                "notes": "No lab booking or equipment model is wired yet.",
+                "lab_count": len(school_labs),
+                "equipment_count": sum(eq.quantity for eq in school_equipments),
+                "booking_count": len(school_bookings),
+                "status": "Ready" if school_labs else "Needs setup",
             }
         )
         total_students += students.count()
@@ -1174,9 +1727,16 @@ def super_admin_lab(request):
     context["lab_summary"] = {
         "schools": len(rows),
         "students": total_students,
-        "ready": 0,
-        "needs_setup": len(rows),
+        "labs": labs.count(),
+        "equipments": sum(eq.quantity for eq in equipments),
+        "bookings": bookings.count(),
+        "ready": sum(1 for row in rows if row["status"] == "Ready"),
+        "needs_setup": sum(1 for row in rows if row["status"] == "Needs setup"),
     }
+    context["schools"] = schools.filter(is_active=True)
+    context["labs"] = labs.order_by("school__name", "name")[:300]
+    context["equipments"] = equipments.order_by("lab__name", "name")[:300]
+    context["lab_bookings"] = bookings[:200]
     context["lab_rows"] = rows
     return render(request, "platform/lab_hub.html", context)
 
@@ -1198,7 +1758,10 @@ def super_admin_inventory(request):
             except Exception:
                 quantity_on_hand = Decimal("0")
                 reorder_level = Decimal("0")
-            if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+            if (
+                not school_id.isdigit()
+                or not School.objects.filter(id=int(school_id), is_active=True).exists()
+            ):
                 messages.error(request, "Valid school is required.")
             elif not sku or not name:
                 messages.error(request, "SKU and item name are required.")
@@ -1224,7 +1787,10 @@ def super_admin_inventory(request):
             phone = (request.POST.get("phone") or "").strip()
             email = (request.POST.get("email") or "").strip()
             gstin = (request.POST.get("gstin") or "").strip()
-            if not school_id.isdigit() or not School.objects.filter(id=int(school_id), is_active=True).exists():
+            if (
+                not school_id.isdigit()
+                or not School.objects.filter(id=int(school_id), is_active=True).exists()
+            ):
                 messages.error(request, "Valid school is required.")
             elif not name:
                 messages.error(request, "Vendor name is required.")
@@ -1260,12 +1826,18 @@ def super_admin_inventory(request):
                 messages.error(request, "PO number is required.")
             elif quantity <= 0:
                 messages.error(request, "PO quantity should be greater than 0.")
-            elif InventoryPurchaseOrder.objects.filter(school_id=int(school_id), po_number=po_number).exists():
+            elif InventoryPurchaseOrder.objects.filter(
+                school_id=int(school_id), po_number=po_number
+            ).exists():
                 messages.error(request, "PO number already exists for this school.")
             else:
                 school_id_i = int(school_id)
-                vendor = InventoryVendor.objects.filter(id=int(vendor_id), school_id=school_id_i, is_active=True).first()
-                item = InventoryItem.objects.filter(id=int(item_id), school_id=school_id_i, is_active=True).first()
+                vendor = InventoryVendor.objects.filter(
+                    id=int(vendor_id), school_id=school_id_i, is_active=True
+                ).first()
+                item = InventoryItem.objects.filter(
+                    id=int(item_id), school_id=school_id_i, is_active=True
+                ).first()
                 if not vendor or not item:
                     messages.error(request, "Invalid vendor or item.")
                 else:
@@ -1286,7 +1858,11 @@ def super_admin_inventory(request):
             if not po_id.isdigit():
                 messages.error(request, "Invalid PO record.")
             else:
-                po = InventoryPurchaseOrder.objects.select_related("item").filter(id=int(po_id)).first()
+                po = (
+                    InventoryPurchaseOrder.objects.select_related("item")
+                    .filter(id=int(po_id))
+                    .first()
+                )
                 if not po:
                     messages.error(request, "PO not found.")
                 elif po.status == "RECEIVED":
@@ -1323,7 +1899,9 @@ def super_admin_inventory(request):
                 messages.error(request, "Quantity should be greater than 0.")
             else:
                 school_id_i = int(school_id)
-                item = InventoryItem.objects.filter(id=int(item_id), school_id=school_id_i, is_active=True).first()
+                item = InventoryItem.objects.filter(
+                    id=int(item_id), school_id=school_id_i, is_active=True
+                ).first()
                 if not item:
                     messages.error(request, "Invalid item selection.")
                 else:
@@ -1357,7 +1935,9 @@ def super_admin_inventory(request):
     total_students = Student.objects.filter(is_active=True).count()
     movements = InventoryMovement.objects.select_related("school", "item").all()
     vendors = InventoryVendor.objects.select_related("school").filter(is_active=True)
-    purchase_orders = InventoryPurchaseOrder.objects.select_related("school", "vendor", "item").all()
+    purchase_orders = InventoryPurchaseOrder.objects.select_related(
+        "school", "vendor", "item"
+    ).all()
     movements_by_school = {}
     for movement in movements:
         movements_by_school.setdefault(movement.school_id, []).append(movement)
@@ -1366,7 +1946,9 @@ def super_admin_inventory(request):
         school_movements = movements_by_school.get(school.id, [])
         issue_count = sum(1 for m in school_movements if m.movement_type == "OUT")
         return_count = sum(1 for m in school_movements if m.movement_type == "IN")
-        low_stock_count = sum(1 for item in school_items if item.quantity_on_hand <= item.reorder_level)
+        low_stock_count = sum(
+            1 for item in school_items if item.quantity_on_hand <= item.reorder_level
+        )
         rows.append(
             {
                 "school": school,
@@ -1401,6 +1983,25 @@ def super_admin_inventory(request):
 @role_required("SUPER_ADMIN")
 @permission_required("platform.view")
 def super_admin_fee_reconciliation(request):
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "process_refund":
+            refund_id = (request.POST.get("refund_id") or "").strip()
+            decision = (request.POST.get("decision") or "").strip()
+            if not refund_id.isdigit():
+                messages.error(request, "Invalid refund case.")
+            elif decision not in {"APPROVED", "REJECTED"}:
+                messages.error(request, "Invalid decision.")
+            else:
+                refund = ServiceRefundEvent.objects.filter(id=int(refund_id), status="OPEN").first()
+                if not refund:
+                    messages.error(request, "Refund case not found or already processed.")
+                else:
+                    refund.status = decision
+                    refund.save(update_fields=["status"])
+                    messages.success(request, f"Refund case marked as {decision}.")
+                    return redirect("/super-admin/fees/")
+
     schools = School.objects.order_by("name")
     rows = []
     total_ledgers = 0
@@ -1421,7 +2022,9 @@ def super_admin_fee_reconciliation(request):
                 "payment_count": payments.count(),
                 "paid_students": paid_students,
                 "refund_count": len(school_refunds),
-                "refund_amount": sum((item.recommended_refund or Decimal("0")) for item in school_refunds),
+                "refund_amount": sum(
+                    (item.recommended_refund or Decimal("0")) for item in school_refunds
+                ),
                 "concession_count": 0,
                 "gateway_count": 0,
                 "status": "Ready" if payments.exists() else "Needs setup",
@@ -1438,15 +2041,127 @@ def super_admin_fee_reconciliation(request):
         "ledgers": total_ledgers,
         "payments": total_payments,
         "refund_cases": refund_events.count(),
-        "refund_exposure": sum((event.recommended_refund or Decimal("0")) for event in refund_events),
+        "refund_exposure": sum(
+            (event.recommended_refund or Decimal("0")) for event in refund_events
+        ),
         "ready": sum(1 for row in rows if row["status"] == "Ready"),
         "needs_setup": sum(1 for row in rows if row["status"] == "Needs setup"),
     }
     context["fee_rows"] = rows
+    context["open_refunds"] = [e for e in refund_events if e.status == "OPEN"][:200]
     return render(request, "platform/fee_reconciliation_hub.html", context)
 
 
+@role_required("SUPER_ADMIN")
+@permission_required("platform.view")
+def super_admin_communication_logs(request):
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "retry":
+            log_id = (request.POST.get("log_id") or "").strip()
+            if not log_id.isdigit():
+                messages.error(request, "Invalid log entry.")
+            else:
+                log = MessageDeliveryLog.objects.filter(id=int(log_id)).first()
+                if not log:
+                    messages.error(request, "Log entry not found.")
+                elif log.status != "FAILED":
+                    messages.error(request, "Only failed messages can be retried.")
+                else:
+                    log.status = "QUEUED"
+                    log.attempt_count += 1
+                    log.error = ""
+                    log.save(update_fields=["status", "attempt_count", "error"])
+                    messages.success(request, "Message requeued for delivery.")
+                    return redirect("/super-admin/communication-logs/")
+
+    logs = MessageDeliveryLog.objects.select_related("campaign", "campaign__school").all()
+    _stats = {
+        "total": logs.count(),
+        "sent": logs.filter(status="SENT").count(),
+        "failed": logs.filter(status="FAILED").count(),
+        "queued": logs.filter(status="QUEUED").count(),
+    }
 
 
+@role_required("SUPER_ADMIN")
+@permission_required("platform.view")
+def super_admin_system_ops(request):
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "save_config":
+            key = (request.POST.get("key") or "").strip()
+            value = (request.POST.get("value") or "").strip()
+            desc = (request.POST.get("description") or "").strip()
+            is_secret = request.POST.get("is_secret") == "on"
+            if key:
+                ServiceConfiguration.objects.update_or_create(
+                    key=key, defaults={"value": value, "description": desc, "is_secret": is_secret}
+                )
+                messages.success(request, f"Configuration '{key}' saved.")
+            return redirect("/super-admin/system/")
+
+        elif action == "delete_config":
+            config_id = (request.POST.get("config_id") or "").strip()
+            if config_id.isdigit():
+                ServiceConfiguration.objects.filter(id=int(config_id)).delete()
+                messages.success(request, "Configuration deleted.")
+            return redirect("/super-admin/system/")
+
+    backups = SystemBackup.objects.select_related("created_by").all()[:100]
+    configs = ServiceConfiguration.objects.all()
+
+    # System info (mocked for demo)
+    sys_info = {
+        "os": "Windows Server / Linux Cluster",
+        "python": "3.11.x",
+        "django": "4.2.x",
+        "db": "PostgreSQL / SQLite",
+        "disk_usage": "45%",
+        "memory_usage": "2.4 GB / 8 GB",
+        "last_backup": backups.first().created_at if backups.exists() else "Never",
+    }
+
+    context = build_layout_context(request.user, current_section="platform")
+    context.update(
+        {
+            "backups": backups,
+            "configs": configs,
+            "sys_info": sys_info,
+        }
+    )
+    return render(request, "platform/system_ops.html", context)
 
 
+@role_required("SUPER_ADMIN")
+@permission_required("platform.view")
+def super_admin_backup_trigger(request):
+    if request.method == "POST":
+        # Mocking backup process
+        from django.core.files.base import ContentFile
+
+        timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"school_erp_backup_{timestamp}.sql"
+
+        backup = SystemBackup.objects.create(
+            filename=filename,
+            status="PENDING",
+            created_by=request.user,
+            notes=request.POST.get("notes", ""),
+        )
+
+        try:
+            # For demo: create a dummy content
+            dummy_content = f"-- School ERP SQL Dump\n-- Date: {timezone.now()}\n-- Total Schools: {School.objects.count()}\n"
+            backup.file.save(filename, ContentFile(dummy_content))
+            backup.status = "COMPLETED"
+            backup.size_bytes = len(dummy_content)
+            backup.save()
+            messages.success(request, f"Backup '{filename}' completed successfully.")
+        except Exception as e:
+            backup.status = "FAILED"
+            backup.notes = f"Error: {str(e)}"
+            backup.save()
+            messages.error(request, f"Backup failed: {str(e)}")
+
+    return redirect("/super-admin/system/")

@@ -1,9 +1,9 @@
 @charset "UTF-8";
 /** ================================= Table Of Contents =================================== /
-1. Abstract Css 
-    1.1 Function Css 
-    1.2 Variables Css 
-    1.3 Mixins Css 
+1. Abstract Css
+    1.1 Function Css
+    1.2 Variables Css
+    1.3 Mixins Css
 
 
 2. Component Css
@@ -10304,6 +10304,11 @@ td {
   border-color: var(--primary-600) !important;
 }
 
+[data-theme=dark] .btn-outline-primary-600 {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
 .btn-outline-primary-600:hover {
   background-color: var(--primary-600) !important;
   color: #fff !important;
@@ -10862,6 +10867,11 @@ td {
   border-color: var(--success-600) !important;
 }
 
+[data-theme=dark] .btn-outline-success-600 {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
 .btn-outline-success-600:hover {
   background-color: var(--success-600) !important;
   color: #fff !important;
@@ -11220,6 +11230,11 @@ td {
   background-color: transparent !important;
   color: var(--info-600) !important;
   border-color: var(--info-600) !important;
+}
+
+[data-theme=dark] .btn-outline-info-600 {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-outline-info-600:hover {
@@ -14520,6 +14535,8 @@ table.dataTable td.dt-type-date {
   height: 100vh;
   background-color: var(--white);
   z-index: 3;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (min-width: 1200px) {
@@ -14937,6 +14954,259 @@ table.dataTable td.dt-type-date {
   content: "\ea64";
 }
 
-[dir=rtl] .ri-arrow-left-s-line:before {
-  content: "\ea6e";
+[dir=rtl] .ri-arrow-left-/* --- Custom School ERP Styles --- */
+:root {
+    --primary-600: #475569; /* Slate Blue */
+    --primary-700: #334155;
+    --primary-50: #f1f5f9;
 }
+
+.sidebar-logo {
+    padding: 16px 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-icon {
+    border-radius: 6px;
+    width: 42px !important;
+    height: 42px !important;
+    object-fit: contain;
+}
+
+.logo-text {
+    white-space: normal;
+    max-width: 180px;
+    line-height: 1.2;
+    display: flex;
+}
+
+.logo-text .school-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-600);
+    /* Allow full name to show */
+    display: block;
+    word-break: break-word;
+}
+
+.sidebar .logo-icon {
+    display: block !important;
+}
+
+/* Sidebar Elements Visibility */
+.sidebar .profile-dropdown__contents,
+.sidebar .profile-dropdown__icon {
+    display: flex;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.active:not(:hover) .logo-text,
+.sidebar.active:not(:hover) .profile-dropdown__contents,
+.sidebar.active:not(:hover) .profile-dropdown__icon {
+    display: none !important;
+    opacity: 0;
+}
+
+.sidebar.active:not(:hover) .sidebar-logo {
+    justify-content: center !important;
+    padding: 12px 0;
+}
+
+.sidebar.active:not(:hover) .sidebar-toggle {
+    display: none !important;
+}
+
+.sidebar-profile-bottom {
+    margin-top: auto;
+    margin-bottom: 0 !important;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding: 0 !important;
+    background: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    width: 100%;
+}
+
+.sidebar-profile-bottom .profile-dropdown__button {
+    background: #fff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 12px 16px !important;
+    width: 100% !important;
+}
+
+.sidebar-profile-bottom .text-primary-light {
+    color: var(--primary-600) !important;
+    font-size: 13px !important;
+    font-weight: 600;
+}
+
+.sidebar-profile-bottom .text-secondary-light {
+    color: #64748b !important;
+    font-size: 11px !important;
+}
+
+.sidebar-profile-bottom .profile-dropdown__icon {
+    color: var(--primary-600) !important;
+}
+
+.sidebar.active:not(:hover) .sidebar-profile-bottom {
+    padding: 0 !important;
+}
+
+.module-name-header h6 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+/* Gradient Backgrounds for Cards */
+.gradient-bg-end-1 { background: linear-gradient(135deg, #FFF9F2 0%, #FFF3E6 100%); }
+.gradient-bg-end-2 { background: linear-gradient(135deg, #F2F7FF 0%, #E6EFFF 100%); }
+.gradient-bg-end-3 { background: linear-gradient(135deg, #F9F2FF 0%, #F1E6FF 100%); }
+.gradient-bg-end-4 { background: linear-gradient(135deg, #F2FFF7 0%, #E6FFEE 100%); }
+.gradient-bg-end-5 { background: linear-gradient(135deg, #FFF2F2 0%, #FFE6E6 100%); }
+.gradient-bg-end-6 { background: linear-gradient(135deg, #F2FEFF 0%, #E6FCFF 100%); }
+
+.shadow-1 { box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05); }
+
+.radius-8 { border-radius: 8px !important; }
+
+/* Dark Mode Dropdown Fix */
+[data-theme=dark] .dropdown-menu {
+    background-color: #1b2431 !important;
+    border: 1px solid #2d394b !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+}
+
+[data-theme=dark] .dropdown-item {
+    color: #cbd5e1 !important;
+}
+
+[data-theme=dark] .dropdown-item:hover {
+    background-color: var(--primary-600) !important;
+    color: #fff !important;
+}
+
+/* Sticky Table Header - Container Based for reliability */
+.table-sticky-header {
+    position: relative;
+    max-height: 650px;
+    overflow: auto !important;
+    border: 1px solid var(--neutral-200);
+    border-radius: 12px;
+    background-color: var(--white);
+}
+
+[data-theme=dark] .table-sticky-header {
+    border-color: #2d394b;
+    background-color: #1b2431;
+}
+
+.table-sticky-header table {
+    border: none !important;
+    margin-bottom: 0 !important;
+}
+
+.table-sticky-header thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background-color: var(--neutral-50) !important;
+    border-bottom: 2px solid var(--neutral-200) !important;
+    padding: 16px 24px !important;
+    font-weight: 700 !important;
+    color: var(--primary-600) !important;
+    text-transform: uppercase;
+    font-size: 12px !important;
+    letter-spacing: 0.5px;
+}
+
+[data-theme=dark] .table-sticky-header thead th {
+    background-color: #101824 !important;
+    border-bottom: 2px solid #2d394b !important;
+    color: #94a3b8 !important;
+}
+
+/* Fix for dropdowns inside sticky containers */
+.table-sticky-header .table-responsive {
+    overflow: visible !important;
+}
+
+/* Ensure data is visible */
+.table-sticky-header tbody td {
+    padding: 16px 24px !important;
+    background-color: transparent !important;
+}
+
+/* Centralized base template styles */
+.sf-toast-container { position: fixed; top: 90px; right: 24px; z-index: 1060; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+.sf-toast { pointer-events: auto; display: flex; align-items: flex-start; gap: 12px; padding: 16px; width: 350px; background: #fff; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); animation: slideInRight 0.3s ease-out forwards; transition: opacity 0.3s ease-out; position: relative; border-left: 4px solid transparent; }
+.sf-toast.closing { opacity: 0; }
+@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.sf-toast-success { background-color: #edf7ed; border-left-color: #4caf50; }
+.sf-toast-error { background-color: #fdeded; border-left-color: #ef5350; }
+.sf-toast-warning { background-color: #fff4e5; border-left-color: #ff9800; }
+.sf-toast-info { background-color: #e5f6fd; border-left-color: #03a9f4; }
+.sf-toast-icon { flex-shrink: 0; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+.sf-toast-success .sf-toast-icon { color: #4caf50; }
+.sf-toast-error .sf-toast-icon { color: #ef5350; }
+.sf-toast-warning .sf-toast-icon { color: #ff9800; }
+.sf-toast-info .sf-toast-icon { color: #03a9f4; }
+.sf-toast-content { flex-grow: 1; }
+.sf-toast-title { font-weight: 600; margin-bottom: 4px; font-size: 16px; color: #1e293b; }
+.sf-toast-message { font-size: 14px; color: #475569; margin: 0; line-height: 1.4; }
+.sf-toast-close { background: transparent; border: none; font-size: 24px; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0; flex-shrink: 0; margin-left: 8px; }
+.sf-toast-close:hover { color: #0f172a; }
+body, h1, h2, h3, h4, h5, h6, p, span, label, td, th, .page-heading, .sidebar-menu-group-title { caret-color: transparent; outline: none !important; }
+input, textarea, [contenteditable="true"], .form-control, .form-select { caret-color: auto !important; }
+.sidebar-menu li { margin-bottom: 4px !important; }
+.sidebar-menu li a { transition: all 0.2s ease; }
+
+/* Digital Marketing: top KPI cards */
+.dm-top-kpi-row .dm-top-kpi-card {
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  min-height: 118px;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.dm-top-kpi-row .dm-top-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
+}
+.dm-top-kpi-row .dm-top-kpi-card .card-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 118px;
+}
+.dm-top-kpi-card__label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.dm-top-kpi-card__value {
+  margin: 8px 0 0;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+}
+.dm-top-kpi-card--warning { background: #fff8e6; border-color: #f6d58a; }
+.dm-top-kpi-card--warning .dm-top-kpi-card__label,
+.dm-top-kpi-card--warning .dm-top-kpi-card__value { color: #d97706; }
+.dm-top-kpi-card--danger { background: #fff1f2; border-color: #fecdd3; }
+.dm-top-kpi-card--danger .dm-top-kpi-card__label,
+.dm-top-kpi-card--danger .dm-top-kpi-card__value { color: #be123c; }
+.dm-top-kpi-card--success { background: #ecfdf3; border-color: #a7f3d0; }
+.dm-top-kpi-card--success .dm-top-kpi-card__label,
+.dm-top-kpi-card--success .dm-top-kpi-card__value { color: #047857; }
+.dm-top-kpi-card--primary { background: #eef2ff; border-color: #c7d2fe; }
+.dm-top-kpi-card--primary .dm-top-kpi-card__label,
+.dm-top-kpi-card--primary .dm-top-kpi-card__value { color: #1d4ed8; }
+@media (max-width: 767.98px) {
+  .dm-top-kpi-card__value { font-size: 34px; }
+}
+

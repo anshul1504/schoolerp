@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Campaign Detail{% endblock %}
+{% block page_heading %}Campaign Detail{% endblock %}
+{% block breadcrumb_active %}Campaign Detail{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm mb-24">
+  <div class="card-header border-bottom py-16 px-24 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0">{{ campaign.name }}</h6>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'digital_marketing:campaign_edit' campaign.id %}">Edit</a>
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:campaign_list' %}">Back</a>
+    </div>
+  </div>
+  <div class="card-body p-24">
+    <div class="row gy-3">
+      <div class="col-md-3"><div class="p-12 radius-8 bg-primary-50"><small class="text-secondary-light d-block">Channel</small><strong>{{ campaign.channel }}</strong></div></div>
+      <div class="col-md-3"><div class="p-12 radius-8 bg-info-50"><small class="text-secondary-light d-block">Status</small><strong>{{ campaign.get_status_display }}</strong></div></div>
+      <div class="col-md-3"><div class="p-12 radius-8 bg-success-50"><small class="text-secondary-light d-block">Budget</small><strong>{{ campaign.budget }}</strong></div></div>
+      <div class="col-md-3"><div class="p-12 radius-8 bg-warning-50"><small class="text-secondary-light d-block">Spent</small><strong>{{ campaign.spent }}</strong></div></div>
+      <div class="col-md-6"><strong>Start Date:</strong> {{ campaign.start_date|default:'-' }}</div>
+      <div class="col-md-6"><strong>End Date:</strong> {{ campaign.end_date|default:'-' }}</div>
+      <div class="col-12"><strong>Objective:</strong> {{ campaign.objective|default:'-' }}</div>
+      <div class="col-12"><strong>Notes:</strong> {{ campaign.notes|default:'-' }}</div>
+    </div>
+  </div>
+</div>
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom py-16 px-24"><h6 class="mb-0">Recent Leads ({{ lead_count }})</h6></div>
+  <div class="card-body p-24">
+    <div class="table-responsive"><table class="table bordered-table mb-0"><thead><tr><th>Student</th><th>Phone</th><th>Source</th><th>Stage</th><th>Created</th></tr></thead><tbody>{% for l in leads %}<tr><td>{{ l.student_name }}</td><td>{{ l.phone }}</td><td>{{ l.source }}</td><td>{{ l.get_stage_display }}</td><td>{{ l.created_at|date:'d M Y' }}</td></tr>{% empty %}<tr><td colspan="5" class="text-center py-20">No leads linked to this campaign.</td></tr>{% endfor %}</tbody></table></div>
+  </div>
+</div>
+{% endblock %}

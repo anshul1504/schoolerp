@@ -5,44 +5,90 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schools', '0012_campus'),
-        ('students', '0015_student_admission_no_per_school'),
+        ("schools", "0012_campus"),
+        ("students", "0015_student_admission_no_per_school"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Guardian',
+            name="Guardian",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('full_name', models.CharField(max_length=150)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('occupation', models.CharField(blank=True, max_length=150)),
-                ('address', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='guardians', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("full_name", models.CharField(max_length=150)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("occupation", models.CharField(blank=True, max_length=150)),
+                ("address", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="guardians",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['full_name', 'id'],
-                'unique_together': {('school', 'full_name', 'phone')},
+                "ordering": ["full_name", "id"],
+                "unique_together": {("school", "full_name", "phone")},
             },
         ),
         migrations.CreateModel(
-            name='StudentGuardian',
+            name="StudentGuardian",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('relation', models.CharField(choices=[('FATHER', 'Father'), ('MOTHER', 'Mother'), ('GUARDIAN', 'Guardian'), ('OTHER', 'Other')], default='GUARDIAN', max_length=20)),
-                ('relation_text', models.CharField(blank=True, max_length=60)),
-                ('is_primary', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('guardian', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='student_links', to='students.guardian')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='guardian_links', to='students.student')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "relation",
+                    models.CharField(
+                        choices=[
+                            ("FATHER", "Father"),
+                            ("MOTHER", "Mother"),
+                            ("GUARDIAN", "Guardian"),
+                            ("OTHER", "Other"),
+                        ],
+                        default="GUARDIAN",
+                        max_length=20,
+                    ),
+                ),
+                ("relation_text", models.CharField(blank=True, max_length=60)),
+                ("is_primary", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "guardian",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="student_links",
+                        to="students.guardian",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="guardian_links",
+                        to="students.student",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-is_primary', 'id'],
-                'constraints': [models.UniqueConstraint(fields=('student', 'guardian'), name='uniq_guardian_per_student')],
+                "ordering": ["-is_primary", "id"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("student", "guardian"), name="uniq_guardian_per_student"
+                    )
+                ],
             },
         ),
     ]

@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Compliance Dashboard | School ERP{% endblock %}
+{% block page_heading %}Compliance & Audits{% endblock %}
+{% block breadcrumb_active %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+    <h5 class="fw-semibold mb-0 text-primary-light">Compliance Command Center</h5>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'compliance_office:policy_create' %}" class="btn btn-primary-600 radius-8 d-inline-flex align-items-center text-nowrap"><iconify-icon icon="ri:file-add-line" class="me-2 text-xl"></iconify-icon> New Policy</a>
+      <a href="{% url 'compliance_office:inspection_create' %}" class="btn btn-info-600 text-white radius-8 d-inline-flex align-items-center text-nowrap"><iconify-icon icon="ri:search-eye-line" class="me-2 text-xl"></iconify-icon> Log Inspection</a>
+      <a href="{% url 'compliance_office:certification_create' %}" class="btn btn-warning-600 text-white radius-8 d-inline-flex align-items-center text-nowrap"><iconify-icon icon="ri:medal-line" class="me-2 text-xl"></iconify-icon> Add Certification</a>
+    </div>
+  </div>
+
+  <div class="row gy-4 mb-24">
+    <div class="col-xl-4 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-primary-200 text-primary-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:file-shield-2-line"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-primary-600 mb-2">Active Policies</p>
+          <h4 class="fw-bold text-primary-800 mb-0">{{ active_policies }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--warning-100) 0%, var(--warning-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-warning-200 text-warning-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:search-line"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-warning-600 mb-2">Pending Inspections</p>
+          <h4 class="fw-bold text-warning-800 mb-0">{{ pending_inspections }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-sm-6">
+      <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);">
+        <div class="card-body p-24">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="w-48-px h-48-px rounded-circle bg-success-200 text-success-700 d-flex align-items-center justify-content-center text-xl">
+              <iconify-icon icon="ri:medal-line"></iconify-icon>
+            </span>
+          </div>
+          <p class="text-sm fw-medium text-success-600 mb-2">Valid Certifications</p>
+          <h4 class="fw-bold text-success-800 mb-0">{{ valid_certifications }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row gy-4">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+          <h6 class="text-lg fw-semibold mb-0">Recent Inspections</h6>
+          <a href="{% url 'compliance_office:inspection_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0 table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-24">Title</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in recent_inspections %}
+                  <tr>
+                    <td class="ps-24 fw-medium text-neutral-700">{{ i.title }}</td>
+                    <td>{{ i.inspection_date|date:'d M Y' }}</td>
+                    <td>
+                      <span class="badge bg-primary-50 text-primary-600">{{ i.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center py-4 text-neutral-500">No recent inspections</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex justify-content-between align-items-center">
+          <h6 class="text-lg fw-semibold mb-0">School Certifications</h6>
+          <a href="{% url 'compliance_office:certification_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0 table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-24">Name</th>
+                  <th>Expiry Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in recent_certifications %}
+                  <tr>
+                    <td class="ps-24 fw-medium text-neutral-700">{{ c.name }}</td>
+                    <td>{{ c.expiry_date|date:'d M Y' }}</td>
+                    <td>
+                      <span class="badge bg-success-50 text-success-600">{{ c.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center py-4 text-neutral-500">No certifications on file</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

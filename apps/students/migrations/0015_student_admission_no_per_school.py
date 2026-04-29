@@ -14,6 +14,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="student",
-            constraint=models.UniqueConstraint(fields=("school", "admission_no"), name="uniq_student_admission_no_per_school"),
+            constraint=models.UniqueConstraint(
+                fields=("school", "admission_no"), name="uniq_student_admission_no_per_school"
+            ),
         ),
     ]

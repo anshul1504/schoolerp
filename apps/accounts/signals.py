@@ -2,8 +2,8 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from apps.core.change_log import record_change
-from .models import User
 
+from .models import User
 
 WATCH_FIELDS = [
     "username",
@@ -38,5 +38,6 @@ def _user_post_save(sender, instance: User, created: bool, **kwargs):
         if before.get(field) != after.get(field):
             changes[field] = {"before": before.get(field), "after": after.get(field)}
     if changes:
-        record_change(entity="accounts.User", object_id=instance.pk, action="UPDATED", changes=changes)
-
+        record_change(
+            entity="accounts.User", object_id=instance.pk, action="UPDATED", changes=changes
+        )

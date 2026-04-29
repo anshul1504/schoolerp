@@ -13,13 +13,23 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="SupportTicket",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("title", models.CharField(max_length=160)),
                 ("description", models.TextField(blank=True)),
                 (
                     "status",
                     models.CharField(
-                        choices=[("OPEN", "Open"), ("IN_PROGRESS", "In Progress"), ("RESOLVED", "Resolved"), ("CLOSED", "Closed")],
+                        choices=[
+                            ("OPEN", "Open"),
+                            ("IN_PROGRESS", "In Progress"),
+                            ("RESOLVED", "Resolved"),
+                            ("CLOSED", "Closed"),
+                        ],
                         default="OPEN",
                         max_length=20,
                     ),
@@ -27,7 +37,12 @@ class Migration(migrations.Migration):
                 (
                     "priority",
                     models.CharField(
-                        choices=[("LOW", "Low"), ("NORMAL", "Normal"), ("HIGH", "High"), ("URGENT", "Urgent")],
+                        choices=[
+                            ("LOW", "Low"),
+                            ("NORMAL", "Normal"),
+                            ("HIGH", "High"),
+                            ("URGENT", "Urgent"),
+                        ],
                         default="NORMAL",
                         max_length=20,
                     ),
@@ -76,7 +91,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="SupportTicketMessage",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("body", models.TextField()),
                 ("is_internal", models.BooleanField(default=True)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
@@ -92,7 +112,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "ticket",
-                    models.ForeignKey(on_delete=models.deletion.CASCADE, related_name="messages", to="core.supportticket"),
+                    models.ForeignKey(
+                        on_delete=models.deletion.CASCADE,
+                        related_name="messages",
+                        to="core.supportticket",
+                    ),
                 ),
             ],
             options={
@@ -100,4 +124,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

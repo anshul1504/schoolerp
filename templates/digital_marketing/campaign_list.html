@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Campaigns{% endblock %}
+{% block page_heading %}Campaigns{% endblock %}
+{% block breadcrumb_active %}Campaigns{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <h6 class="text-lg fw-semibold mb-0">Campaign Management</h6>
+      <p class="text-sm text-secondary-light mb-0 mt-4">Track paid and social campaigns with filters and exports.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:campaign_export_csv' %}?q={{ filters.q }}&status={{ filters.status }}&channel={{ filters.channel }}">Export CSV</a>
+      <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:campaign_export_excel' %}?q={{ filters.q }}&status={{ filters.status }}&channel={{ filters.channel }}">Export Excel</a>
+      <a class="btn btn-primary-600 radius-8 px-20 py-11" href="{% url 'digital_marketing:campaign_create' %}">Create Campaign</a>
+    </div>
+  </div>
+  <div class="card-body p-24">
+    <form method="get" class="mb-24">
+      <div class="row gy-3 gx-3 align-items-end">
+        <div class="col-lg-5"><label class="form-label">Search</label><input name="q" value="{{ filters.q }}" class="form-control" placeholder="Campaign/objective"></div>
+        <div class="col-lg-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">All Status</option>{% for code,label in status_choices %}<option value="{{ code }}" {% if filters.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-lg-2"><label class="form-label">Channel</label><input name="channel" value="{{ filters.channel }}" class="form-control" placeholder="Meta/Google"></div>
+        <div class="col-lg-1"><button class="btn btn-primary-600 w-100">Apply</button></div>
+        <div class="col-lg-1"><a class="btn btn-outline-danger-600 w-100" href="{% url 'digital_marketing:campaign_list' %}">Reset</a></div>
+      </div>
+    </form>
+
+    <div class="row gy-3 mt-1 mb-24">
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%); border: 1px solid var(--primary-200);">
+          <span class="text-sm fw-medium text-primary-600">Total Campaigns</span>
+          <h4 class="mb-4 mt-8 fw-bold text-primary-700">{{ stats.total }}</h4>
+          <small class="text-xs text-primary-500">Current filter scope</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%); border: 1px solid var(--success-200);">
+          <span class="text-sm fw-medium text-success-600">Active</span>
+          <h4 class="mb-4 mt-8 fw-bold text-success-700">{{ stats.active }}</h4>
+          <small class="text-xs text-success-500">Running campaigns</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--warning-100) 0%, var(--warning-50) 100%); border: 1px solid var(--warning-200);">
+          <span class="text-sm fw-medium text-warning-600">Budget Pool</span>
+          <h4 class="mb-4 mt-8 fw-bold text-warning-700">{{ stats.budget }}</h4>
+          <small class="text-xs text-warning-500">Total allocated budget</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table bordered-table mb-0">
+        <thead><tr><th>#</th><th>Name</th><th>Channel</th><th>Status</th><th>Budget</th><th>Spent</th><th>Start</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>{% for c in campaigns %}<tr><td>{{ forloop.counter|add:campaigns.start_index|add:"-1" }}</td><td>{{ c.name }}</td><td>{{ c.channel }}</td><td><span class="badge bg-primary-100 text-primary-600">{{ c.get_status_display }}</span></td><td>{{ c.budget }}</td><td>{{ c.spent }}</td><td>{{ c.start_date|default:"-" }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'digital_marketing:campaign_detail' c.id %}">View</a> <a class="btn btn-sm btn-outline-primary" href="{% url 'digital_marketing:campaign_edit' c.id %}">Edit</a> <form method="post" action="{% url 'digital_marketing:campaign_delete' c.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete campaign?')">Delete</button></form></td></tr>{% empty %}<tr><td colspan="8" class="text-center py-20">No campaigns found.</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% if campaigns.paginator.num_pages > 1 %}<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24"><span class="text-secondary-light text-sm">Showing {{ campaigns.start_index }} to {{ campaigns.end_index }} of {{ campaigns.paginator.count }} entries</span><ul class="pagination d-flex gap-2 mb-0">{% if campaigns.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ campaigns.previous_page_number }}&q={{ filters.q }}&status={{ filters.status }}&channel={{ filters.channel }}">Prev</a></li>{% endif %}<li class="page-item"><span class="page-link bg-primary-600 text-white">{{ campaigns.number }}</span></li>{% if campaigns.has_next %}<li class="page-item"><a class="page-link" href="?page={{ campaigns.next_page_number }}&q={{ filters.q }}&status={{ filters.status }}&channel={{ filters.channel }}">Next</a></li>{% endif %}</ul></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

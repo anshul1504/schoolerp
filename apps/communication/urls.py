@@ -2,15 +2,14 @@ from django.urls import path
 
 from .views import (
     communication_overview,
-    notice_detail,
     notice_create,
     notice_delete,
+    notice_detail,
     notice_export_csv,
     notice_export_excel,
     notice_manage_list,
     notice_update,
 )
-
 
 urlpatterns = [
     path("", communication_overview, name="communication_overview"),

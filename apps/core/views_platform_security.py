@@ -19,8 +19,12 @@ def platform_security(request):
     since = now - timedelta(days=1)
 
     users = User.objects.select_related("school").order_by("-date_joined")
-    locked_users = users.filter(locked_until__isnull=False, locked_until__gt=now).order_by("-locked_until")
-    risky_users = users.filter(Q(failed_login_attempts__gte=3) | Q(locked_until__isnull=False)).order_by("-failed_login_attempts", "-locked_until")
+    locked_users = users.filter(locked_until__isnull=False, locked_until__gt=now).order_by(
+        "-locked_until"
+    )
+    risky_users = users.filter(
+        Q(failed_login_attempts__gte=3) | Q(locked_until__isnull=False)
+    ).order_by("-failed_login_attempts", "-locked_until")
 
     otps = UserLoginOTP.objects.select_related("user").order_by("-created_at")
     active_otps = otps.filter(expires_at__gt=now, used_at__isnull=True).order_by("-expires_at")
@@ -29,7 +33,9 @@ def platform_security(request):
     pending_invites = invites.filter(accepted_at__isnull=True).order_by("-created_at")
 
     activity = ActivityLog.objects.select_related("actor", "school").order_by("-created_at")
-    recent_auth_activity = activity.filter(path__in={"/login/", "/login/verify/"}).order_by("-created_at")
+    recent_auth_activity = activity.filter(path__in={"/login/", "/login/verify/"}).order_by(
+        "-created_at"
+    )
 
     events = AuthSecurityEvent.objects.all()
     recent_events = events.filter(created_at__gte=since).order_by("-created_at")

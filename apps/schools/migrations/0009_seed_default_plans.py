@@ -63,7 +63,6 @@ def seed_plans(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("schools", "0008_seed_default_features"),
     ]
@@ -71,4 +70,3 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(seed_plans, migrations.RunPython.noop),
     ]
-

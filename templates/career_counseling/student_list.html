@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Student Career Profiles | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Student Career Portfolios{% endblock %}
+{% block breadcrumb_active %}Students{% endblock %}
+
+{% block content %}
+<div class="career-counseling-wrapper">
+    {% include "career_counseling/_nav.html" %}
+
+    <div class="card radius-16 border-0 shadow-1">
+        <div class="card-header bg-base py-16 px-24 border-bottom border-neutral-100 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <h6 class="mb-0 fw-bold">Student Directory</h6>
+            <div class="d-flex align-items-center gap-12">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text bg-neutral-50 border-neutral-100 text-neutral-400"><i class="ri-search-line"></i></span>
+                    <input type="text" id="studentSearch" class="form-control border-neutral-100" placeholder="Search students...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table border-0 mb-0" id="studentTable">
+                    <thead class="bg-neutral-100 dark-bg-neutral-800">
+                        <tr>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Student Information</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Class / Section</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase">Interests</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-center">Status</th>
+                            <th class="py-16 px-24 text-xs fw-bold text-primary-light dark-text-neutral-200 text-uppercase text-end">Portfolio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                            <td class="py-16 px-24">
+                                <div class="d-flex align-items-center gap-12">
+                                    <div class="avatar-group">
+                                        <div class="w-40-px h-40-px bg-primary-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center text-sm fw-bold border border-primary-200">
+                                            {{ student.full_name|slice:":1"|upper }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm fw-bold text-primary-light d-block">{{ student.full_name }}</span>
+                                        <span class="text-xxs text-neutral-500">ID: #{{ student.student_id|default:student.pk }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-16 px-24">
+                                <span class="text-sm text-secondary-light">{{ student.class_room.name|default:"N/A" }} - {{ student.section.name|default:"N/A" }}</span>
+                            </td>
+                            <td class="py-16 px-24">
+                                <div class="d-flex flex-wrap gap-4">
+                                    {% if student.career_profile.interests %}
+                                        {% with interests=student.career_profile.interests|slice:":50" %}
+                                            <span class="text-sm text-primary-light">{{ interests }}{% if student.career_profile.interests|length > 50 %}...{% endif %}</span>
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="text-xs text-neutral-400 italic">Not set</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="py-16 px-24 text-center">
+                                {% if student.career_profile.is_complete %}
+                                    <span class="px-10 py-4 radius-pill bg-success-100 text-success-600 text-xxs fw-bold">PROFILED</span>
+                                {% else %}
+                                    <span class="px-10 py-4 radius-pill bg-warning-100 text-warning-600 text-xxs fw-bold">INCOMPLETE</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-16 px-24 text-end">
+                                <a href="{% url 'career_counseling:student_detail' student.pk %}" class="btn btn-icon btn-sm bg-neutral-50 text-secondary-light border border-neutral-100 hover-bg-neutral-100 radius-8">
+                                    <i class="ri-arrow-right-up-line"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-80 text-center text-secondary-light">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="ri-user-search-line text-5xl mb-16 opacity-25"></i>
+                                    <h6>No students found</h6>
+                                    <p class="text-sm">Verify student records in the main directory.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById("studentSearch");
+    const rows = document.querySelectorAll(".student-row");
+
+    searchInput.addEventListener("keyup", function() {
+        const query = searchInput.value.toLowerCase();
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? "" : "none";
+        });
+    });
+});
+</script>
+{% endblock %}

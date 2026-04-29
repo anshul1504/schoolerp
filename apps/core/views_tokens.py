@@ -29,7 +29,9 @@ def token_create(request):
             messages.error(request, "Name is required.")
         else:
             token = secrets.token_hex(32)
-            IntegrationToken.objects.create(name=name, token=token, scopes=scopes, is_active=is_active)
+            IntegrationToken.objects.create(
+                name=name, token=token, scopes=scopes, is_active=is_active
+            )
             messages.success(request, "Token created. Copy it now (it won’t be shown again).")
             request.session["last_created_token_value"] = token
             return redirect("/platform/tokens/")
@@ -49,4 +51,3 @@ def token_toggle(request, id):
     obj.save(update_fields=["is_active"])
     messages.success(request, "Token updated.")
     return redirect("/platform/tokens/")
-

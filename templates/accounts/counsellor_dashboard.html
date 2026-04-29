@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Counsellor Workspace | School ERP{% endblock %}
+
+{% block page_heading %}Counsellor Dashboard{% endblock %}
+{% block breadcrumb_active %}Workspace{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+    <!-- Quick Stats Cards -->
+    <div class="col-xxl-3 col-sm-6">
+        <a href="/frontoffice/enquiries/" class="card shadow-1 radius-12 border-0 overflow-hidden transition-all hover-translate-y-2">
+            <div class="card-body p-20 d-flex align-items-center gap-3">
+                <div class="w-56-px h-56-px bg-purple-100 text-purple-600 rounded-circle d-flex justify-content-center align-items-center">
+                    <i class="ri-user-search-line text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-secondary-light fw-medium text-sm">My Enquiries</span>
+                    <h4 class="mb-0">{{ stats.total_enquiries }}</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xxl-3 col-sm-6">
+        <a href="/frontoffice/follow-ups/" class="card shadow-1 radius-12 border-0 overflow-hidden transition-all hover-translate-y-2">
+            <div class="card-body p-20 d-flex align-items-center gap-3">
+                <div class="w-56-px h-56-px bg-success-100 text-success-600 rounded-circle d-flex justify-content-center align-items-center">
+                    <i class="ri-calendar-check-line text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-secondary-light fw-medium text-sm">Follow-ups Today</span>
+                    <h4 class="mb-0">{{ stats.followups_today }}</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xxl-3 col-sm-6">
+        <a href="/admissions/" class="card shadow-1 radius-12 border-0 overflow-hidden transition-all hover-translate-y-2">
+            <div class="card-body p-20 d-flex align-items-center gap-3">
+                <div class="w-56-px h-56-px bg-primary-100 text-primary-600 rounded-circle d-flex justify-content-center align-items-center">
+                    <i class="ri-file-list-3-line text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-secondary-light fw-medium text-sm">Applications</span>
+                    <h4 class="mb-0">{{ stats.total_applications }}</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xxl-3 col-sm-6">
+        <div class="card shadow-1 radius-12 border-0 overflow-hidden">
+            <div class="card-body p-20 d-flex align-items-center gap-3">
+                <div class="w-56-px h-56-px bg-danger-100 text-danger-600 rounded-circle d-flex justify-content-center align-items-center">
+                    <i class="ri-line-chart-line text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-secondary-light fw-medium text-sm">Conversion Rate</span>
+                    <h4 class="mb-0">{{ stats.conversion_rate }}%</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-xxl-8">
+        <div class="row">
+            <!-- Activity Chart -->
+            <div class="col-lg-7">
+                <div class="card radius-12 border-0 mb-24">
+                    <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between py-16 px-24 border-bottom border-neutral-200">
+                        <h6 class="mb-0 fw-bold text-lg">Lead Activity</h6>
+                        <div class="dropdown">
+                            <button class="btn btn-icon btn-sm bg-neutral-50 border border-neutral-100 text-secondary-light radius-8" type="button" data-bs-toggle="dropdown">
+                                <i class="ri-more-2-fill"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border p-12">
+                                <li><a href="/reports/" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-file-chart-line me-8"></i> Full Report</a></li>
+                                <li><a href="javascript:void(0)" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-download-2-line me-8"></i> Export CSV</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body p-24">
+                        <div id="activityChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie Chart (P Chart) -->
+            <div class="col-lg-5">
+                <div class="card radius-12 border-0 mb-24">
+                    <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between py-16 px-24 border-bottom border-neutral-200">
+                        <h6 class="mb-0 fw-bold text-lg">Overall Status</h6>
+                        <span class="badge bg-primary-100 text-primary-600">Real-time</span>
+                    </div>
+                    <div class="card-body p-24">
+                        <div id="pieChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Tabs -->
+        <div class="card radius-12 border-0">
+            <div class="card-header py-12 px-24 border-bottom border-neutral-200 bg-base d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <ul class="nav nav-pills border-0 gap-3" id="recentActivityTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-8 px-20 radius-6 fw-semibold" id="enquiries-tab" data-bs-toggle="tab" data-bs-target="#enquiries-pane" type="button" role="tab">Recent Enquiries</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-8 px-20 radius-6 fw-semibold bg-neutral-50 text-secondary-light border border-neutral-200 hover-bg-neutral-100" id="followups-tab" data-bs-toggle="tab" data-bs-target="#followups-pane" type="button" role="tab">Latest Follow-ups</button>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-12">
+                    <a href="/frontoffice/enquiries/" class="text-primary-600 fw-medium text-sm hover-underline">View All</a>
+                    <div class="dropdown">
+                        <button class="btn btn-sm bg-neutral-50 border border-neutral-100 text-secondary-light radius-8 px-12" type="button" data-bs-toggle="dropdown">
+                            Actions <i class="ri-arrow-down-s-line ms-4"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end border p-12">
+                            <li><a href="/frontoffice/enquiries/create/" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-add-line me-8"></i> Add New</a></li>
+                            <li><a href="/frontoffice/follow-ups/" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-calendar-check-line me-8"></i> My Follow-ups</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a href="javascript:void(0)" class="dropdown-item rounded text-secondary-light py-6"><i class="ri-mail-send-line me-8"></i> Bulk SMS</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="tab-content" id="recentActivityTabContent">
+                    <!-- Enquiries Tab -->
+                    <div class="tab-pane fade show active" id="enquiries-pane" role="tabpanel">
+                        <div class="table-responsive scroll-sm">
+                            <table class="table border-0 mb-0">
+                                <thead class="bg-neutral-100 dark-bg-neutral-800">
+                                    <tr>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Student Name</th>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Source</th>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Date</th>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for enquiry in recent_enquiries %}
+                                    <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                        <td class="py-12 px-24">
+                                            <div class="d-flex align-items-center gap-10">
+                                                <div class="w-32-px h-32-px bg-primary-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center text-xs fw-bold">
+                                                    {{ enquiry.student_name|slice:":1" }}
+                                                </div>
+                                                <span class="text-sm fw-semibold text-primary-light">{{ enquiry.student_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-12 px-24 text-sm text-secondary-light">{{ enquiry.get_source_display }}</td>
+                                        <td class="py-12 px-24 text-sm text-secondary-light">{{ enquiry.created_at|date:"d M, Y" }}</td>
+                                        <td class="py-12 px-24 text-center">
+                                            <span class="px-12 py-4 radius-pill text-xs fw-bold
+                                                {% if enquiry.status == 'NEW' %}bg-primary-100 text-primary-600
+                                                {% elif enquiry.status == 'QUALIFIED' %}bg-success-100 text-success-600
+                                                {% elif enquiry.status == 'LOST' %}bg-danger-100 text-danger-600
+                                                {% else %}bg-neutral-100 text-neutral-600{% endif %}">
+                                                {{ enquiry.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4" class="text-center py-48 text-secondary-light">No recent enquiries found.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Followups Tab -->
+                    <div class="tab-pane fade" id="followups-pane" role="tabpanel">
+                        <div class="table-responsive scroll-sm">
+                            <table class="table border-0 mb-0">
+                                <thead class="bg-neutral-100 dark-bg-neutral-800">
+                                    <tr>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Enquiry</th>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Last Call</th>
+                                        <th class="py-12 px-24 text-xs fw-bold text-primary-light text-uppercase">Response</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for follow in recent_followups %}
+                                    <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                        <td class="py-12 px-24">
+                                            <span class="text-sm fw-semibold text-primary-light">{{ follow.enquiry.student_name }}</span>
+                                        </td>
+                                        <td class="py-12 px-24 text-sm text-secondary-light">{{ follow.created_at|date:"d M, H:i" }}</td>
+                                        <td class="py-12 px-24 text-sm text-secondary-light">
+                                            {{ follow.get_outcome_display }}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="3" class="text-center py-48 text-secondary-light">No follow-up history found.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Content Area -->
+    <div class="col-xxl-4">
+        <!-- Quick Actions Card -->
+        <div class="card radius-12 border-0 mb-24 bg-primary-600 shadow-primary overflow-hidden">
+            <div class="card-body p-24 position-relative z-1">
+                <div class="d-flex align-items-center justify-content-between mb-20">
+                    <h6 class="text-white mb-0 fw-bold">Quick Workflow</h6>
+                    <div class="dropdown">
+                        <button class="btn btn-icon btn-sm bg-white bg-opacity-10 text-white border-0 radius-8" type="button" data-bs-toggle="dropdown">
+                            <i class="ri-more-fill"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end border p-12">
+                            <li><a href="/frontoffice/calls/create/" class="dropdown-item rounded text-secondary-light py-6">Log Quick Call</a></li>
+                            <li><a href="/frontoffice/meetings/create/" class="dropdown-item rounded text-secondary-light py-6">New Meeting</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a href="/settings/" class="dropdown-item rounded text-secondary-light py-6">Workflow Settings</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="/frontoffice/enquiries/create/" class="d-flex flex-column align-items-center justify-content-center p-16 radius-12 bg-white bg-opacity-10 text-white transition-all hover-bg-opacity-20 border border-white border-opacity-10 h-100">
+                            <i class="ri-user-add-line text-2xl mb-8"></i>
+                            <span class="text-xs fw-medium text-center">New Enquiry</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/frontoffice/calls/create/" class="d-flex flex-column align-items-center justify-content-center p-16 radius-12 bg-white bg-opacity-10 text-white transition-all hover-bg-opacity-20 border border-white border-opacity-10 h-100">
+                            <i class="ri-phone-line text-2xl mb-8"></i>
+                            <span class="text-xs fw-medium text-center">Log Call</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/frontoffice/meetings/create/" class="d-flex flex-column align-items-center justify-content-center p-16 radius-12 bg-white bg-opacity-10 text-white transition-all hover-bg-opacity-20 border border-white border-opacity-10 h-100">
+                            <i class="ri-discuss-line text-2xl mb-8"></i>
+                            <span class="text-xs fw-medium text-center">Book Meeting</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        {% if request.user.role == 'CAREER_COUNSELOR' %}
+                        <a href="/career-counseling/sessions/add/" class="d-flex flex-column align-items-center justify-content-center p-16 radius-12 bg-white bg-opacity-10 text-white transition-all hover-bg-opacity-20 border border-white border-opacity-10 h-100">
+                            <i class="ri-service-line text-2xl mb-8"></i>
+                            <span class="text-xs fw-medium text-center">New Session</span>
+                        </a>
+                        {% else %}
+                        <a href="/admissions/applications/create/" class="d-flex flex-column align-items-center justify-content-center p-16 radius-12 bg-white bg-opacity-10 text-white transition-all hover-bg-opacity-20 border border-white border-opacity-10 h-100">
+                            <i class="ri-edit-2-line text-2xl mb-8"></i>
+                            <span class="text-xs fw-medium text-center">New Admission</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="card radius-12 border-0">
+            <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between py-12 px-20 border-bottom border-neutral-200 bg-base radius-top-12">
+                <h6 class="mb-0 fw-bold text-lg">
+                    {% if request.user.role == 'CAREER_COUNSELOR' %}Counselling Schedule{% else %}Meetings & Tasks{% endif %}
+                </h6>
+                <span class="text-xs text-neutral-500">{{ today|date:"D, d M" }}</span>
+            </div>
+            <div class="card-body p-20">
+                <div class="d-flex flex-column gap-16 max-h-400-px overflow-y-auto scroll-sm">
+                    {% if request.user.role == 'CAREER_COUNSELOR' %}
+                        {% for session in today_sessions %}
+                        <div class="d-flex align-items-center justify-content-between p-12 radius-8 bg-neutral-50 border border-neutral-100 transition-all hover-bg-white hover-shadow-sm">
+                            <div class="d-flex align-items-center gap-12">
+                                <div class="avatar-group">
+                                    {% if session.student.avatar %}
+                                        <img src="{{ session.student.avatar.url }}" class="w-40-px h-40-px rounded-circle object-fit-cover border border-neutral-100 shadow-sm">
+                                    {% else %}
+                                        <div class="w-40-px h-40-px bg-primary-100 dark-bg-primary-900 text-primary-600 dark-text-primary-300 rounded-circle d-flex align-items-center justify-content-center fw-bold border border-primary-100 dark-border-primary-800 shadow-sm">
+                                            {{ session.student.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="text-sm mb-2 text-primary-light">{{ session.student.full_name }}</h6>
+                                    <span class="text-xs text-secondary-light"><i class="ri-time-line me-4"></i>{{ session.scheduled_at|date:"H:i" }}</span>
+                                </div>
+                            </div>
+                            <a href="/career-counseling/sessions/{{ session.id }}/" class="text-primary-600"><i class="ri-arrow-right-s-line text-xl"></i></a>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-48">
+                            <i class="ri-calendar-event-line text-secondary-light opacity-25" style="font-size: 64px;"></i>
+                            <p class="text-secondary-light text-sm mt-16">No sessions scheduled for today.</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        {% for meeting in upcoming_meetings %}
+                        <div class="d-flex align-items-center justify-content-between p-12 radius-8 bg-neutral-50 border border-neutral-100 transition-all hover-bg-white hover-shadow-sm">
+                            <div class="d-flex align-items-center gap-12">
+                                <div class="w-40-px h-40-px bg-warning-100 text-warning-600 rounded-circle d-flex align-items-center justify-content-center fw-bold">
+                                    {{ meeting.enquiry.student_name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <h6 class="text-sm mb-2 text-primary-light">{{ meeting.enquiry.student_name }}</h6>
+                                    <span class="text-xs text-secondary-light"><i class="ri-time-line me-4"></i>{{ meeting.scheduled_at|date:"H:i" }}</span>
+                                </div>
+                            </div>
+                            <span class="px-8 py-2 radius-4 text-xs fw-medium bg-warning-subtle text-warning-main">Scheduled</span>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-48">
+                            <i class="ri-calendar-todo-line text-secondary-light opacity-25" style="font-size: 64px;"></i>
+                            <p class="text-secondary-light text-sm mt-16">No meetings today.</p>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Activity Chart
+    var options = {
+        series: [{
+            name: 'Enquiries',
+            data: {{ chart_enquiries|safe }}
+        }, {
+            name: 'Admissions',
+            data: {{ chart_admissions|safe }}
+        }],
+        chart: {
+            type: 'area',
+            height: 300,
+            toolbar: { show: false },
+            zoom: { enabled: false }
+        },
+        colors: ['#487FFF', '#22c55e'],
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0.1,
+                stops: [0, 90, 100]
+            }
+        },
+        xaxis: {
+            categories: {{ chart_labels|safe }},
+            labels: { style: { colors: '#718096', fontSize: '12px' } }
+        },
+        yaxis: {
+            labels: { style: { colors: '#718096', fontSize: '12px' } }
+        },
+        grid: {
+            borderColor: '#f1f1f1',
+            strokeDashArray: 4,
+            xaxis: { lines: { show: true } }
+        },
+        legend: { show: false }
+    };
+
+    var chart = new ApexCharts(document.querySelector("#activityChart"), options);
+    chart.render();
+
+    // Pie Chart (P Chart)
+    var pieOptions = {
+        series: {{ status_distribution|safe }},
+        chart: {
+            type: 'donut',
+            height: 300,
+        },
+        labels: ['New', 'Qualified', 'In-Progress', 'Lost'],
+        colors: ['#487FFF', '#22c55e', '#ff9f43', '#ef4444'],
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total Leads',
+                            formatter: function (w) {
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        legend: {
+            position: 'bottom',
+            fontSize: '12px',
+            markers: { radius: 12 }
+        },
+        dataLabels: { enabled: false }
+    };
+
+    var pieChart = new ApexCharts(document.querySelector("#pieChart"), pieOptions);
+    pieChart.render();
+</script>
+{% endblock %}

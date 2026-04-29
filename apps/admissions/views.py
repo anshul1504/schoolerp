@@ -1,17 +1,20 @@
 from datetime import date as dt_date
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db import models
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from urllib.parse import urlencode
 
-from apps.core.permissions import has_permission, role_required
-from apps.core.tenancy import allowed_school_ids_for_user, school_scope_for_user, selected_school_for_request
-from apps.core.ui import build_layout_context
 from apps.academics.models import AcademicYear, ClassMaster, SectionMaster
+from apps.core.permissions import has_permission, role_required
+from apps.core.tenancy import (
+    allowed_school_ids_for_user,
+    school_scope_for_user,
+    selected_school_for_request,
+)
+from apps.core.ui import build_layout_context
 from apps.frontoffice.models import Enquiry
-from apps.students.models import Student
 
 from .models import AdmissionApplication, AdmissionDocument, AdmissionEvent
 
@@ -38,7 +41,9 @@ def _parse_date(value):
         return None
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_list(request):
     if not has_permission(request.user, "admissions.view"):
         messages.error(request, "You do not have permission to view admissions.")
@@ -47,7 +52,9 @@ def admission_list(request):
     school = _selected_school(request)
     school_ids = _school_ids_for_user(request.user)
 
-    qs = AdmissionApplication.objects.select_related("school", "academic_year", "enquiry").filter(school_id__in=school_ids)
+    qs = AdmissionApplication.objects.select_related("school", "academic_year", "enquiry").filter(
+        school_id__in=school_ids
+    )
     if school:
         qs = qs.filter(school=school)
 
@@ -58,7 +65,11 @@ def admission_list(request):
     to_date = _parse_date(request.GET.get("to"))
 
     if q:
-        qs = qs.filter(models.Q(student_name__icontains=q) | models.Q(application_no__icontains=q) | models.Q(phone__icontains=q))
+        qs = qs.filter(
+            models.Q(student_name__icontains=q)
+            | models.Q(application_no__icontains=q)
+            | models.Q(phone__icontains=q)
+        )
     if status:
         qs = qs.filter(status=status)
     if class_id:
@@ -68,7 +79,11 @@ def admission_list(request):
     if to_date:
         qs = qs.filter(created_at__date__lte=to_date)
 
-    current_section = "admissions" if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"} else "frontoffice"
+    current_section = (
+        "admissions"
+        if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"}
+        else "frontoffice"
+    )
     context = build_layout_context(request.user, current_section=current_section)
     can_manage_admissions = has_permission(request.user, "admissions.manage")
     context.update(
@@ -78,14 +93,22 @@ def admission_list(request):
             "applications": qs.order_by("-created_at")[:500],
             "status_choices": AdmissionApplication.STATUS_CHOICES,
             "class_options": ClassMaster.objects.filter(school_id__in=school_ids).order_by("name"),
-            "filters": {"q": q, "status": status, "class": class_id, "from": request.GET.get("from") or "", "to": request.GET.get("to") or ""},
+            "filters": {
+                "q": q,
+                "status": status,
+                "class": class_id,
+                "from": request.GET.get("from") or "",
+                "to": request.GET.get("to") or "",
+            },
             "can_manage_admissions": can_manage_admissions,
         }
     )
     return render(request, "admissions/application_list.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_create(request):
     if not has_permission(request.user, "admissions.manage"):
         messages.error(request, "You do not have permission to create admissions.")
@@ -112,8 +135,12 @@ def admission_create(request):
 
     if request.method == "POST":
         academic_year_id = (request.POST.get("academic_year_id") or "").strip() or None
-        desired_class_master_id = (request.POST.get("desired_class_master_id") or "").strip() or None
-        desired_section_master_id = (request.POST.get("desired_section_master_id") or "").strip() or None
+        desired_class_master_id = (
+            request.POST.get("desired_class_master_id") or ""
+        ).strip() or None
+        desired_section_master_id = (
+            request.POST.get("desired_section_master_id") or ""
+        ).strip() or None
 
         app = AdmissionApplication.objects.create(
             school=school,
@@ -135,7 +162,11 @@ def admission_create(request):
             updated_by=request.user,
         )
         AdmissionEvent.objects.create(
-            application=app, school=school, actor=request.user, action="CREATED", message="Admission application created."
+            application=app,
+            school=school,
+            actor=request.user,
+            action="CREATED",
+            message="Admission application created.",
         )
 
         if enquiry:
@@ -159,7 +190,11 @@ def admission_create(request):
         "status": "SUBMITTED" if enquiry else "DRAFT",
     }
 
-    current_section = "admissions" if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"} else "frontoffice"
+    current_section = (
+        "admissions"
+        if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"}
+        else "frontoffice"
+    )
     context = build_layout_context(request.user, current_section=current_section)
     context.update(
         {
@@ -168,15 +203,21 @@ def admission_create(request):
             "enquiry": enquiry,
             "initial": initial,
             "status_choices": AdmissionApplication.STATUS_CHOICES,
-            "academic_year_options": AcademicYear.objects.filter(school_id__in=school_ids).order_by("-start_date", "-id"),
-        "class_options": ClassMaster.objects.filter(school_id__in=school_ids).order_by("name"),
-        "section_options": SectionMaster.objects.filter(school_id__in=school_ids).order_by("name"),
+            "academic_year_options": AcademicYear.objects.filter(school_id__in=school_ids).order_by(
+                "-start_date", "-id"
+            ),
+            "class_options": ClassMaster.objects.filter(school_id__in=school_ids).order_by("name"),
+            "section_options": SectionMaster.objects.filter(school_id__in=school_ids).order_by(
+                "name"
+            ),
         }
     )
     return render(request, "admissions/application_form.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_detail(request, application_id):
     if not has_permission(request.user, "admissions.view"):
         messages.error(request, "You do not have permission to view admissions.")
@@ -184,12 +225,18 @@ def admission_detail(request, application_id):
 
     school_ids = _school_ids_for_user(request.user)
     app = get_object_or_404(
-        AdmissionApplication.objects.select_related("school", "academic_year", "enquiry").prefetch_related("documents", "events"),
+        AdmissionApplication.objects.select_related(
+            "school", "academic_year", "enquiry"
+        ).prefetch_related("documents", "events"),
         id=application_id,
         school_id__in=school_ids,
     )
 
-    current_section = "admissions" if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"} else "frontoffice"
+    current_section = (
+        "admissions"
+        if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"}
+        else "frontoffice"
+    )
     context = build_layout_context(request.user, current_section=current_section)
     can_manage_admissions = has_permission(request.user, "admissions.manage")
     context.update(
@@ -199,13 +246,16 @@ def admission_detail(request, application_id):
             "application": app,
             "status_choices": AdmissionApplication.STATUS_CHOICES,
             "can_manage_admissions": can_manage_admissions,
-            "can_create_student_from_admission": has_permission(request.user, "students.manage") or has_permission(request.user, "students.*"),
+            "can_create_student_from_admission": has_permission(request.user, "students.manage")
+            or has_permission(request.user, "students.*"),
         }
     )
     return render(request, "admissions/application_detail.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_edit(request, application_id):
     if not has_permission(request.user, "admissions.manage"):
         messages.error(request, "You do not have permission to edit admissions.")
@@ -224,18 +274,32 @@ def admission_edit(request, application_id):
         app.notes = (request.POST.get("notes") or "").strip()
 
         app.academic_year_id = (request.POST.get("academic_year_id") or "").strip() or None
-        app.desired_class_master_id = (request.POST.get("desired_class_master_id") or "").strip() or None
+        app.desired_class_master_id = (
+            request.POST.get("desired_class_master_id") or ""
+        ).strip() or None
         app.desired_class_text = (request.POST.get("desired_class_text") or "").strip()
-        app.desired_section_master_id = (request.POST.get("desired_section_master_id") or "").strip() or None
+        app.desired_section_master_id = (
+            request.POST.get("desired_section_master_id") or ""
+        ).strip() or None
         app.desired_section_text = (request.POST.get("desired_section_text") or "").strip()
         app.updated_by = request.user
         app.save()
 
-        AdmissionEvent.objects.create(application=app, school=app.school, actor=request.user, action="UPDATED", message="Application updated.")
+        AdmissionEvent.objects.create(
+            application=app,
+            school=app.school,
+            actor=request.user,
+            action="UPDATED",
+            message="Application updated.",
+        )
         messages.success(request, "Admission application updated.")
         return redirect("admission-detail", application_id=app.id)
 
-    current_section = "admissions" if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"} else "frontoffice"
+    current_section = (
+        "admissions"
+        if request.user.role in {"SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL"}
+        else "frontoffice"
+    )
     context = build_layout_context(request.user, current_section=current_section)
     context.update(
         {
@@ -243,15 +307,21 @@ def admission_edit(request, application_id):
             "selected_school": _selected_school(request),
             "application": app,
             "status_choices": AdmissionApplication.STATUS_CHOICES,
-            "academic_year_options": AcademicYear.objects.filter(school_id__in=school_ids).order_by("-start_date", "-id"),
-        "class_options": ClassMaster.objects.filter(school_id__in=school_ids).order_by("name"),
-        "section_options": SectionMaster.objects.filter(school_id__in=school_ids).order_by("name"),
+            "academic_year_options": AcademicYear.objects.filter(school_id__in=school_ids).order_by(
+                "-start_date", "-id"
+            ),
+            "class_options": ClassMaster.objects.filter(school_id__in=school_ids).order_by("name"),
+            "section_options": SectionMaster.objects.filter(school_id__in=school_ids).order_by(
+                "name"
+            ),
         }
     )
     return render(request, "admissions/application_edit.html", context)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_delete(request, application_id):
     if not has_permission(request.user, "admissions.manage"):
         messages.error(request, "You do not have permission to delete admissions.")
@@ -268,7 +338,9 @@ def admission_delete(request, application_id):
     return redirect("admission-list")
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_status(request, application_id):
     if not has_permission(request.user, "admissions.manage"):
         messages.error(request, "You do not have permission to update admissions.")
@@ -303,7 +375,9 @@ def admission_status(request, application_id):
     return redirect("admission-detail", application_id=application_id)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_document_add(request, application_id):
     if not has_permission(request.user, "admissions.manage"):
         messages.error(request, "You do not have permission to manage documents.")
@@ -322,12 +396,20 @@ def admission_document_add(request, application_id):
         return redirect("admission-detail", application_id=application_id)
 
     AdmissionDocument.objects.create(application=app, title=title)
-    AdmissionEvent.objects.create(application=app, school=app.school, actor=request.user, action="UPDATED", message="Document checklist updated.")
+    AdmissionEvent.objects.create(
+        application=app,
+        school=app.school,
+        actor=request.user,
+        action="UPDATED",
+        message="Document checklist updated.",
+    )
     messages.success(request, "Document added to checklist.")
     return redirect("admission-detail", application_id=application_id)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_document_toggle_received(request, application_id, document_id):
     if not has_permission(request.user, "admissions.manage"):
         messages.error(request, "You do not have permission to manage documents.")
@@ -357,21 +439,33 @@ def admission_document_toggle_received(request, application_id, document_id):
     return redirect("admission-detail", application_id=application_id)
 
 
-@role_required("SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST")
+@role_required(
+    "SUPER_ADMIN", "SCHOOL_OWNER", "ADMIN", "PRINCIPAL", "RECEPTIONIST", "ADMISSION_COUNSELOR"
+)
 def admission_create_student(request, application_id):
-    if not has_permission(request.user, "students.manage") and not has_permission(request.user, "students.*"):
+    if not has_permission(request.user, "students.manage") and not has_permission(
+        request.user, "students.*"
+    ):
         messages.error(request, "You do not have permission to create students.")
         return redirect("admission-detail", application_id=application_id)
 
     school_ids = _school_ids_for_user(request.user)
-    app = get_object_or_404(AdmissionApplication.objects.select_related("enquiry", "school"), id=application_id, school_id__in=school_ids)
+    app = get_object_or_404(
+        AdmissionApplication.objects.select_related("enquiry", "school"),
+        id=application_id,
+        school_id__in=school_ids,
+    )
 
     # Redirect to existing student create page with prefill query params.
     # (We keep student creation logic centralized in students app.)
     params = {
         "school": app.school_id,
         "first_name": (app.student_name.split(" ", 1)[0] if app.student_name else ""),
-        "last_name": (app.student_name.split(" ", 1)[1] if app.student_name and " " in app.student_name else ""),
+        "last_name": (
+            app.student_name.split(" ", 1)[1]
+            if app.student_name and " " in app.student_name
+            else ""
+        ),
         "guardian_name": app.guardian_name,
         "guardian_phone": app.phone,
         "email": app.email,

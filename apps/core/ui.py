@@ -10,19 +10,64 @@ ROLE_UI = {
         "label": "Super Admin",
         "subtitle": "Platform",
         "welcome": "Manage platform-level schools, users, billing, and settings.",
-        "sections": {"platform", "dashboard", "students", "schools", "users", "billing", "activity", "reports", "settings"},
+        "sections": {
+            "platform",
+            "dashboard",
+            "students",
+            "schools",
+            "users",
+            "billing",
+            "activity",
+            "reports",
+            "settings",
+            "research",
+        },
     },
     "SCHOOL_OWNER": {
         "label": "School Owner",
-        "subtitle": "School",
-        "welcome": "Manage your school setup and daily operations.",
-        "sections": {"dashboard", "students", "schools", "admissions", "academics", "staff", "attendance", "fees", "exams", "communication", "reports"},
+        "subtitle": "Ownership",
+        "welcome": "Full institutional oversight. Manage school profiles, finances, teams, and high-level strategy.",
+        "sections": {
+            "dashboard",
+            "students",
+            "schools",
+            "admissions",
+            "academics",
+            "staff",
+            "attendance",
+            "fees",
+            "exams",
+            "communication",
+            "reports",
+            "transport",
+            "hostel",
+            "library",
+            "timetable",
+            "research",
+        },
     },
     "PRINCIPAL": {
         "label": "Principal",
         "subtitle": "Academics",
-        "welcome": "Manage academics, attendance, and students.",
-        "sections": {"dashboard", "students", "schools", "academics", "staff", "attendance", "reports"},
+        "welcome": "Lead school operations — academics, admissions, staff, exams, attendance, communication, and all facilities.",
+        "sections": {
+            "dashboard",
+            "students",
+            "schools",
+            "admissions",
+            "academics",
+            "staff",
+            "attendance",
+            "fees",
+            "exams",
+            "communication",
+            "reports",
+            "timetable",
+            "transport",
+            "hostel",
+            "library",
+            "research",
+        },
     },
     "TEACHER": {
         "label": "Teacher",
@@ -62,31 +107,87 @@ ROLE_UI.update(
             "label": "Admin",
             "subtitle": "Administration",
             "welcome": "Manage school operations, admissions, academics, fees, and reports.",
-            "sections": {"dashboard", "students", "schools", "admissions", "academics", "staff", "attendance", "fees", "exams", "communication", "reports"},
+            "sections": {
+                "dashboard",
+                "students",
+                "schools",
+                "admissions",
+                "academics",
+                "staff",
+                "attendance",
+                "fees",
+                "exams",
+                "communication",
+                "reports",
+                "transport",
+                "hostel",
+                "library",
+                "timetable",
+                "research",
+            },
         },
         "VICE_PRINCIPAL": {
             "label": "Vice Principal",
             "subtitle": "Academics",
-            "welcome": "Coordinate academics, attendance, exams, communication, and student operations.",
-            "sections": {"dashboard", "students", "schools", "academics", "staff", "attendance", "exams", "communication", "reports"},
+            "welcome": "Coordinate academics, admissions, attendance, exams, communication, and student operations.",
+            "sections": {
+                "dashboard",
+                "students",
+                "schools",
+                "admissions",
+                "academics",
+                "staff",
+                "attendance",
+                "exams",
+                "communication",
+                "reports",
+                "timetable",
+            },
         },
         "MANAGEMENT_TRUSTEE": {
             "label": "Management / Trustee",
             "subtitle": "Management",
             "welcome": "Review institutional progress, finance, staffing, and operational reports.",
-            "sections": {"dashboard", "students", "schools", "academics", "staff", "attendance", "fees", "exams", "communication", "reports"},
+            "sections": {
+                "dashboard",
+                "students",
+                "schools",
+                "academics",
+                "staff",
+                "attendance",
+                "fees",
+                "exams",
+                "communication",
+                "reports",
+            },
         },
         "REPORT_VIEWER": {
             "label": "Report Viewer",
             "subtitle": "Read-only",
             "welcome": "View reports and operational summaries without making changes.",
-            "sections": {"dashboard", "students", "academics", "attendance", "fees", "exams", "reports"},
+            "sections": {
+                "dashboard",
+                "students",
+                "academics",
+                "attendance",
+                "fees",
+                "exams",
+                "reports",
+            },
         },
         "ACADEMIC_COORDINATOR": {
             "label": "Academic Coordinator",
             "subtitle": "Academics",
             "welcome": "Coordinate classes, curriculum, attendance, exams, and academic communication.",
-            "sections": {"dashboard", "students", "academics", "attendance", "exams", "communication", "reports"},
+            "sections": {
+                "dashboard",
+                "students",
+                "academics",
+                "attendance",
+                "exams",
+                "communication",
+                "reports",
+            },
         },
         "EXAM_CONTROLLER": {
             "label": "Exam Controller",
@@ -98,19 +199,42 @@ ROLE_UI.update(
             "label": "Class Teacher / Incharge",
             "subtitle": "Teaching",
             "welcome": "Manage your class students, attendance, notices, and academic follow-up.",
-            "sections": {"dashboard", "students", "academics", "attendance", "exams", "communication"},
+            "sections": {
+                "dashboard",
+                "students",
+                "academics",
+                "attendance",
+                "exams",
+                "communication",
+            },
         },
         "SUBJECT_TEACHER": {
             "label": "Subject Teacher",
             "subtitle": "Teaching",
             "welcome": "Access your subject classes, attendance, exams, and school communication.",
-            "sections": {"dashboard", "students", "academics", "attendance", "exams", "communication"},
+            "sections": {
+                "dashboard",
+                "students",
+                "academics",
+                "attendance",
+                "exams",
+                "communication",
+            },
         },
         "HOD": {
             "label": "Head of Department",
             "subtitle": "Department",
             "welcome": "Oversee department academics, teachers, exams, and reports.",
-            "sections": {"dashboard", "students", "academics", "staff", "attendance", "exams", "communication", "reports"},
+            "sections": {
+                "dashboard",
+                "students",
+                "academics",
+                "staff",
+                "attendance",
+                "exams",
+                "communication",
+                "reports",
+            },
         },
         "SUBSTITUTE_TEACHER": {
             "label": "Substitute Teacher",
@@ -122,19 +246,40 @@ ROLE_UI.update(
             "label": "Tutor / Mentor",
             "subtitle": "Mentor",
             "welcome": "Track assigned students, academic progress, attendance, and communication.",
-            "sections": {"dashboard", "students", "academics", "attendance", "exams", "communication"},
+            "sections": {
+                "dashboard",
+                "students",
+                "academics",
+                "attendance",
+                "exams",
+                "communication",
+            },
         },
         "OFFICE_ADMIN": {
             "label": "Office Admin",
             "subtitle": "Office",
             "welcome": "Manage front-office records, students, staff visibility, and communication.",
-            "sections": {"dashboard", "frontoffice", "students", "staff", "communication", "reports"},
+            "sections": {
+                "dashboard",
+                "frontoffice",
+                "students",
+                "staff",
+                "communication",
+                "reports",
+            },
         },
         "ADMISSION_COUNSELOR": {
             "label": "Admission Counselor",
             "subtitle": "Admissions",
             "welcome": "Manage enquiries, admissions, follow-ups, and applicant communication.",
-            "sections": {"frontoffice", "students", "communication", "reports"},
+            "sections": {
+                "dashboard",
+                "frontoffice",
+                "admissions",
+                "students",
+                "communication",
+                "reports",
+            },
         },
         "HR_MANAGER": {
             "label": "HR Manager",
@@ -170,7 +315,7 @@ ROLE_UI.update(
             "label": "Transport Manager",
             "subtitle": "Transport",
             "welcome": "Coordinate transport staff, students, communication, and reports.",
-            "sections": {"dashboard", "students", "staff", "communication", "reports"},
+            "sections": {"dashboard", "students", "staff", "communication", "reports", "transport"},
         },
         "TRANSPORT_SUPERVISOR": {
             "label": "Transport Supervisor",
@@ -194,7 +339,7 @@ ROLE_UI.update(
             "label": "Hostel Manager",
             "subtitle": "Hostel",
             "welcome": "Manage hostel students, communication, finance visibility, and reports.",
-            "sections": {"dashboard", "students", "fees", "communication", "reports"},
+            "sections": {"dashboard", "students", "fees", "communication", "reports", "hostel"},
         },
         "HOSTEL_WARDEN": {
             "label": "Hostel Warden",
@@ -218,7 +363,7 @@ ROLE_UI.update(
             "label": "Librarian",
             "subtitle": "Library",
             "welcome": "Manage library-related students, communication, and reports.",
-            "sections": {"dashboard", "students", "communication", "reports"},
+            "sections": {"dashboard", "students", "communication", "reports", "library"},
         },
         "LAB_ASSISTANT": {
             "label": "Lab Assistant",
@@ -314,7 +459,55 @@ ROLE_UI.update(
             "label": "Research Coordinator",
             "subtitle": "Research",
             "welcome": "Review academic and student reports for research coordination.",
-            "sections": {"dashboard", "students", "academics", "reports"},
+            "sections": {"dashboard", "students", "academics", "reports", "research"},
+        },
+        "CAREER_COUNSELOR": {
+            "label": "Career Counselor",
+            "subtitle": "Guidance",
+            "welcome": "Track student aspirations, university applications, and counseling sessions.",
+            "sections": {
+                "dashboard",
+                "students",
+                "communication",
+                "career_counseling",
+                "research",
+                "academics",
+                "admissions",
+                "attendance",
+                "exams",
+                "reports",
+                "frontoffice",
+            },
+        },
+        "TESTER": {
+            "label": "System Tester",
+            "subtitle": "QA & Testing",
+            "welcome": "Access all system modules for comprehensive testing and verification.",
+            "sections": {
+                "platform",
+                "dashboard",
+                "students",
+                "schools",
+                "admissions",
+                "users",
+                "academics",
+                "staff",
+                "attendance",
+                "fees",
+                "exams",
+                "communication",
+                "frontoffice",
+                "transport",
+                "hostel",
+                "library",
+                "timetable",
+                "billing",
+                "activity",
+                "reports",
+                "settings",
+                "research",
+                "career_counseling",
+            },
         },
     }
 )
@@ -324,19 +517,60 @@ BASE_NAVIGATION = [
     {"key": "dashboard", "label": "Dashboard", "icon": "ri-home-4-line", "url": "/dashboard/"},
     {"key": "students", "label": "Students", "icon": "ri-graduation-cap-line", "url": "/students/"},
     {"key": "schools", "label": "Schools", "icon": "ri-school-line", "url": "/schools/"},
-    {"key": "admissions", "label": "Admissions", "icon": "ri-file-list-2-line", "url": "/admissions/"},
+    {
+        "key": "admissions",
+        "label": "Admissions",
+        "icon": "ri-file-list-2-line",
+        "url": "/admissions/",
+    },
     {"key": "users", "label": "Users & Roles", "icon": "ri-shield-user-line", "url": "/users/"},
     {"key": "academics", "label": "Academics", "icon": "ri-book-open-line", "url": "/academics/"},
     {"key": "staff", "label": "Staff", "icon": "ri-team-line", "url": "/staff/"},
-    {"key": "attendance", "label": "Attendance", "icon": "ri-calendar-check-line", "url": "/attendance/"},
+    {
+        "key": "attendance",
+        "label": "Attendance",
+        "icon": "ri-calendar-check-line",
+        "url": "/attendance/",
+    },
     {"key": "fees", "label": "Fees", "icon": "ri-money-dollar-circle-line", "url": "/fees/"},
     {"key": "exams", "label": "Exams", "icon": "ri-file-edit-line", "url": "/exams/"},
-    {"key": "communication", "label": "Communication", "icon": "ri-message-2-line", "url": "/communication/"},
-    {"key": "frontoffice", "label": "Front Office", "icon": "ri-briefcase-4-line", "url": "/frontoffice/"},
+    {
+        "key": "communication",
+        "label": "Communication",
+        "icon": "ri-message-2-line",
+        "url": "/communication/",
+    },
+    {
+        "key": "frontoffice",
+        "label": "Front Office",
+        "icon": "ri-briefcase-4-line",
+        "url": "/frontoffice/",
+    },
+    {"key": "transport", "label": "Transport", "icon": "ri-bus-line", "url": "/transport/"},
+    {"key": "hostel", "label": "Hostel", "icon": "ri-hotel-line", "url": "/hostel/"},
+    {"key": "library", "label": "Library", "icon": "ri-book-3-line", "url": "/library/"},
+    {
+        "key": "timetable",
+        "label": "Timetable",
+        "icon": "ri-calendar-todo-line",
+        "url": "/timetable/",
+    },
     {"key": "billing", "label": "Billing", "icon": "ri-bill-line", "url": "/billing/plans/"},
-    {"key": "activity", "label": "Activity Log", "icon": "ri-file-list-3-line", "url": "/activity/"},
+    {
+        "key": "activity",
+        "label": "Activity Log",
+        "icon": "ri-file-list-3-line",
+        "url": "/activity/",
+    },
     {"key": "reports", "label": "Reports", "icon": "ri-bar-chart-box-line", "url": "/reports/"},
     {"key": "settings", "label": "Settings", "icon": "ri-settings-3-line", "url": "/settings/"},
+    {"key": "research", "label": "Research", "icon": "ri-microscope-line", "url": "/research/"},
+    {
+        "key": "career_counseling",
+        "label": "Career Counseling",
+        "icon": "ri-compass-3-line",
+        "url": "/career-counseling/",
+    },
 ]
 
 
@@ -362,16 +596,27 @@ def build_layout_context(user, current_section="dashboard"):
     navigation = []
 
     enabled_features = None
-    if getattr(user, "is_authenticated", False) and getattr(user, "role", None) != "SUPER_ADMIN" and getattr(user, "school_id", None):
+    if (
+        getattr(user, "is_authenticated", False)
+        and getattr(user, "role", None) != "SUPER_ADMIN"
+        and getattr(user, "school_id", None)
+    ):
         enabled_features = enabled_feature_codes_for_school(user.school_id)
-        if not enabled_features and not SchoolSubscription.objects.filter(school_id=user.school_id).exists():
+        if (
+            not enabled_features
+            and not SchoolSubscription.objects.filter(school_id=user.school_id).exists()
+        ):
             # No subscription configured yet: keep baseline role navigation visible.
             enabled_features = None
 
     for item in BASE_NAVIGATION:
         if item["key"] in allowed_sections:
             required_feature = MODULE_FEATURE_MAP.get(item["key"])
-            if required_feature and enabled_features is not None and required_feature not in enabled_features:
+            if (
+                required_feature
+                and enabled_features is not None
+                and required_feature not in enabled_features
+            ):
                 continue
             navigation.append({**item, "active": item["key"] == current_section})
 
@@ -389,6 +634,7 @@ def build_layout_context(user, current_section="dashboard"):
             "can_manage_admissions": has_permission(user, "admissions.manage"),
             "can_manage_staff": has_permission(user, "staff.manage"),
             "can_manage_academics": has_permission(user, "academics.manage"),
+            "can_manage_research": has_permission(user, "research.manage"),
         },
         "current_section": current_section,
     }

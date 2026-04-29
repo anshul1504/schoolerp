@@ -1,50 +1,70 @@
-from datetime import date
-from decimal import Decimal
-import json
 import hashlib
 import hmac
-import time
+import json
+from datetime import date, time
+from decimal import Decimal
 from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.utils import timezone
 
-from apps.schools.models import School, SchoolSubscription, SubscriptionPlan
-from apps.core.models import ScheduledReport
-from apps.core.models import ActivityLog
-from apps.core.models import EntityChangeLog
-from apps.core.models import AuditLogExport
-from apps.core.models import PlatformAnnouncement
-from apps.core.models import SupportTicket
-from apps.core.models import AuthSecurityEvent
-from apps.core.models import ReportTemplate
-from apps.students.models import Student
-from apps.schools.models import SubscriptionInvoice, SubscriptionPayment
-from apps.schools.models import SchoolDomain
-from apps.schools.models import SubscriptionCoupon
-from apps.core.models import IntegrationToken
-from apps.core.models import RBACChangeEvent, RolePermissionsOverride, RoleSectionsOverride
-from apps.core.models import TwoFactorPolicy
-from apps.core.models import SupportTicket
 from apps.core.models import (
-    TransportRoute,
-    TransportAssignment,
-    HostelRoom,
-    HostelAllocation,
-    LibraryBook,
-    LibraryIssue,
+    ActivityLog,
+    AuditLogExport,
+    AuthSecurityEvent,
+    EntityChangeLog,
+    IntegrationToken,
     InventoryItem,
     InventoryMovement,
-    InventoryVendor,
     InventoryPurchaseOrder,
+    InventoryVendor,
+    PlatformAnnouncement,
+    RBACChangeEvent,
+    ReportTemplate,
+    RolePermissionsOverride,
+    RoleSectionsOverride,
+    ScheduledReport,
     ServiceRefundEvent,
+    SupportTicket,
+    TwoFactorPolicy,
+)
+from apps.core.upload_validation import (
+    DEFAULT_DOCUMENT_POLICY,
+    DEFAULT_IMAGE_POLICY,
+    UploadPolicy,
+    validate_upload,
 )
 from apps.fees.models import FeeStructure, StudentFeeLedger
-from apps.core.upload_validation import DEFAULT_IMAGE_POLICY, UploadPolicy, validate_upload
-from apps.core.upload_validation import DEFAULT_DOCUMENT_POLICY
+from apps.hostel.models import Bed as HostelBed
+from apps.hostel.models import Hostel, HostelAllocation
+from apps.hostel.models import Room as HostelRoom
+from apps.library.models import (
+    Book as LibraryBook,
+)
+from apps.library.models import (
+    BookIssue as LibraryIssue,
+)
+from apps.schools.models import (
+    School,
+    SchoolDomain,
+    SchoolSubscription,
+    SubscriptionCoupon,
+    SubscriptionInvoice,
+    SubscriptionPayment,
+    SubscriptionPlan,
+)
+from apps.students.models import Student
+from apps.transport.models import (
+    Route as TransportRoute,
+)
+from apps.transport.models import (
+    Stop as TransportStop,
+)
+from apps.transport.models import (
+    TransportAllocation as TransportAssignment,
+)
 
 
 class ReportsOverviewTests(TestCase):
@@ -68,11 +88,19 @@ class ReportsOverviewTests(TestCase):
             role="PRINCIPAL",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
     def test_principal_can_open_reports_overview(self):
@@ -125,17 +153,32 @@ class UsersExportsAccessTests(TestCase):
             role="PRINCIPAL",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
     def test_non_superadmin_cannot_access_users_export(self):
         self.client.force_login(self.principal)
         response = self.client.get("/users/export/csv/")
         self.assertIn(response.status_code, {302, 403})
+
+
+class DemoRoutesSafetyTests(TestCase):
+    @override_settings(ENABLE_DEMO_PAGES=True)
+    def test_demo_index_missing_template_returns_404(self):
+        response = self.client.get("/demo/")
+        self.assertEqual(response.status_code, 404)
 
 
 class UsersBulkActionsTests(TestCase):
@@ -166,11 +209,19 @@ class UsersBulkActionsTests(TestCase):
             school=self.school,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
     def test_bulk_action_never_applies_to_self(self):
@@ -254,11 +305,19 @@ class ImpersonationFlowTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
         self.superadmin = User.objects.create_user(
@@ -301,7 +360,12 @@ class PlatformAnnouncementsTests(TestCase):
         self.client.force_login(self.superadmin)
         response = self.client.post(
             "/platform/announcements/create/",
-            {"title": "Maintenance", "message": "Tonight 10 PM", "severity": "WARNING", "is_active": "on"},
+            {
+                "title": "Maintenance",
+                "message": "Tonight 10 PM",
+                "severity": "WARNING",
+                "is_active": "on",
+            },
         )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(PlatformAnnouncement.objects.filter(title="Maintenance").exists())
@@ -321,7 +385,12 @@ class SupportInboxTests(TestCase):
         self.client.force_login(self.superadmin)
         response = self.client.post(
             "/platform/support/create/",
-            {"title": "Login issue", "description": "School cannot login", "status": "OPEN", "priority": "HIGH"},
+            {
+                "title": "Login issue",
+                "description": "School cannot login",
+                "status": "OPEN",
+                "priority": "HIGH",
+            },
         )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(SupportTicket.objects.filter(title="Login issue").exists())
@@ -330,7 +399,9 @@ class SupportInboxTests(TestCase):
 class AuthThrottlingSmokeTests(TestCase):
     def test_login_throttle_sets_event(self):
         # This is a smoke test: we just ensure event logging model is wired.
-        AuthSecurityEvent.objects.create(event="THROTTLED", username="x", ip_address="1.1.1.1", success=False, details="test")
+        AuthSecurityEvent.objects.create(
+            event="THROTTLED", username="x", ip_address="1.1.1.1", success=False, details="test"
+        )
         self.assertEqual(AuthSecurityEvent.objects.filter(event="THROTTLED").count(), 1)
 
 
@@ -343,7 +414,9 @@ class ReportBuilderSmokeTests(TestCase):
             role="SUPER_ADMIN",
             school=None,
         )
-        self.template = ReportTemplate.objects.create(name="Users Export", dataset="USERS", filters={}, columns=[], is_active=True)
+        self.template = ReportTemplate.objects.create(
+            name="Users Export", dataset="USERS", filters={}, columns=[], is_active=True
+        )
 
     def test_superadmin_can_export_report_template_csv(self):
         self.client.force_login(self.superadmin)
@@ -378,19 +451,34 @@ class TenancySafetyTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school_a,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
             SchoolSubscription.objects.update_or_create(
                 school=self.school_b,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
         User = get_user_model()
-        self.principal_a = User.objects.create_user(username="principal_a", password="pass123", role="PRINCIPAL", school=self.school_a)
+        self.principal_a = User.objects.create_user(
+            username="principal_a", password="pass123", role="PRINCIPAL", school=self.school_a
+        )
 
         self.student_b = Student.objects.create(
             school=self.school_b,
@@ -421,7 +509,9 @@ class TenancySafetyTests(TestCase):
 class BillingWebhookSmokeTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin", password="pass123", role="SUPER_ADMIN", school=None
+        )
         self.school = School.objects.create(
             name="Webhook School",
             code="WS01",
@@ -434,7 +524,10 @@ class BillingWebhookSmokeTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if not plan:
             plan = SubscriptionPlan.objects.create(name="Plan", code="X", tier="SILVER")
         self.invoice = SubscriptionInvoice.objects.create(
@@ -457,7 +550,9 @@ class BillingWebhookSmokeTests(TestCase):
             "transaction_ref": "tx1",
             "status": "PAID",
         }
-        response = self.client.post("/billing/webhooks/generic/", data=json.dumps(payload), content_type="application/json")
+        response = self.client.post(
+            "/billing/webhooks/generic/", data=json.dumps(payload), content_type="application/json"
+        )
         self.assertEqual(response.status_code, 200)
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, "PAID")
@@ -467,7 +562,9 @@ class BillingWebhookSmokeTests(TestCase):
 class AuditLogExportTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin_export", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin_export", password="pass123", role="SUPER_ADMIN", school=None
+        )
         ActivityLog.objects.create(
             actor=self.superadmin,
             school=None,
@@ -506,21 +603,34 @@ class AuditLogExportTests(TestCase):
 class SettingsOverridesTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin_settings", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin_settings", password="pass123", role="SUPER_ADMIN", school=None
+        )
 
     def test_superadmin_can_save_role_sections_override(self):
         self.client.force_login(self.superadmin)
-        resp = self.client.post("/settings/role-matrix/", data={"role": "TEACHER", "sections": ["dashboard", "students", "schools", "settings"]})
+        resp = self.client.post(
+            "/settings/role-matrix/",
+            data={"role": "TEACHER", "sections": ["dashboard", "students", "schools", "settings"]},
+        )
         self.assertEqual(resp.status_code, 302)
         self.assertTrue(RoleSectionsOverride.objects.filter(role="TEACHER").exists())
-        self.assertTrue(RBACChangeEvent.objects.filter(kind="ROLE_SECTIONS_OVERRIDE", role="TEACHER").exists())
+        self.assertTrue(
+            RBACChangeEvent.objects.filter(kind="ROLE_SECTIONS_OVERRIDE", role="TEACHER").exists()
+        )
 
     def test_superadmin_cannot_remove_settings_manage_from_superadmin(self):
         self.client.force_login(self.superadmin)
-        resp = self.client.post("/settings/permissions/", data={"role": "SUPER_ADMIN", "permissions": ["schools.view"]})
+        resp = self.client.post(
+            "/settings/permissions/", data={"role": "SUPER_ADMIN", "permissions": ["schools.view"]}
+        )
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(RolePermissionsOverride.objects.filter(role="SUPER_ADMIN").exists())
-        self.assertFalse(RBACChangeEvent.objects.filter(kind="ROLE_PERMISSIONS_OVERRIDE", role="SUPER_ADMIN").exists())
+        self.assertFalse(
+            RBACChangeEvent.objects.filter(
+                kind="ROLE_PERMISSIONS_OVERRIDE", role="SUPER_ADMIN"
+            ).exists()
+        )
 
     def test_rbac_grants_page_loads(self):
         self.client.force_login(self.superadmin)
@@ -531,7 +641,9 @@ class SettingsOverridesTests(TestCase):
 class RateLimitingSmokeTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin_rate", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin_rate", password="pass123", role="SUPER_ADMIN", school=None
+        )
 
     @override_settings(THROTTLE_USER_INVITES_PER_15M=1)
     def test_user_invite_throttles(self):
@@ -558,7 +670,11 @@ class RateLimitingSmokeTests(TestCase):
         }
         first = self.client.post("/users/invite/", data=payload, follow=False)
         self.assertEqual(first.status_code, 302)
-        second = self.client.post("/users/invite/", data={**payload, "username": "invitee_2", "email": "invitee2@example.com"}, follow=False)
+        second = self.client.post(
+            "/users/invite/",
+            data={**payload, "username": "invitee_2", "email": "invitee2@example.com"},
+            follow=False,
+        )
         self.assertEqual(second.status_code, 302)
 
 
@@ -576,8 +692,9 @@ class UploadValidationTests(TestCase):
         self.assertTrue(errors)
 
     def test_validate_upload_accepts_valid_png(self):
-        from django.core.files.uploadedfile import SimpleUploadedFile
         from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
         from PIL import Image
 
         buf = BytesIO()
@@ -603,8 +720,9 @@ class UploadValidationTests(TestCase):
 
     @override_settings(ANTIVIRUS_SCAN_MODE="required")
     def test_validate_upload_fails_when_antivirus_required_but_missing(self):
-        from django.core.files.uploadedfile import SimpleUploadedFile
         from unittest.mock import patch
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
 
         up = SimpleUploadedFile("ok.pdf", b"%PDF-1.7\\n...", content_type="application/pdf")
         with patch("apps.core.upload_validation.shutil.which", return_value=None):
@@ -613,8 +731,9 @@ class UploadValidationTests(TestCase):
 
     @override_settings(ANTIVIRUS_SCAN_MODE="best_effort")
     def test_validate_upload_skips_when_antivirus_best_effort_and_missing(self):
-        from django.core.files.uploadedfile import SimpleUploadedFile
         from unittest.mock import patch
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
 
         up = SimpleUploadedFile("ok.pdf", b"%PDF-1.7\\n...", content_type="application/pdf")
         with patch("apps.core.upload_validation.shutil.which", return_value=None):
@@ -625,14 +744,22 @@ class UploadValidationTests(TestCase):
 class SupportTicketEntityChangeLogTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin_supportlog", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin_supportlog", password="pass123", role="SUPER_ADMIN", school=None
+        )
 
     def test_support_ticket_update_creates_change_log(self):
         self.client.force_login(self.superadmin)
-        ticket = SupportTicket.objects.create(title="Help", description="x", status="OPEN", priority="NORMAL")
+        ticket = SupportTicket.objects.create(
+            title="Help", description="x", status="OPEN", priority="NORMAL"
+        )
         ticket.status = "IN_PROGRESS"
         ticket.save(update_fields=["status"])
-        self.assertTrue(EntityChangeLog.objects.filter(entity="core.SupportTicket", object_id=str(ticket.id), action="UPDATED").exists())
+        self.assertTrue(
+            EntityChangeLog.objects.filter(
+                entity="core.SupportTicket", object_id=str(ticket.id), action="UPDATED"
+            ).exists()
+        )
 
 
 class CustomDomainBrandingTests(TestCase):
@@ -649,9 +776,13 @@ class CustomDomainBrandingTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        SchoolDomain.objects.create(school=self.school, domain="erp.domainschool.test", is_active=True, is_primary=True)
+        SchoolDomain.objects.create(
+            school=self.school, domain="erp.domainschool.test", is_active=True, is_primary=True
+        )
 
-    @override_settings(ALLOWED_HOSTS=["erp.domainschool.test", "testserver", "localhost", "127.0.0.1"])
+    @override_settings(
+        ALLOWED_HOSTS=["erp.domainschool.test", "testserver", "localhost", "127.0.0.1"]
+    )
     def test_login_page_title_uses_tenant_school(self):
         response = self.client.get("/login/", HTTP_HOST="erp.domainschool.test")
         self.assertEqual(response.status_code, 200)
@@ -661,7 +792,9 @@ class CustomDomainBrandingTests(TestCase):
 class CouponInvoiceSmokeTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin", password="pass123", role="SUPER_ADMIN", school=None
+        )
         self.school = School.objects.create(
             name="Coupon School",
             code="CS01",
@@ -674,11 +807,16 @@ class CouponInvoiceSmokeTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if not plan:
             plan = SubscriptionPlan.objects.create(name="Plan", code="PC", tier="SILVER")
         self.plan = plan
-        SubscriptionCoupon.objects.create(code="LAUNCH50", discount_type="PERCENT", value="50", is_active=True)
+        SubscriptionCoupon.objects.create(
+            code="LAUNCH50", discount_type="PERCENT", value="50", is_active=True
+        )
 
     def test_invoice_create_applies_coupon_discount(self):
         self.client.force_login(self.superadmin)
@@ -704,7 +842,9 @@ class CouponInvoiceSmokeTests(TestCase):
 class InvoiceTaxSmokeTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.superadmin = User.objects.create_user(username="superadmin", password="pass123", role="SUPER_ADMIN", school=None)
+        self.superadmin = User.objects.create_user(
+            username="superadmin", password="pass123", role="SUPER_ADMIN", school=None
+        )
         self.school = School.objects.create(
             name="Tax School",
             code="TX01",
@@ -717,7 +857,10 @@ class InvoiceTaxSmokeTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if not plan:
             plan = SubscriptionPlan.objects.create(name="Plan", code="TP", tier="SILVER")
         self.plan = plan
@@ -757,7 +900,10 @@ class BillingWebhookSecurityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if not plan:
             plan = SubscriptionPlan.objects.create(name="Plan", code="WBP", tier="SILVER")
         self.invoice = SubscriptionInvoice.objects.create(
@@ -773,7 +919,7 @@ class BillingWebhookSecurityTests(TestCase):
     def _signed_headers(self, payload: dict, secret: str):
         timestamp = str(int(time.time()))
         body = json.dumps(payload)
-        signed_payload = f"{timestamp}.{body}".encode("utf-8")
+        signed_payload = f"{timestamp}.{body}".encode()
         signature = hmac.new(secret.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
         return body, {
             "HTTP_X_WEBHOOK_TIMESTAMP": timestamp,
@@ -782,8 +928,14 @@ class BillingWebhookSecurityTests(TestCase):
 
     @override_settings(BILLING_WEBHOOK_REQUIRE_SIGNATURE=True, BILLING_WEBHOOK_SECRET="test-secret")
     def test_rejects_missing_signature_headers(self):
-        payload = {"provider": "GENERIC", "event_id": "ev_missing_headers", "invoice_id": self.invoice.id}
-        response = self.client.post("/billing/webhooks/generic/", data=json.dumps(payload), content_type="application/json")
+        payload = {
+            "provider": "GENERIC",
+            "event_id": "ev_missing_headers",
+            "invoice_id": self.invoice.id,
+        }
+        response = self.client.post(
+            "/billing/webhooks/generic/", data=json.dumps(payload), content_type="application/json"
+        )
         self.assertEqual(response.status_code, 401)
 
     @override_settings(BILLING_WEBHOOK_REQUIRE_SIGNATURE=True, BILLING_WEBHOOK_SECRET="test-secret")
@@ -799,7 +951,9 @@ class BillingWebhookSecurityTests(TestCase):
             "status": "PAID",
         }
         body, headers = self._signed_headers(payload, "test-secret")
-        response = self.client.post("/billing/webhooks/generic/", data=body, content_type="application/json", **headers)
+        response = self.client.post(
+            "/billing/webhooks/generic/", data=body, content_type="application/json", **headers
+        )
         self.assertEqual(response.status_code, 200)
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, "PAID")
@@ -814,9 +968,13 @@ class BillingWebhookSecurityTests(TestCase):
             "method": "UPI",
         }
         body, headers = self._signed_headers(payload, "test-secret")
-        first = self.client.post("/billing/webhooks/generic/", data=body, content_type="application/json", **headers)
+        first = self.client.post(
+            "/billing/webhooks/generic/", data=body, content_type="application/json", **headers
+        )
         self.assertEqual(first.status_code, 200)
-        second = self.client.post("/billing/webhooks/generic/", data=body, content_type="application/json", **headers)
+        second = self.client.post(
+            "/billing/webhooks/generic/", data=body, content_type="application/json", **headers
+        )
         self.assertEqual(second.status_code, 409)
 
 
@@ -834,7 +992,10 @@ class BillingAutomationCommandTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if not plan:
             plan = SubscriptionPlan.objects.create(name="Plan", code="AUTOP", tier="SILVER")
         self.sub = SchoolSubscription.objects.create(
@@ -892,14 +1053,25 @@ class ProvisioningApiSmokeTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        self.token = IntegrationToken.objects.create(name="prov", token="t" * 64, scopes=["provision.users"], is_active=True)
+        self.token = IntegrationToken.objects.create(
+            name="prov", token="t" * 64, scopes=["provision.users"], is_active=True
+        )
 
     def test_upsert_requires_token(self):
-        response = self.client.post("/api/provision/users/upsert/", data={"username": "x", "role": "TEACHER"}, content_type="application/json")
+        response = self.client.post(
+            "/api/provision/users/upsert/",
+            data={"username": "x", "role": "TEACHER"},
+            content_type="application/json",
+        )
         self.assertEqual(response.status_code, 401)
 
     def test_upsert_creates_user(self):
-        payload = {"username": "api_teacher", "role": "TEACHER", "school_id": self.school.id, "is_active": True}
+        payload = {
+            "username": "api_teacher",
+            "role": "TEACHER",
+            "school_id": self.school.id,
+            "is_active": True,
+        }
         response = self.client.post(
             "/api/provision/users/upsert/",
             data=json.dumps(payload),
@@ -911,8 +1083,15 @@ class ProvisioningApiSmokeTests(TestCase):
         self.assertTrue(User.objects.filter(username="api_teacher").exists())
 
     def test_upsert_rejects_token_without_scope(self):
-        bad = IntegrationToken.objects.create(name="bad", token="b" * 64, scopes=["reports.view"], is_active=True)
-        payload = {"username": "api_teacher2", "role": "TEACHER", "school_id": self.school.id, "is_active": True}
+        bad = IntegrationToken.objects.create(
+            name="bad", token="b" * 64, scopes=["reports.view"], is_active=True
+        )
+        payload = {
+            "username": "api_teacher2",
+            "role": "TEACHER",
+            "school_id": self.school.id,
+            "is_active": True,
+        }
         response = self.client.post(
             "/api/provision/users/upsert/",
             data=json.dumps(payload),
@@ -951,14 +1130,29 @@ class TwoFactorAllRolesSmokeTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
-        self.teacher = User.objects.create_user(username="t2fa", password="pass123", role="TEACHER", school=self.school, email="t2fa@example.com", is_active=True)
+        self.teacher = User.objects.create_user(
+            username="t2fa",
+            password="pass123",
+            role="TEACHER",
+            school=self.school,
+            email="t2fa@example.com",
+            is_active=True,
+        )
 
     def test_login_redirects_to_verify_when_enabled(self):
         from django.test.utils import override_settings
@@ -989,16 +1183,30 @@ class RoleUrlAccessTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
-        self.principal = User.objects.create_user(username="principal_role", password="pass123", role="PRINCIPAL", school=self.school)
-        self.teacher = User.objects.create_user(username="teacher_role", password="pass123", role="TEACHER", school=self.school)
-        self.accountant = User.objects.create_user(username="accountant_role", password="pass123", role="ACCOUNTANT", school=self.school)
+        self.principal = User.objects.create_user(
+            username="principal_role", password="pass123", role="PRINCIPAL", school=self.school
+        )
+        self.teacher = User.objects.create_user(
+            username="teacher_role", password="pass123", role="TEACHER", school=self.school
+        )
+        self.accountant = User.objects.create_user(
+            username="accountant_role", password="pass123", role="ACCOUNTANT", school=self.school
+        )
 
     def test_non_superadmin_cannot_access_superadmin_urls(self):
         protected_urls = [
@@ -1014,7 +1222,11 @@ class RoleUrlAccessTests(TestCase):
             self.client.force_login(user)
             for url in protected_urls:
                 response = self.client.get(url)
-                self.assertIn(response.status_code, {302, 403}, msg=f"{user.role} unexpectedly accessed {url} ({response.status_code})")
+                self.assertIn(
+                    response.status_code,
+                    {302, 403},
+                    msg=f"{user.role} unexpectedly accessed {url} ({response.status_code})",
+                )
 
 
 class SchoolOwnerRoleUiParityTests(TestCase):
@@ -1031,14 +1243,24 @@ class SchoolOwnerRoleUiParityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
-        self.owner = User.objects.create_user(username="owner_ui", password="pass123", role="SCHOOL_OWNER", school=self.school)
+        self.owner = User.objects.create_user(
+            username="owner_ui", password="pass123", role="SCHOOL_OWNER", school=self.school
+        )
 
     def test_school_owner_navigation_has_management_modules_without_superadmin_surfaces(self):
         self.client.force_login(self.owner)
@@ -1078,14 +1300,24 @@ class AdminRoleUiParityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
-        self.admin = User.objects.create_user(username="admin_ui", password="pass123", role="ADMIN", school=self.school)
+        self.admin = User.objects.create_user(
+            username="admin_ui", password="pass123", role="ADMIN", school=self.school
+        )
 
     def test_admin_navigation_has_admissions_but_not_users_or_settings(self):
         self.client.force_login(self.admin)
@@ -1109,7 +1341,9 @@ class AdminRoleUiParityTests(TestCase):
         self.client.force_login(self.admin)
         for url in ("/reports/builder/", "/reports/scheduled/"):
             response = self.client.get(url)
-            self.assertIn(response.status_code, {302, 403}, msg=f"ADMIN unexpectedly accessed {url}")
+            self.assertIn(
+                response.status_code, {302, 403}, msg=f"ADMIN unexpectedly accessed {url}"
+            )
 
     def test_admin_can_open_admissions_list(self):
         self.client.force_login(self.admin)
@@ -1138,14 +1372,24 @@ class PrincipalRoleUiParityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
-        self.principal = User.objects.create_user(username="principal_ui", password="pass123", role="PRINCIPAL", school=self.school)
+        self.principal = User.objects.create_user(
+            username="principal_ui", password="pass123", role="PRINCIPAL", school=self.school
+        )
 
     def test_principal_navigation_is_ops_scoped_without_users_settings_platform(self):
         self.client.force_login(self.principal)
@@ -1185,11 +1429,19 @@ class VicePrincipalRoleUiParityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
         self.vice_principal = User.objects.create_user(
@@ -1238,11 +1490,19 @@ class ManagementTrusteeRoleUiParityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
         self.trustee = User.objects.create_user(
@@ -1252,7 +1512,9 @@ class ManagementTrusteeRoleUiParityTests(TestCase):
             school=self.school,
         )
 
-    def test_management_trustee_navigation_is_leadership_scoped_without_users_settings_platform(self):
+    def test_management_trustee_navigation_is_leadership_scoped_without_users_settings_platform(
+        self,
+    ):
         self.client.force_login(self.trustee)
         response = self.client.get("/dashboard/")
         self.assertEqual(response.status_code, 200)
@@ -1291,11 +1553,19 @@ class ReportViewerRoleUiParityTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
         self.report_viewer = User.objects.create_user(
@@ -1347,11 +1617,19 @@ class SuperAdminOpsWorkflowTests(TestCase):
             established_year=2001,
             is_active=True,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
         User = get_user_model()
         self.superadmin = User.objects.create_user(
@@ -1386,14 +1664,12 @@ class SuperAdminOpsWorkflowTests(TestCase):
         self.client.force_login(self.superadmin)
         route = TransportRoute.objects.create(
             school=self.school,
-            route_code="R-01",
-            route_name="Route 1",
-            vehicle_number="MP04AB1234",
-            driver_name="Driver",
-            attendant_name="Attendant",
-            stops=["Stop 1"],
-            is_active=True,
+            name="R-01 - Route 1",
         )
+        TransportStop.objects.create(
+            route=route, name="Stop 1", order=0, pickup_time=time(8, 0), drop_time=time(14, 0)
+        )
+
         assign = self.client.post(
             "/super-admin/transport/",
             {
@@ -1405,32 +1681,38 @@ class SuperAdminOpsWorkflowTests(TestCase):
             },
         )
         self.assertEqual(assign.status_code, 302)
-        self.assertTrue(TransportAssignment.objects.filter(route=route, student=self.student, active=True).exists())
+        self.assertTrue(
+            TransportAssignment.objects.filter(
+                route=route, student=self.student, is_active=True
+            ).exists()
+        )
         self.student.refresh_from_db()
         self.assertTrue(self.student.transport_required)
-        active_assignment = TransportAssignment.objects.get(route=route, student=self.student, active=True)
+        active_assignment = TransportAssignment.objects.get(
+            route=route, student=self.student, is_active=True
+        )
         release = self.client.post(
             "/super-admin/transport/",
             {"action": "release_assignment", "assignment_id": str(active_assignment.id)},
         )
         self.assertEqual(release.status_code, 302)
         active_assignment.refresh_from_db()
-        self.assertFalse(active_assignment.active)
+        self.assertFalse(active_assignment.is_active)
         self.student.refresh_from_db()
         self.assertFalse(self.student.transport_required)
 
     def test_hostel_allocate_and_release(self):
         self.client.force_login(self.superadmin)
+        hostel = Hostel.objects.create(school=self.school, name="Test Hostel")
         room = HostelRoom.objects.create(
-            school=self.school,
+            hostel=hostel,
             room_number="H-101",
-            block_name="A",
-            bed_capacity=2,
-            occupied_beds=0,
-            warden_name="Warden",
-            mess_plan="Veg",
+            capacity=2,
             is_active=True,
         )
+        HostelBed.objects.create(room=room, bed_number="B1")
+        HostelBed.objects.create(room=room, bed_number="B2")
+
         allocate = self.client.post(
             "/super-admin/hostel/",
             {
@@ -1442,36 +1724,39 @@ class SuperAdminOpsWorkflowTests(TestCase):
             },
         )
         self.assertEqual(allocate.status_code, 302)
-        self.assertTrue(HostelAllocation.objects.filter(room=room, student=self.student, active=True).exists())
-        room.refresh_from_db()
-        self.assertEqual(room.occupied_beds, 1)
-        active_allocation = HostelAllocation.objects.get(room=room, student=self.student, active=True)
+        self.assertTrue(
+            HostelAllocation.objects.filter(
+                room=room, student=self.student, is_active=True
+            ).exists()
+        )
+        active_allocation = HostelAllocation.objects.get(
+            room=room, student=self.student, is_active=True
+        )
         release = self.client.post(
             "/super-admin/hostel/",
             {"action": "release_allocation", "allocation_id": str(active_allocation.id)},
         )
         self.assertEqual(release.status_code, 302)
         active_allocation.refresh_from_db()
-        self.assertFalse(active_allocation.active)
-        room.refresh_from_db()
-        self.assertEqual(room.occupied_beds, 0)
+        self.assertFalse(active_allocation.is_active)
+        self.assertTrue(HostelBed.objects.filter(room=room, is_occupied=False).exists())
 
     def test_library_mark_lost_updates_issue_and_book(self):
         self.client.force_login(self.superadmin)
         book = LibraryBook.objects.create(
             school=self.school,
-            accession_no="ACC-100",
+            isbn="ACC-100",
             title="Ops Book",
             total_copies=2,
             available_copies=1,
             is_active=True,
         )
         issue = LibraryIssue.objects.create(
-            school=self.school,
             book=book,
             student=self.student,
             status="ISSUED",
-            issued_on=date(2026, 4, 1),
+            issue_date=date(2026, 4, 1),
+            due_date=date(2026, 4, 15),
         )
         response = self.client.post(
             "/super-admin/library/",
@@ -1516,11 +1801,12 @@ class SuperAdminOpsWorkflowTests(TestCase):
         self.client.force_login(self.superadmin)
         route = TransportRoute.objects.create(
             school=self.school,
-            route_code="R-02",
-            route_name="Route 2",
-            vehicle_number="MP04AB2234",
-            is_active=True,
+            name="R-02 - Route 2",
         )
+        TransportStop.objects.create(
+            route=route, name="Stop 2", order=0, pickup_time=time(8, 0), drop_time=time(14, 0)
+        )
+
         response = self.client.post(
             "/super-admin/transport/",
             {
@@ -1535,18 +1821,21 @@ class SuperAdminOpsWorkflowTests(TestCase):
         self.assertEqual(response.status_code, 302)
         structure = FeeStructure.objects.filter(school=self.school, class_name="TRANSPORT").first()
         self.assertIsNotNone(structure)
-        self.assertTrue(StudentFeeLedger.objects.filter(student=self.student, fee_structure=structure).exists())
+        self.assertTrue(
+            StudentFeeLedger.objects.filter(student=self.student, fee_structure=structure).exists()
+        )
 
     def test_hostel_allocation_creates_fee_ledger(self):
         self.client.force_login(self.superadmin)
+        hostel = Hostel.objects.create(school=self.school, name="Fee Hostel")
         room = HostelRoom.objects.create(
-            school=self.school,
+            hostel=hostel,
             room_number="H-102",
-            block_name="A",
-            bed_capacity=2,
-            occupied_beds=0,
+            capacity=2,
             is_active=True,
         )
+        HostelBed.objects.create(room=room, bed_number="B1")
+
         response = self.client.post(
             "/super-admin/hostel/",
             {
@@ -1554,14 +1843,16 @@ class SuperAdminOpsWorkflowTests(TestCase):
                 "school_id": str(self.school.id),
                 "room_id": str(room.id),
                 "student_id": str(self.student.id),
-                "bed_label": "B2",
+                "bed_label": "B1",
                 "fee_amount": "1400",
             },
         )
         self.assertEqual(response.status_code, 302)
         structure = FeeStructure.objects.filter(school=self.school, class_name="HOSTEL").first()
         self.assertIsNotNone(structure)
-        self.assertTrue(StudentFeeLedger.objects.filter(student=self.student, fee_structure=structure).exists())
+        self.assertTrue(
+            StudentFeeLedger.objects.filter(student=self.student, fee_structure=structure).exists()
+        )
 
     def test_inventory_purchase_order_receive_updates_stock(self):
         self.client.force_login(self.superadmin)
@@ -1636,7 +1927,9 @@ class SuperAdminOpsWorkflowTests(TestCase):
             {"action": "release_assignment", "assignment_id": str(assignment.id)},
         )
         self.assertEqual(release.status_code, 302)
-        event = ServiceRefundEvent.objects.filter(student=self.student, service_type="TRANSPORT").first()
+        event = ServiceRefundEvent.objects.filter(
+            student=self.student, service_type="TRANSPORT"
+        ).first()
         self.assertIsNotNone(event)
         self.assertGreaterEqual(event.recommended_refund, Decimal("0"))
 

@@ -2,6 +2,8 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
+from django.conf import settings
+
 
 def send_email_via_school_smtp(*, settings_obj, to_email, subject, body):
     if not settings_obj or not getattr(settings_obj, "smtp_enabled", False):
@@ -22,17 +24,28 @@ def send_email_via_school_smtp(*, settings_obj, to_email, subject, body):
     msg.set_content(body)
 
     context = ssl.create_default_context()
+    helo_name = (getattr(settings, "EMAIL_HELO_NAME", "") or "thewebfix.in").strip()
     if settings_obj.smtp_use_ssl:
-        with smtplib.SMTP_SSL(settings_obj.smtp_host, int(settings_obj.smtp_port), context=context, timeout=15) as smtp:
+        with smtplib.SMTP_SSL(
+            settings_obj.smtp_host,
+            int(settings_obj.smtp_port),
+            context=context,
+            timeout=15,
+            local_hostname=helo_name,
+        ) as smtp:
             smtp.login(settings_obj.smtp_username, settings_obj.smtp_password)
             smtp.send_message(msg)
         return
 
-    with smtplib.SMTP(settings_obj.smtp_host, int(settings_obj.smtp_port), timeout=15) as smtp:
+    with smtplib.SMTP(
+        settings_obj.smtp_host,
+        int(settings_obj.smtp_port),
+        timeout=15,
+        local_hostname=helo_name,
+    ) as smtp:
         smtp.ehlo()
         if settings_obj.smtp_use_tls:
             smtp.starttls(context=context)
             smtp.ehlo()
         smtp.login(settings_obj.smtp_username, settings_obj.smtp_password)
         smtp.send_message(msg)
-

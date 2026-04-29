@@ -1,6 +1,6 @@
+import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -13,7 +13,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="EntityChangeLog",
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("entity", models.CharField(max_length=80)),
                 ("object_id", models.CharField(max_length=64)),
                 ("action", models.CharField(max_length=20)),
@@ -36,11 +41,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="entitychangelog",
-            index=models.Index(fields=["entity", "object_id"], name="core_entity_entity_3f0f6d_idx"),
+            index=models.Index(
+                fields=["entity", "object_id"], name="core_entity_entity_3f0f6d_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="entitychangelog",
             index=models.Index(fields=["created_at"], name="core_entity_created_9df0b2_idx"),
         ),
     ]
-

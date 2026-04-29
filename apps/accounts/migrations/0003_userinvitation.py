@@ -2,13 +2,12 @@
 
 import uuid
 
+import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0002_alter_user_role"),
     ]
@@ -17,7 +16,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="UserInvitation",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("token", models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ("expires_at", models.DateTimeField()),
                 ("accepted_at", models.DateTimeField(blank=True, null=True)),
@@ -34,7 +38,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "user",
-                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name="invitation", to=settings.AUTH_USER_MODEL),
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="invitation",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
                 ),
             ],
             options={
@@ -42,4 +50,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

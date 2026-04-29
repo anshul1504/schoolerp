@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("students", "0004_expand_student_admission_fields"),
     ]
@@ -78,6 +77,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="student",
             name="blood_group",
-            field=models.CharField(blank=True, choices=[("A+", "A+"), ("A-", "A-"), ("B+", "B+"), ("B-", "B-"), ("AB+", "AB+"), ("AB-", "AB-"), ("O+", "O+"), ("O-", "O-")], max_length=10),
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("A+", "A+"),
+                    ("A-", "A-"),
+                    ("B+", "B+"),
+                    ("B-", "B-"),
+                    ("AB+", "AB+"),
+                    ("AB-", "AB-"),
+                    ("O+", "O+"),
+                    ("O-", "O-"),
+                ],
+                max_length=10,
+            ),
         ),
     ]

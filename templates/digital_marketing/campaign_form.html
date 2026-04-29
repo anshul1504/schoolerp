@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Campaign Form{% endblock %}
+{% block page_heading %}{% if is_edit %}Edit Campaign{% else %}Create Campaign{% endif %}{% endblock %}
+{% block breadcrumb_active %}Campaign Form{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom py-16 px-24 d-flex align-items-center justify-content-between">
+    <h6 class="mb-0">{% if is_edit %}Update Campaign{% else %}New Campaign{% endif %}</h6>
+    <a class="btn btn-outline-secondary" href="{% url 'digital_marketing:campaign_list' %}">Back</a>
+  </div>
+  <div class="card-body p-24">
+    <form method="post">{% csrf_token %}
+      <div class="row gy-3">
+        {% for field in form %}
+        <div class="col-lg-6">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<small class="text-muted d-block mt-1">{{ field.help_text }}</small>{% endif %}
+          {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:', ' }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mt-20 d-flex gap-2"><button class="btn btn-primary-600 radius-8 px-20 py-11" type="submit">Save Campaign</button><a class="btn btn-outline-secondary" href="{% url 'digital_marketing:campaign_list' %}">Cancel</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

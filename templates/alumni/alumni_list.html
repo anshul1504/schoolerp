@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Alumni Directory | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Alumni Directory{% endblock %}
+{% block breadcrumb_active %}Directory{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card h-100 radius-12 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-base border-bottom py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="mb-0">
+                    <h6 class="text-lg fw-bold mb-0">Alumni Members</h6>
+                    <p class="text-sm text-secondary-light mb-0 mt-4">Manage and track graduation records for all alumni.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button onclick="window.print()" class="btn btn-outline-info radius-8 px-20 d-flex align-items-center gap-8">
+                        <i class="ri-printer-line"></i>
+                        <span>Print</span>
+                    </button>
+                    <a href="{% url 'alumni:export_alumni_csv' %}" class="btn btn-outline-secondary radius-8 px-20 d-flex align-items-center gap-8">
+                        <i class="ri-download-2-line"></i>
+                        <span>Export CSV</span>
+                    </a>
+                    <a href="{% url 'alumni:alumni_create' %}" class="btn btn-primary-600 radius-8 px-20 py-11 d-flex align-items-center gap-8">
+                        <i class="ri-add-circle-line"></i>
+                        <span>Add Member</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-24">
+                <!-- Standard Filters -->
+                <form method="get" class="mb-24">
+                    <div class="row gy-3 gx-3 align-items-end">
+                        <div class="col-lg-3 col-sm-6">
+                            <label class="form-label fw-bold text-primary-light mb-8 text-sm">Search</label>
+                            <div class="input-group border radius-8 overflow-hidden bg-base">
+                                <span class="input-group-text bg-transparent border-0 text-neutral-400 pe-0"><i class="ri-search-line"></i></span>
+                                <input type="text" name="q" class="form-control border-0 px-12 bg-transparent py-10 text-sm" placeholder="Name, email..." value="{{ request.GET.q }}">
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6">
+                            <label class="form-label fw-bold text-primary-light mb-8 text-sm">Graduation Year</label>
+                            <select name="year" class="form-select border radius-8 bg-base py-10 text-sm">
+                                <option value="">All Years</option>
+                                {% for yr in years %}
+                                <option value="{{ yr }}" {% if request.GET.year == yr|stringformat:"s" %}selected{% endif %}>{{ yr }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-sm-6">
+                            <label class="form-label fw-bold text-primary-light mb-8 text-sm">Status</label>
+                            <select name="status" class="form-select border radius-8 bg-base py-10 text-sm">
+                                <option value="">All Status</option>
+                                <option value="verified" {% if request.GET.status == 'verified' %}selected{% endif %}>Verified</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-sm-6">
+                            <div class="d-flex gap-8">
+                                <button type="submit" class="btn btn-primary-600 flex-grow-1 radius-8 py-10 fw-bold text-sm">Apply Filter</button>
+                                <a href="{% url 'alumni:alumni_list' %}" class="btn btn-outline-danger-600 radius-8 py-10 fw-bold text-sm px-20">Clear</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-responsive allow-dropdown">
+                    <table class="table bordered-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">#</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Member</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Graduation</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase">Career Detail</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-center">Status</th>
+                                <th class="text-xs fw-bold text-primary-light text-uppercase text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for person in alumni_list %}
+                            <tr class="border-bottom transition-all hover-bg-primary-50">
+                                <td class="text-sm text-secondary-light fw-medium">{{ forloop.counter|add:alumni_list.start_index|add:"-1" }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-12">
+                                        <div class="w-40-px h-40-px bg-primary-100 text-primary-600 rounded-circle d-flex align-items-center justify-content-center fw-bold shrink-0">
+                                            {{ person.full_name|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="text-sm mb-4 fw-bold text-primary-light">{{ person.full_name }}</h6>
+                                            <span class="text-xs text-secondary-light fw-bold">{{ person.email }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-sm fw-bold text-primary-light">{{ person.graduation_year }}</span>
+                                        <small class="text-xs text-secondary-light fw-bold">{{ person.batch|default:"Regular" }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-4">
+                                        <span class="text-sm fw-bold text-primary-light">{{ person.current_occupation|default:"-" }}</span>
+                                        <span class="text-xs text-secondary-light">{{ person.current_organization|default:"-" }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="px-10 py-2 radius-pill text-xs fw-bold
+                                        {% if person.is_verified %}bg-success-100 text-success-600{% else %}bg-warning-100 text-warning-600{% endif %}">
+                                        {% if person.is_verified %}Verified{% else %}Pending{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-icon border radius-8" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border shadow-sm">
+                                            <li><a href="{% url 'alumni:alumni_detail' person.pk %}" class="dropdown-item py-8 px-16 d-flex align-items-center gap-8"><i class="ri-eye-line text-primary-600"></i> View Profile</a></li>
+                                            <li><a href="{% url 'alumni:alumni_edit' person.pk %}" class="dropdown-item py-8 px-16 d-flex align-items-center gap-8"><i class="ri-edit-line text-warning-600"></i> Edit</a></li>
+                                            <li><a href="{% url 'alumni:toggle_verification' person.pk %}" class="dropdown-item py-8 px-16 d-flex align-items-center gap-8"><i class="ri-checkbox-circle-line text-info-600"></i> {% if person.is_verified %}Unverify{% else %}Verify{% endif %}</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <form action="{% url 'alumni:alumni_delete' person.pk %}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item py-8 px-16 d-flex align-items-center gap-8 text-danger-600 border-0 bg-transparent w-100 text-start">
+                                                        <i class="ri-delete-bin-line"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-40 text-secondary-light">No alumni records found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Standard Pagination -->
+                {% if alumni_list.has_other_pages %}
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-24 border-top pt-20">
+                    <span class="text-sm text-secondary-light fw-bold">
+                        Showing {{ alumni_list.start_index }} to {{ alumni_list.end_index }} of {{ alumni_list.paginator.count }} entries
+                    </span>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-primary gap-8 mb-0">
+                            {% if alumni_list.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link w-40-px h-40-px d-flex align-items-center justify-content-center radius-8" href="?page={{ alumni_list.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for i in alumni_list.paginator.page_range %}
+                                {% if alumni_list.number == i %}
+                                <li class="page-item active"><span class="page-link w-40-px h-40-px d-flex align-items-center justify-content-center radius-8">{{ i }}</span></li>
+                                {% elif i > alumni_list.number|add:'-3' and i < alumni_list.number|add:'3' %}
+                                <li class="page-item"><a class="page-link w-40-px h-40-px d-flex align-items-center justify-content-center radius-8" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ i }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if alumni_list.has_next %}
+                            <li class="page-item">
+                                <a class="page-link w-40-px h-40-px d-flex align-items-center justify-content-center radius-8" href="?page={{ alumni_list.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

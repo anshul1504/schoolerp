@@ -1,8 +1,9 @@
+import secrets
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
-import uuid
-import secrets
 
 from apps.schools.models import School
 
@@ -69,8 +70,10 @@ class User(AbstractUser):
         ("SECURITY_OFFICER", "Security Officer"),
         ("DIGITAL_MARKETING_MANAGER", "Digital Marketing Manager"),
         ("ALUMNI_MANAGER", "Alumni Manager"),
-        ("PLACEMENT_COORDINATOR", "Placement Coordinator"),
+        ("CAREER_COUNSELOR", "Career Counselor"),
         ("RESEARCH_COORDINATOR", "Research Coordinator"),
+        # QA & Testing Roles
+        ("TESTER", "System Tester (All Access)"),
     )
 
     role = models.CharField(max_length=40, choices=ROLE_CHOICES)
@@ -85,7 +88,9 @@ class User(AbstractUser):
 class UserInvitation(models.Model):
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="invitation")
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_invitations")
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_invitations"
+    )
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
     sent_to = models.EmailField(blank=True)

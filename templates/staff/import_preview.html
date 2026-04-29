@@ -6,14 +6,14 @@
 {% block page_copy %}Review rows and validation errors before confirming.{% endblock %}
 
 {% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
+  <div class="card radius-12 border-neutral-200 mb-24">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="mb-0">
           <h6>Preview</h6>
           <p>School: {% if selected_school %}{{ selected_school.name }}{% else %}-{% endif %}. Total: {{ total_rows }}. Invalid: {{ invalid_count }}.</p>
         </div>
-        <div class="sf-actions">
+        <div class="d-flex flex-wrap gap-2">
           {% if selected_school %}
             <a class="btn btn-outline-secondary" href="/staff/import/?school={{ selected_school.id }}">Upload new file</a>
             <a class="btn btn-outline-secondary" href="/staff/?school={{ selected_school.id }}">Back to Staff</a>
@@ -39,14 +39,14 @@
     </div>
   </div>
 
-  <div class="sf-card">
-    <div class="sf-card__body">
+  <div class="card radius-12 border-neutral-200">
+    <div class="card-body">
       <div class="table-responsive">
         <table class="table align-middle sf-table">
           <thead>
             <tr>
-              <th class="sf-th-72">Row</th>
-              <th class="sf-th-220">Status</th>
+              <th class="text-xs text-secondary-light font-bold 72">Row</th>
+              <th class="text-xs text-secondary-light font-bold 220">Status</th>
               {% for h in headers %}
                 <th>{{ h }}</th>
               {% endfor %}

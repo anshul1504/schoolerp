@@ -8,8 +8,8 @@
 {% block content %}
   <div class="row gy-4">
     <div class="col-xl-4">
-      <div class="sf-card">
-        <div class="sf-card__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-12">
             <h6 class="mb-0">Details</h6>
             <a class="btn btn-sm btn-outline-secondary" href="/platform/support/">Back</a>
@@ -70,15 +70,15 @@
     </div>
 
     <div class="col-xl-8">
-      <div class="sf-card mb-24">
-        <div class="sf-card__body">
+      <div class="card radius-12 border-neutral-200 mb-24">
+        <div class="card-body">
           <h6 class="mb-12">Description</h6>
           <div class="text-muted">{{ ticket.description|default:"—" }}</div>
         </div>
       </div>
 
-      <div class="sf-card">
-        <div class="sf-card__body">
+      <div class="card radius-12 border-neutral-200">
+        <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-12">
             <h6 class="mb-0">Messages</h6>
           </div>

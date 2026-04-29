@@ -1,9 +1,9 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
-from django.conf import settings
 
 from apps.core.ui import build_layout_context
 from apps.core.upload_validation import DEFAULT_IMAGE_POLICY, UploadPolicy, validate_upload
@@ -28,7 +28,9 @@ def profile_edit(request):
     avatar = request.FILES.get("avatar")
     if avatar:
         policy = UploadPolicy(
-            max_bytes=int(getattr(settings, "MAX_USER_AVATAR_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)),
+            max_bytes=int(
+                getattr(settings, "MAX_USER_AVATAR_BYTES", DEFAULT_IMAGE_POLICY.max_bytes)
+            ),
             allowed_extensions=DEFAULT_IMAGE_POLICY.allowed_extensions,
             allowed_image_formats=DEFAULT_IMAGE_POLICY.allowed_image_formats,
         )

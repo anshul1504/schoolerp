@@ -12,7 +12,9 @@ class Command(BaseCommand):
     help = "Run billing automation jobs: mark subscriptions past-due/active using invoice signals."
 
     def add_arguments(self, parser):
-        parser.add_argument("--dry-run", action="store_true", help="Compute actions but do not write changes.")
+        parser.add_argument(
+            "--dry-run", action="store_true", help="Compute actions but do not write changes."
+        )
 
     def handle(self, *args, **options):
         dry_run = bool(options.get("dry_run"))
@@ -26,8 +28,12 @@ class Command(BaseCommand):
         for sub in subscriptions:
             checked += 1
             invoices = SubscriptionInvoice.objects.filter(school=sub.school).exclude(status="VOID")
-            has_overdue_issued = invoices.filter(status="ISSUED", due_date__isnull=False, due_date__lt=today).exists()
-            recent_paid = invoices.filter(status="PAID", created_at__gte=timezone.now() - timedelta(days=45)).exists()
+            has_overdue_issued = invoices.filter(
+                status="ISSUED", due_date__isnull=False, due_date__lt=today
+            ).exists()
+            recent_paid = invoices.filter(
+                status="PAID", created_at__gte=timezone.now() - timedelta(days=45)
+            ).exists()
 
             if has_overdue_issued and sub.status in {"ACTIVE", "TRIAL"}:
                 if not dry_run:

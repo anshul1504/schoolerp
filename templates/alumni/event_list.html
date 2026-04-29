@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Events & Gatherings | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Events & Gatherings{% endblock %}
+{% block breadcrumb_active %}Events{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-base py-16 px-24 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h6 class="mb-0 fw-bold">Alumni Events Schedule</h6>
+                    <p class="text-sm text-secondary-light mb-0 mt-4">Organize and manage upcoming reunions and networking sessions.</p>
+                </div>
+                <div class="d-flex align-items-center gap-12">
+                    <form method="get" class="d-flex align-items-center gap-8">
+                        <select name="year" class="form-select form-select-sm radius-8 py-6" onchange="this.form.submit()">
+                            <option value="">All Years</option>
+                            {% for yr in years %}
+                            <option value="{{ yr }}" {% if request.GET.year == yr|stringformat:"s" %}selected{% endif %}>{{ yr }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <a href="{% url 'alumni:event_create' %}" class="btn btn-sm btn-primary-600 radius-8 px-16">
+                        <i class="ri-add-circle-line me-4"></i> Create Event
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-24">
+                <div class="row gy-4">
+                    {% for event in events %}
+                    <div class="col-xxl-4 col-md-6">
+                        <!-- bg-base ensures dark mode compatibility; border inherits theme color -->
+                        <div class="card h-100 radius-12 border shadow-sm transition-all hover-translate-y-4 bg-base">
+                            {% if event.poster %}
+                            <img src="{{ event.poster.url }}" class="card-img-top object-fit-cover" style="height: 180px; border-radius: 12px 12px 0 0;" alt="{{ event.title }}">
+                            {% else %}
+                            <div class="bg-primary-100 d-flex align-items-center justify-content-center" style="height: 180px; border-radius: 12px 12px 0 0;">
+                                <i class="ri-calendar-event-line text-primary-300 text-5xl"></i>
+                            </div>
+                            {% endif %}
+
+                            <div class="card-body p-20">
+                                <div class="d-flex align-items-start justify-content-between mb-16">
+                                    <div class="w-56-px h-56-px bg-warning-100 text-warning-600 radius-12 d-flex flex-column align-items-center justify-content-center shrink-0">
+                                        <span class="fw-bold text-lg mb-0 line-height-1">{{ event.date|date:"d" }}</span>
+                                        <span class="text-xxs text-uppercase fw-bold">{{ event.date|date:"M" }}</span>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="text-secondary-light" type="button" data-bs-toggle="dropdown">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border shadow-sm">
+                                            <li><a class="dropdown-item py-8 px-16 d-flex align-items-center gap-8" href="{% url 'alumni:event_detail' event.pk %}"><i class="ri-eye-line"></i> View Details</a></li>
+                                            <li><a class="dropdown-item py-8 px-16 d-flex align-items-center gap-8" href="{% url 'alumni:event_edit' event.pk %}"><i class="ri-edit-line"></i> Edit Event</a></li>
+                                            <li>
+                                                <form action="{% url 'alumni:event_delete' event.pk %}" method="POST" onsubmit="return confirm('Delete this event?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item py-8 px-16 d-flex align-items-center gap-8 text-danger-600 border-0 bg-transparent w-100 text-start">
+                                                        <i class="ri-delete-bin-line"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <a href="{% url 'alumni:event_detail' event.pk %}" class="text-primary-light hover-text-primary">
+                                    <h6 class="text-md fw-bold mb-8 line-clamp-1">{{ event.title }}</h6>
+                                </a>
+                                <p class="text-sm text-secondary-light mb-20 line-clamp-2" style="min-height: 2.5rem;">{{ event.description }}</p>
+
+                                <div class="d-flex flex-column gap-8 mt-auto pt-16 border-top">
+                                    <div class="d-flex align-items-center gap-8 text-xs text-secondary-light">
+                                        <i class="ri-map-pin-line text-primary-600"></i> {{ event.location }}
+                                    </div>
+                                    <div class="d-flex align-items-center gap-8 text-xs text-secondary-light">
+                                        <i class="ri-time-line text-primary-600"></i> {{ event.date|date:"H:i" }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- card-footer uses bg-base so it matches dark/light theme -->
+                            <div class="card-footer bg-base border-top p-16">
+                                <a href="{% url 'alumni:event_detail' event.pk %}" class="btn btn-sm btn-outline-primary-600 w-100 radius-8">View Event Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 py-100 text-center text-secondary-light">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="ri-calendar-line text-6xl mb-16 opacity-25"></i>
+                            <h6 class="fw-bold">No events found</h6>
+                            <p class="text-sm">Start by creating a reunion or workshop for alumni.</p>
+                            <a href="{% url 'alumni:event_create' %}" class="btn btn-primary-600 radius-8 px-24 py-10 mt-16 fw-bold">Add Event</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if events.has_other_pages %}
+                <div class="d-flex justify-content-center mt-40">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-primary gap-8 mb-0">
+                            {% if events.has_previous %}
+                            <li class="page-item"><a class="page-link radius-8" href="?page={{ events.previous_page_number }}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}"><i class="ri-arrow-left-s-line"></i></a></li>
+                            {% endif %}
+                            <li class="page-item active"><span class="page-link radius-8">{{ events.number }}</span></li>
+                            {% if events.has_next %}
+                            <li class="page-item"><a class="page-link radius-8" href="?page={{ events.next_page_number }}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}"><i class="ri-arrow-right-s-line"></i></a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

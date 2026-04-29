@@ -4,40 +4,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schools', '0009_seed_default_plans'),
+        ("schools", "0009_seed_default_plans"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='school',
-            name='address_line2',
+            model_name="school",
+            name="address_line2",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AddField(
-            model_name='school',
-            name='board',
+            model_name="school",
+            name="board",
             field=models.CharField(blank=True, max_length=80),
         ),
         migrations.AddField(
-            model_name='school',
-            name='medium',
+            model_name="school",
+            name="medium",
             field=models.CharField(blank=True, max_length=40),
         ),
         migrations.AddField(
-            model_name='school',
-            name='pincode',
+            model_name="school",
+            name="pincode",
             field=models.CharField(blank=True, max_length=12),
         ),
         migrations.AddField(
-            model_name='school',
-            name='support_email',
+            model_name="school",
+            name="support_email",
             field=models.EmailField(blank=True, max_length=254),
         ),
         migrations.AddField(
-            model_name='school',
-            name='website',
+            model_name="school",
+            name="website",
             field=models.URLField(blank=True),
         ),
     ]

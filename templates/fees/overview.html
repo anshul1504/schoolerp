@@ -176,13 +176,28 @@
     </div>
   </div>
 
+  {% if selected_school and selected_school.upi_id %}
+  <div class="col-12">
+    <div class="fee-card">
+      <div class="fee-card__head">
+        <h6 class="mb-4">Quick Pay via UPI</h6>
+        <p class="text-neutral-600 text-sm mb-0">Scan this QR code to collect payment via UPI (VPA: {{ selected_school.upi_id }}).</p>
+      </div>
+      <div class="fee-card__body text-center">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa={{ selected_school.upi_id }}%26pn={{ selected_school.name|urlencode }}%26cu={{ selected_school.currency }}%26mode=02" alt="UPI QR Code" class="img-fluid mb-3" style="max-width: 200px;">
+        <p class="mb-0"><strong>{{ selected_school.upi_id }}</strong></p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="col-xl-6">
     <div class="fee-card h-100">
       <div class="fee-card__head"><h6 class="mb-4">Recent Dues</h6><p class="text-neutral-600 text-sm mb-0">Latest student ledger entries and their settlement status.</p></div>
       <div class="fee-card__body">
         {% if fee_ledgers %}
           <table class="fee-table">
-            <thead><tr>{% if request.user.role != "SCHOOL_OWNER" %}<th class="sf-th-icon"></th>{% endif %}<th>Student</th><th>Month</th><th>Due</th><th>Paid</th><th>Status</th></tr></thead>
+            <thead><tr>{% if request.user.role != "SCHOOL_OWNER" %}<th class="text-xs text-secondary-light font-bold icon"></th>{% endif %}<th>Student</th><th>Month</th><th>Due</th><th>Paid</th><th>Status</th></tr></thead>
             <tbody>
               {% for ledger in fee_ledgers %}
                 <tr>
@@ -219,9 +234,9 @@
       <div class="fee-card__body">
         {% if fee_payments %}
           <table class="fee-table">
-            <thead><tr>{% if request.user.role != "SCHOOL_OWNER" %}<th class="sf-th-icon"></th>{% endif %}<th>Student</th><th>Amount</th><th>Date</th><th>Mode</th><th>Collector</th></tr></thead>
+            <thead><tr>{% if request.user.role != "SCHOOL_OWNER" %}<th class="text-xs text-secondary-light font-bold icon"></th>{% endif %}<th>Student</th><th>Amount</th><th>Date</th><th>Mode</th><th>Action</th></tr></thead>
             <tbody>
-              {% for payment in fee_payments %}
+{% for payment in fee_payments %}
                 <tr>
                   {% if request.user.role != "SCHOOL_OWNER" %}
                     <td>
@@ -229,10 +244,14 @@
                     </td>
                   {% endif %}
                   <td><strong>{{ payment.student.first_name }} {{ payment.student.last_name }}</strong><br><span class="text-neutral-500 text-sm">{{ payment.ledger.billing_month }}</span></td>
-                  <td>Rs {{ payment.amount }}</td>
+                  <td>{{ selected_school.currency }} {{ payment.amount }}</td>
                   <td>{{ payment.payment_date }}</td>
-                  <td>{{ payment.payment_mode|title }}</td>
-                  <td>{{ payment.collected_by.get_full_name|default:payment.collected_by.username|default:"-" }}</td>
+                  <td><span class="status-chip">{{ payment.get_payment_mode_display }}</span></td>
+                  <td>
+                    <a href="{% url 'generate_receipt_pdf' payment.id %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Download Receipt">
+                      <i class="fas fa-file-pdf"></i> Receipt
+                    </a>
+                  </td>
                 </tr>
               {% endfor %}
             </tbody>

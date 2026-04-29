@@ -11,7 +11,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ReportTemplate",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("name", models.CharField(max_length=140)),
                 (
                     "dataset",
@@ -38,4 +43,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

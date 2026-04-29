@@ -41,15 +41,28 @@ class StaffExportTests(TestCase):
             role="PRINCIPAL",
             school=self.school,
         )
-        plan = SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first() or SubscriptionPlan.objects.first()
+        plan = (
+            SubscriptionPlan.objects.filter(code="PLATINUM", is_active=True).first()
+            or SubscriptionPlan.objects.first()
+        )
         if plan:
             SchoolSubscription.objects.update_or_create(
                 school=self.school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
             SchoolSubscription.objects.update_or_create(
                 school=self.other_school,
-                defaults={"plan": plan, "status": "ACTIVE", "starts_on": date(2026, 4, 1), "ends_on": None},
+                defaults={
+                    "plan": plan,
+                    "status": "ACTIVE",
+                    "starts_on": date(2026, 4, 1),
+                    "ends_on": None,
+                },
             )
 
         self.staff = StaffMember.objects.create(
@@ -71,7 +84,9 @@ class StaffExportTests(TestCase):
 
     def test_staff_export_selected_does_not_leak_cross_school(self):
         self.client.force_login(self.principal)
-        response = self.client.get(f"/staff/export/csv/?school={self.other_school.id}&staff_ids={self.staff.id},{self.other_staff.id}")
+        response = self.client.get(
+            f"/staff/export/csv/?school={self.other_school.id}&staff_ids={self.staff.id},{self.other_staff.id}"
+        )
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8", errors="ignore")
         self.assertIn("Aditi Sharma", body)

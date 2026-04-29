@@ -139,7 +139,9 @@ class MeetingRequest(models.Model):
     )
 
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="meeting_requests")
-    enquiry = models.ForeignKey(Enquiry, on_delete=models.SET_NULL, null=True, blank=True, related_name="meeting_requests")
+    enquiry = models.ForeignKey(
+        Enquiry, on_delete=models.SET_NULL, null=True, blank=True, related_name="meeting_requests"
+    )
     principal = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -215,7 +217,9 @@ class MessageCampaign(models.Model):
     TARGET_CHOICES = MessageTemplate.TARGET_CHOICES
 
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="message_campaigns")
-    template = models.ForeignKey(MessageTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name="campaigns")
+    template = models.ForeignKey(
+        MessageTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name="campaigns"
+    )
     channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default="EMAIL")
     target = models.CharField(max_length=20, choices=TARGET_CHOICES, default="PARENTS")
     title = models.CharField(max_length=150)
@@ -248,7 +252,9 @@ class MessageDeliveryLog(models.Model):
     )
     channel = models.CharField(max_length=20, choices=MessageTemplate.CHANNEL_CHOICES)
 
-    campaign = models.ForeignKey(MessageCampaign, on_delete=models.CASCADE, related_name="deliveries")
+    campaign = models.ForeignKey(
+        MessageCampaign, on_delete=models.CASCADE, related_name="deliveries"
+    )
     recipient_label = models.CharField(max_length=150, blank=True)
     recipient_contact = models.CharField(max_length=200, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="QUEUED")
@@ -278,8 +284,16 @@ class CallLog(models.Model):
     )
 
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="call_logs")
-    enquiry = models.ForeignKey(Enquiry, on_delete=models.SET_NULL, null=True, blank=True, related_name="call_logs")
-    student = models.ForeignKey("students.Student", on_delete=models.SET_NULL, null=True, blank=True, related_name="call_logs")
+    enquiry = models.ForeignKey(
+        Enquiry, on_delete=models.SET_NULL, null=True, blank=True, related_name="call_logs"
+    )
+    student = models.ForeignKey(
+        "students.Student",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="call_logs",
+    )
     caller_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=20)
     call_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="INCOMING")

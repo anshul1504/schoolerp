@@ -11,10 +11,32 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ScheduledReport",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("name", models.CharField(max_length=120)),
-                ("report_type", models.CharField(choices=[("INVOICES", "Billing Invoices (CSV)"), ("ACTIVITY", "Activity Log (CSV)"), ("STUDENTS", "Students Export (CSV)")], max_length=20)),
-                ("frequency", models.CharField(choices=[("DAILY", "Daily"), ("WEEKLY", "Weekly"), ("MONTHLY", "Monthly")], default="WEEKLY", max_length=20)),
+                (
+                    "report_type",
+                    models.CharField(
+                        choices=[
+                            ("INVOICES", "Billing Invoices (CSV)"),
+                            ("ACTIVITY", "Activity Log (CSV)"),
+                            ("STUDENTS", "Students Export (CSV)"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "frequency",
+                    models.CharField(
+                        choices=[("DAILY", "Daily"), ("WEEKLY", "Weekly"), ("MONTHLY", "Monthly")],
+                        default="WEEKLY",
+                        max_length=20,
+                    ),
+                ),
                 ("recipients", models.TextField(help_text="Comma-separated emails")),
                 ("filters", JSONField(blank=True, default=dict)),
                 ("is_active", models.BooleanField(default=True)),
@@ -27,4 +49,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

@@ -4,8 +4,8 @@ import csv
 from datetime import timedelta
 from io import StringIO
 
-from django.core.management.base import BaseCommand
 from django.core.mail import EmailMultiAlternatives
+from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.core.models import ActivityLog, ScheduledReport, ScheduledReportRun
@@ -60,7 +60,17 @@ def _report_csv(report: ScheduledReport) -> tuple[str, str, int]:
             for inv in qs
         ]
         content = _csv_string(
-            ["id", "school", "plan", "period_start", "period_end", "amount", "status", "due_date", "issued_at"],
+            [
+                "id",
+                "school",
+                "plan",
+                "period_start",
+                "period_end",
+                "amount",
+                "status",
+                "due_date",
+                "issued_at",
+            ],
             rows,
         )
         return "invoices.csv", content, len(rows)
@@ -86,7 +96,17 @@ def _report_csv(report: ScheduledReport) -> tuple[str, str, int]:
             for log in qs
         ]
         content = _csv_string(
-            ["created_at", "actor", "actor_email", "school", "action", "method", "path", "status_code", "ip_address"],
+            [
+                "created_at",
+                "actor",
+                "actor_email",
+                "school",
+                "action",
+                "method",
+                "path",
+                "status_code",
+                "ip_address",
+            ],
             rows,
         )
         return "activity.csv", content, len(rows)
@@ -117,7 +137,17 @@ def _report_csv(report: ScheduledReport) -> tuple[str, str, int]:
             for s in qs
         ]
         content = _csv_string(
-            ["school", "admission_no", "first_name", "last_name", "class", "section", "guardian_name", "guardian_phone", "is_active"],
+            [
+                "school",
+                "admission_no",
+                "first_name",
+                "last_name",
+                "class",
+                "section",
+                "guardian_name",
+                "guardian_phone",
+                "is_active",
+            ],
             rows,
         )
         return "students.csv", content, len(rows)
@@ -130,7 +160,9 @@ class Command(BaseCommand):
     help = "Send due scheduled reports via email (CSV attachments)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--dry-run", action="store_true", help="Do not send emails; only update next_run_at.")
+        parser.add_argument(
+            "--dry-run", action="store_true", help="Do not send emails; only update next_run_at."
+        )
 
     def handle(self, *args, **options):
         now = timezone.now()

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Integration Settings{% endblock %}
+{% block page_heading %}Integration Settings{% endblock %}
+{% block breadcrumb_active %}Integration Settings{% endblock %}
+{% block content %}
+<div class="card h-100 radius-12 border-0 shadow-sm">
+  <div class="card-header border-bottom py-16 px-24">
+    <h6 class="mb-0">Per-School Integration Configuration</h6>
+  </div>
+  <div class="card-body p-24">
+    <form method="post">{% csrf_token %}
+      <div class="row gy-3">
+        {% for field in form %}
+        <div class="col-lg-6">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mt-20">
+        <button class="btn btn-primary-600 radius-8 px-20 py-11" type="submit">Save Settings</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

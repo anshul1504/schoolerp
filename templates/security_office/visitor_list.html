@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitor Register | School ERP{% endblock %}
+{% block page_heading %}Visitor Register{% endblock %}
+{% block breadcrumb_active %}Visitors{% endblock %}
+
+{% block content %}
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-header border-bottom border-neutral-200 py-16 px-24 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="mb-0">
+        <h6 class="text-lg fw-semibold mb-0">Visitor Register</h6>
+        <p class="text-sm text-secondary-light mb-0 mt-4">Manage and track visitor entries and exits.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap" href="?q={{ filters.q }}&export=csv"><iconify-icon icon="ri:file-download-line" class="me-2 text-xl"></iconify-icon> Export CSV</a>
+        <a class="btn btn-primary-600 radius-8 px-20 py-11 d-inline-flex align-items-center text-nowrap" href="{% url 'security_office:visitor_create' %}"><iconify-icon icon="ri:user-add-line" class="me-2 text-xl"></iconify-icon> Log Visitor</a>
+      </div>
+    </div>
+
+    <div class="card-body p-24">
+      {% url 'security_office:visitor_list' as reset_url %}
+      {% include "includes/list_search_filter.html" with search_placeholder="Search by name, phone, purpose..." reset_url=reset_url %}
+
+      {% if visitors %}
+        <div class="table-responsive mt-24">
+          <table class="table bordered-table mb-0" id="dataTable" data-page-length="10">
+            <thead>
+              <tr>
+                <th>Visitor Details</th>
+                <th>Purpose & Person</th>
+                <th>Check In/Out</th>
+                <th>Verified</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in visitors %}
+                <tr>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium text-neutral-700">{{ v.name }}</span>
+                      <span class="text-sm text-neutral-500">{{ v.phone|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium text-neutral-700">{{ v.person_to_meet|default:"-" }}</span>
+                      <span class="text-sm text-neutral-500">{{ v.purpose|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="text-neutral-600 text-sm">In: {{ v.check_in_at|date:'d M Y, H:i' }}</div>
+                    {% if v.check_out_at %}
+                        <div class="text-neutral-600 text-sm">Out: {{ v.check_out_at|date:'d M Y, H:i' }}</div>
+                    {% else %}
+                        <div class="text-warning-600 text-sm fw-medium mt-1">Inside Campus</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if v.is_verified %}
+                      <span class="badge bg-success-50 text-success-600">Yes</span>
+                    {% else %}
+                      <span class="badge bg-neutral-100 text-neutral-600">No</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                      <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="{% url 'security_office:visitor_edit' v.id %}"><iconify-icon icon="ri:edit-line" class="me-1"></iconify-icon> Edit</a>
+                      <form method="post" action="{% url 'security_office:visitor_delete' v.id %}" class="d-inline" onsubmit="return confirm('Delete this visitor log?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"><iconify-icon icon="ri:delete-bin-line" class="me-1"></iconify-icon> Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center flex-column py-48 bg-neutral-50 radius-8 border border-neutral-100 mt-24">
+            <iconify-icon icon="ri:user-location-line" class="text-4xl text-neutral-400 mb-16"></iconify-icon>
+            <p class="text-neutral-500 fw-medium text-lg mb-0">No visitors found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

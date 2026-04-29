@@ -6,34 +6,38 @@ from django.utils.text import slugify
 
 def _backfill_student_slugs(apps, schema_editor):
     Student = apps.get_model("students", "Student")
-    existing = set(
-        Student.objects.exclude(slug="").values_list("slug", flat=True)
-    )
-    for student in Student.objects.all().only("id", "first_name", "middle_name", "last_name", "slug"):
+    existing = set(Student.objects.exclude(slug="").values_list("slug", flat=True))
+    for student in Student.objects.all().only(
+        "id", "first_name", "middle_name", "last_name", "slug"
+    ):
         if student.slug:
             continue
-        base = slugify(f"{student.first_name} {getattr(student, 'middle_name', '')} {student.last_name}".strip()) or "student"
+        base = (
+            slugify(
+                f"{student.first_name} {getattr(student, 'middle_name', '')} {student.last_name}".strip()
+            )
+            or "student"
+        )
         candidate = base[:120]
         index = 1
         while candidate in existing:
             index += 1
             suffix = f"-{index}"
-            candidate = (base[: (120 - len(suffix))] + suffix)
+            candidate = base[: (120 - len(suffix))] + suffix
         student.slug = candidate
         student.save(update_fields=["slug"])
         existing.add(candidate)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('students', '0007_student_history_event'),
+        ("students", "0007_student_history_event"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='student',
-            name='slug',
+            model_name="student",
+            name="slug",
             field=models.SlugField(blank=True, max_length=140, unique=True),
         ),
         migrations.RunPython(_backfill_student_slugs, migrations.RunPython.noop),

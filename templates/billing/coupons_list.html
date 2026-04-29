@@ -2,60 +2,119 @@
 
 {% block title %}Coupons{% endblock %}
 {% block page_heading %}Coupons{% endblock %}
-{% block page_copy %}Discount codes for subscription invoicing (manual invoice creation).{% endblock %}
-{% block page_eyebrow %}Billing{% endblock %}
+{% block breadcrumb_active %}Billing / Coupons{% endblock %}
 
-{% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Coupons</h6>
-          <p>Create fixed or percent discounts.</p>
-        </div>
-        <div class="sf-actions">
-          <a class="btn btn-outline-secondary" href="/billing/invoices/">Back</a>
-          <a class="btn btn-primary" href="/billing/coupons/create/">Create</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="sf-card">
-    <div class="sf-card__body">
-      <div class="table-responsive">
-        <table class="table align-middle sf-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Type</th>
-              <th>Value</th>
-              <th>Window</th>
-              <th>Uses</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in coupons %}
-              <tr>
-                <td class="fw-semibold">{{ c.code }}</td>
-                <td class="text-muted text-sm">{{ c.get_discount_type_display }}</td>
-                <td class="text-muted text-sm">{{ c.value }}</td>
-                <td class="text-muted text-sm">
-                  {% if c.starts_on %}{{ c.starts_on }}{% else %}—{% endif %} → {% if c.ends_on %}{{ c.ends_on }}{% else %}—{% endif %}
-                </td>
-                <td class="text-muted text-sm">
-                  {{ c.used_count }} / {% if c.max_uses %}{{ c.max_uses }}{% else %}∞{% endif %}
-                </td>
-                <td>{% if c.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Paused</span>{% endif %}</td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="6" class="text-center text-muted">No coupons yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+{% block heading_actions %}
+<div class="d-flex align-items-center gap-3">
+    <a href="/billing/coupons/create/" class="btn btn-primary d-flex align-items-center gap-2">
+        <iconify-icon icon="ri:add-line"></iconify-icon>
+        Create Coupon
+    </a>
+</div>
 {% endblock %}
 
+{% block content %}
+<div class="card h-100">
+    <div class="card-body p-0 dataTable-wrapper">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+                <!-- Nav Links for Billing Module -->
+                <div class="btn-group" role="group">
+                    <a href="/billing/plans/" class="btn btn-outline-primary">Plans</a>
+                    <a href="/billing/features/" class="btn btn-outline-primary">Features</a>
+                    <a href="/billing/schools/" class="btn btn-outline-primary">Subscriptions</a>
+                    <a href="/billing/invoices/" class="btn btn-outline-primary">Invoices</a>
+                    <a href="/billing/coupons/" class="btn btn-primary">Coupons</a>
+                    <a href="/billing/webhooks/" class="btn btn-outline-primary">Webhooks</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-0 table-responsive">
+            <table class="table bordered-table mb-0 data-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Code</th>
+                        <th scope="col">Type & Value</th>
+                        <th scope="col">Validity Window</th>
+                        <th scope="col">Uses</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in coupons %}
+                    <tr>
+                        <td><strong class="text-primary-600 text-md">{{ c.code }}</strong></td>
+                        <td>
+                            <span class="d-block text-primary-light fw-medium">{{ c.value }}</span>
+                            <span class="text-secondary-light text-xs">{{ c.get_discount_type_display }}</span>
+                        </td>
+                        <td>
+                            <span class="text-secondary-light text-sm d-block">
+                                {% if c.starts_on %}From: {{ c.starts_on }}{% else %}From: No limit{% endif %}
+                            </span>
+                            <span class="text-secondary-light text-sm d-block">
+                                {% if c.ends_on %}To: {{ c.ends_on }}{% else %}To: No limit{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-primary-light fw-medium">{{ c.used_count }}</span>
+                                <span class="text-secondary-light">/ {% if c.max_uses %}{{ c.max_uses }}{% else %}∞{% endif %}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if c.is_active %}
+                            <span class="bg-success-100 text-success-600 px-16 py-4 radius-4 fw-medium text-sm">Active</span>
+                            {% else %}
+                            <span class="bg-danger-100 text-danger-600 px-16 py-4 radius-4 fw-medium text-sm">Paused</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-24 text-secondary-light">
+                            No coupons created yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if coupons.has_other_pages %}
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-20 py-12 border-top border-neutral-200">
+            <span class="text-secondary-light text-sm">
+                Showing {{ coupons.start_index }} to {{ coupons.end_index }} of {{ coupons.paginator.count }} entries
+            </span>
+            <ul class="pagination mb-0 d-flex gap-2">
+                {% if coupons.has_previous %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ coupons.previous_page_number }}">Prev</a>
+                </li>
+                {% endif %}
+
+                {% for num in coupons.paginator.page_range %}
+                    {% if coupons.number == num %}
+                    <li class="page-item">
+                        <span class="page-link px-12 py-8 rounded bg-primary-600 text-white">{{ num }}</span>
+                    </li>
+                    {% elif num > coupons.number|add:'-3' and num < coupons.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if coupons.has_next %}
+                <li class="page-item">
+                    <a class="page-link px-12 py-8 rounded bg-neutral-100 text-secondary-light" href="?page={{ coupons.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

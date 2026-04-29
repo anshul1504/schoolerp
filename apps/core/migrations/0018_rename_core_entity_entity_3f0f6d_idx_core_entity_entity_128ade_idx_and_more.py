@@ -4,35 +4,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0017_entity_change_log'),
+        ("core", "0017_entity_change_log"),
     ]
 
     operations = [
         migrations.RenameIndex(
-            model_name='entitychangelog',
-            new_name='core_entity_entity_128ade_idx',
-            old_name='core_entity_entity_3f0f6d_idx',
+            model_name="entitychangelog",
+            new_name="core_entity_entity_128ade_idx",
+            old_name="core_entity_entity_3f0f6d_idx",
         ),
         migrations.RenameIndex(
-            model_name='entitychangelog',
-            new_name='core_entity_created_2f5f42_idx',
-            old_name='core_entity_created_9df0b2_idx',
+            model_name="entitychangelog",
+            new_name="core_entity_created_2f5f42_idx",
+            old_name="core_entity_created_9df0b2_idx",
         ),
         migrations.AlterField(
-            model_name='entitychangelog',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="entitychangelog",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='rbacchangeevent',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="rbacchangeevent",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='twofactorpolicy',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="twofactorpolicy",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
     ]

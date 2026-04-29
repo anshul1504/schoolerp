@@ -48,11 +48,11 @@
       <div><h6>Billing SLA Dashboard</h6><p>Operational billing health and automation signals.</p></div>
       <div>
         {% if billing_sla.state == "GREEN" %}
-          <span class="status-pill status-pill--success">🟢 Healthy</span>
+          <span class="badge status-pill--success">🟢 Healthy</span>
         {% elif billing_sla.state == "YELLOW" %}
-          <span class="status-pill status-pill--warning">🟡 Watch</span>
+          <span class="badge status-pill--warning">🟡 Watch</span>
         {% else %}
-          <span class="status-pill status-pill--danger">🔴 Critical</span>
+          <span class="badge status-pill--danger">🔴 Critical</span>
         {% endif %}
       </div>
     </div>

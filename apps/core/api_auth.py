@@ -23,4 +23,3 @@ def require_token(request, *, scope: str) -> IntegrationToken | None:
         return None
     IntegrationToken.objects.filter(id=obj.id).update(last_used_at=timezone.now())
     return obj
-

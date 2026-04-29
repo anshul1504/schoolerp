@@ -7,14 +7,14 @@
 {% block page_copy %}Profile edits, class changes, and activity logs for {{ student.first_name }} {{ student.last_name }}.{% endblock %}
 
 {% block content %}
-<div class="student-page">
+<div class="student-page students-v3 students-v4">
   <div class="row gy-4">
     <div class="col-12">
       {% include "students/_student_nav.html" with student_nav_active="history" %}
     </div>
     <div class="col-xl-4">
-      <div class="platform-panel h-100">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200 h-100">
+        <div class="card-body">
           <h6 class="mb-14">Profile Edit History</h6>
           {% if profile_edits %}
             <div class="d-flex flex-column gap-12">
@@ -33,8 +33,8 @@
       </div>
     </div>
     <div class="col-xl-4">
-      <div class="platform-panel h-100">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200 h-100">
+        <div class="card-body">
           <h6 class="mb-14">Class Change History</h6>
           {% if class_changes %}
             <div class="d-flex flex-column gap-12">
@@ -53,8 +53,8 @@
       </div>
     </div>
     <div class="col-xl-4">
-      <div class="platform-panel h-100">
-        <div class="platform-panel__body">
+      <div class="card radius-12 border-neutral-200 h-100">
+        <div class="card-body">
           <h6 class="mb-14">Activity Logs</h6>
           {% if history_events %}
             <div class="d-flex flex-column gap-12">
@@ -75,3 +75,9 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+

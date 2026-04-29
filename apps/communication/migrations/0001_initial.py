@@ -6,30 +6,73 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('schools', '0003_school_student_capacity_school_allowed_campuses'),
+        ("schools", "0003_school_student_capacity_school_allowed_campuses"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Notice',
+            name="Notice",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=150)),
-                ('body', models.TextField()),
-                ('audience', models.CharField(choices=[('ALL', 'All'), ('STAFF', 'Staff'), ('STUDENTS', 'Students'), ('PARENTS', 'Parents')], default='ALL', max_length=20)),
-                ('priority', models.CharField(choices=[('NORMAL', 'Normal'), ('IMPORTANT', 'Important'), ('URGENT', 'Urgent')], default='NORMAL', max_length=20)),
-                ('is_published', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_notices', to=settings.AUTH_USER_MODEL)),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notices', to='schools.school')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("title", models.CharField(max_length=150)),
+                ("body", models.TextField()),
+                (
+                    "audience",
+                    models.CharField(
+                        choices=[
+                            ("ALL", "All"),
+                            ("STAFF", "Staff"),
+                            ("STUDENTS", "Students"),
+                            ("PARENTS", "Parents"),
+                        ],
+                        default="ALL",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "priority",
+                    models.CharField(
+                        choices=[
+                            ("NORMAL", "Normal"),
+                            ("IMPORTANT", "Important"),
+                            ("URGENT", "Urgent"),
+                        ],
+                        default="NORMAL",
+                        max_length=20,
+                    ),
+                ),
+                ("is_published", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_notices",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notices",
+                        to="schools.school",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Project Details: {{ project.title }} | {{ school.name }}{% endblock %}
+
+{% block page_heading %}Project Details{% endblock %}
+{% block breadcrumb_active %}Project #RES-{{ project.pk|stringformat:"04d" }}{% endblock %}
+
+{% block heading_actions %}
+<div class="d-flex gap-16 align-items-center">
+
+    <a href="{% url 'research:project_edit' project.pk %}" class="btn btn-primary-600 radius-8 px-20 d-flex align-items-center gap-8 shadow-primary">
+        <i class="ri-edit-line"></i> Edit Project
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Project Status Banner -->
+    <div class="col-12">
+        <div class="card radius-16 border-0 shadow-sm overflow-hidden mb-8 transition-all hover-shadow-md">
+            <div class="card-body p-40">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <div class="d-flex align-items-center gap-16 mb-20">
+                            <span class="px-16 py-6 radius-pill text-xs fw-bold uppercase tracking-widest
+                                {% if project.status == 'ONGOING' %}bg-success-100 text-success-600
+                                {% elif project.status == 'PROPOSED' %}bg-warning-100 text-warning-600
+                                {% else %}bg-primary-100 text-primary-600{% endif %}">
+                                {{ project.get_status_display }}
+                            </span>
+                            <span class="text-secondary-light text-sm fw-bold bg-neutral-100 px-12 py-4 radius-6">STUDY ID: #RES-{{ project.pk|stringformat:"04d" }}</span>
+                        </div>
+                        <h2 class="fw-bold text-primary-light mb-16">{{ project.title }}</h2>
+                        <p class="text-secondary-light text-lg mb-0 line-height-2">{{ project.description }}</p>
+                    </div>
+                    <div class="col-lg-4 mt-32 mt-lg-0">
+                        <div class="p-32 radius-16 bg-neutral-50 border border-neutral-100 d-flex align-items-center justify-content-between shadow-sm">
+                            <div>
+                                <span class="text-xs text-secondary-light fw-bold uppercase d-block mb-8">Approved Budget</span>
+                                <h3 class="mb-0 fw-bold text-success-600">{{ school.currency }} {{ project.budget|floatformat:0 }}</h3>
+                            </div>
+                            <div class="w-64-px h-64-px bg-success-100 text-success-600 radius-12 d-flex align-items-center justify-content-center">
+                                <i class="ri-money-dollar-circle-fill text-3xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="col-12">
+        <div class="card radius-12 border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom p-0">
+                <ul class="nav nav-tabs border-0 px-24 pt-12 gap-24" id="projectTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active py-16 px-0 border-0 border-bottom border-primary-600 fw-bold text-sm" data-bs-toggle="tab" data-bs-target="#overview">
+                            <i class="ri-dashboard-line me-8"></i> Overview
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-16 px-0 border-0 fw-bold text-sm text-secondary-light" data-bs-toggle="tab" data-bs-target="#funding">
+                            <i class="ri-hand-coin-line me-8"></i> Funding & Grants
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-16 px-0 border-0 fw-bold text-sm text-secondary-light" data-bs-toggle="tab" data-bs-target="#outputs">
+                            <i class="ri-article-line me-8"></i> Academic Outputs
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-16 px-0 border-0 fw-bold text-sm text-secondary-light" data-bs-toggle="tab" data-bs-target="#ethics">
+                            <i class="ri-shield-check-line me-8"></i> Ethics Compliance
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body p-32">
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview">
+                        <div class="row g-4">
+                            <div class="col-lg-7">
+                                <h6 class="fw-bold text-primary-light mb-16 border-bottom pb-12">Study Abstract & Context</h6>
+                                <p class="text-secondary-light line-height-2">{{ project.description }}</p>
+
+                                <div class="mt-32">
+                                    <h6 class="fw-bold text-primary-light mb-16">Project Timeline</h6>
+                                    <div class="d-flex align-items-center gap-40">
+                                        <div>
+                                            <small class="text-xs text-secondary-light uppercase fw-bold d-block mb-4">Start Date</small>
+                                            <span class="text-sm fw-bold text-primary-light">{{ project.start_date|date:"F d, Y" }}</span>
+                                        </div>
+                                        <div class="h-40-px border-start border-neutral-200"></div>
+                                        <div>
+                                            <small class="text-xs text-secondary-light uppercase fw-bold d-block mb-4">End Date</small>
+                                            <span class="text-sm fw-bold text-primary-light">{{ project.end_date|date:"F d, Y"|default:"Not Set" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="p-24 radius-12 bg-neutral-50 border border-neutral-100 h-100">
+                                    <h6 class="fw-bold text-primary-light mb-20">Principal Investigator</h6>
+                                    <div class="d-flex align-items-center gap-16 mb-24 pb-24 border-bottom">
+                                        <div class="w-64-px h-64-px bg-primary-600 text-white radius-circle d-flex align-items-center justify-content-center fw-bold text-2xl">
+                                            {{ project.pi.full_name|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-4 fw-bold text-primary-light">{{ project.pi.full_name }}</h5>
+                                            <span class="text-primary-600 fw-bold text-sm">{{ project.pi.designation }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column gap-12">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <span class="text-xs fw-bold text-secondary-light uppercase">Employee ID</span>
+                                            <span class="text-sm text-primary-light fw-bold">{{ project.pi.emp_id }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <span class="text-xs fw-bold text-secondary-light uppercase">Department</span>
+                                            <span class="text-sm text-primary-light fw-bold">{{ project.pi.department.name }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Funding Tab -->
+                    <div class="tab-pane fade" id="funding">
+                        <div class="d-flex align-items-center justify-content-between mb-24 pb-12 border-bottom">
+                            <h6 class="mb-0 fw-bold">Funding Sources & External Grants</h6>
+                            <button type="button" class="btn btn-sm btn-primary-600 radius-8 px-16" data-bs-toggle="modal" data-bs-target="#addGrantModal">
+                                <i class="ri-add-line me-8"></i> Register Funding
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table border">
+                                <thead class="bg-neutral-50">
+                                    <tr>
+                                        <th class="text-xs fw-bold text-primary-light uppercase">#</th>
+                                        <th class="text-xs fw-bold text-primary-light uppercase">Grant ID</th>
+                                        <th class="text-xs fw-bold text-primary-light uppercase">Agency</th>
+                                        <th class="text-xs fw-bold text-primary-light uppercase text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for grant in grants %}
+                                    <tr>
+                                        <td class="text-sm text-secondary-light">{{ forloop.counter }}</td>
+                                        <td class="text-sm fw-bold text-primary-light">{{ grant.grant_id }}</td>
+                                        <td class="text-sm text-secondary-light">{{ grant.agency }}</td>
+                                        <td class="text-sm fw-bold text-success-600 text-end">{{ school.currency }} {{ grant.amount|floatformat:0 }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4" class="text-center py-40 text-secondary-light">No external funding sources registered.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Outputs Tab -->
+                    <div class="tab-pane fade" id="outputs">
+                        <div class="d-flex align-items-center justify-content-between mb-24 pb-12 border-bottom">
+                            <h6 class="mb-0 fw-bold">Academic Publications & Outputs</h6>
+                            <button type="button" class="btn btn-sm btn-primary-600 radius-8 px-16" data-bs-toggle="modal" data-bs-target="#addPaperModal">
+                                <i class="ri-add-line me-8"></i> Add Publication
+                            </button>
+                        </div>
+                        <div class="row g-4">
+                            {% for paper in papers %}
+                            <div class="col-md-6">
+                                <div class="p-20 radius-12 border border-neutral-100 bg-neutral-50 h-100">
+                                    <div class="d-flex align-items-start justify-content-between mb-12">
+                                        <div class="w-32-px h-32-px bg-primary-100 text-primary-600 radius-6 d-flex align-items-center justify-content-center shrink-0">
+                                            <i class="ri-article-line"></i>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-icon btn-sm text-secondary-light" data-bs-toggle="dropdown"><i class="ri-more-2-fill"></i></button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{{ paper.link }}" target="_blank"><i class="ri-external-link-line me-8"></i> View Source</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <h6 class="text-sm fw-bold text-primary-light mb-4 line-clamp-2">{{ paper.title }}</h6>
+                                    <p class="text-xs text-secondary-light mb-12">{{ paper.journal }} • {{ paper.publication_date|date:"M Y" }}</p>
+                                    {% if paper.doi %}
+                                    <div class="text-xxs fw-bold uppercase text-primary-600">DOI: {{ paper.doi }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12 text-center py-80">
+                                <i class="ri-article-line text-4xl text-neutral-200 mb-16 d-block"></i>
+                                <span class="text-secondary-light">No publications recorded for this study.</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="ethics">
+                        <div class="row g-4 align-items-center">
+                            <div class="col-lg-7">
+                                <h6 class="fw-bold text-primary-light mb-20">Ethics Review Status</h6>
+                                <div class="p-32 radius-16 text-center {% if review.status == 'APPROVED' %}bg-success-50 border border-success-100{% elif review.status == 'PENDING' %}bg-warning-50 border border-warning-100{% else %}bg-danger-50 border border-danger-100{% endif %}">
+                                    <div class="w-80-px h-80-px radius-circle mx-auto mb-20 d-flex align-items-center justify-content-center {% if review.status == 'APPROVED' %}bg-success-600{% elif review.status == 'PENDING' %}bg-warning-600{% else %}bg-danger-600{% endif %} text-white">
+                                        <i class="{% if review.status == 'APPROVED' %}ri-checkbox-circle-line{% elif review.status == 'PENDING' %}ri-time-line{% else %}ri-close-circle-line{% endif %} text-4xl"></i>
+                                    </div>
+                                    <h4 class="fw-bold mb-8 {% if review.status == 'APPROVED' %}text-success-600{% elif review.status == 'PENDING' %}text-warning-600{% else %}text-danger-600{% endif %}">
+                                        {% if review %}{{ review.get_status_display }}{% else %}Not Reviewed{% endif %}
+                                    </h4>
+                                    <p class="text-secondary-light mb-0">{% if review.status == 'APPROVED' %}This project has been approved for research.{% elif review.status == 'PENDING' %}This project is waiting for ethics review.{% elif review.status == 'REJECTED' %}This project has been rejected or needs revision.{% else %}No ethics review has been assigned yet.{% endif %}</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="p-24 radius-12 bg-neutral-50 border border-neutral-100">
+                                    <h6 class="fw-bold text-primary-light mb-16">Review Notes</h6>
+                                    <div class="d-flex flex-column gap-16">
+                                        <div>
+                                            <small class="text-xs fw-bold text-secondary-light uppercase d-block mb-4">Assigned Reviewer</small>
+                                            <span class="text-sm fw-bold text-primary-light">{{ review.reviewer.full_name|default:"Not Assigned" }}</span>
+                                        </div>
+                                        <div>
+                                            <small class="text-xs fw-bold text-secondary-light uppercase d-block mb-4">Reviewer Comments</small>
+                                            <p class="text-sm text-secondary-light">{{ review.comments|default:"No comments yet." }}</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary-600 w-100 mt-20 radius-8 fw-bold" data-bs-toggle="modal" data-bs-target="#updateEthicsModal">Update Decision</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Grant -->
+<div class="modal fade" id="addGrantModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="{% url 'research:grant_add' project.pk %}" class="modal-content border-0 radius-16 shadow-lg overflow-hidden">
+            {% csrf_token %}
+            <div class="modal-header bg-primary-600 text-white border-0 p-24">
+                <h6 class="modal-title fw-bold text-white"><i class="ri-money-dollar-circle-line me-8"></i> Add Grant</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-24">
+                <div class="mb-20">
+                    <label class="form-label fw-bold text-primary-light">Grant / Instrument ID</label>
+                    <input type="text" name="grant_id" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="e.g., GR-2026-001" required>
+                </div>
+                <div class="mb-20">
+                    <label class="form-label fw-bold text-primary-light">Funding Agency</label>
+                    <input type="text" name="agency" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="e.g., National Research Council" required>
+                </div>
+                <div class="mb-20">
+                    <label class="form-label fw-bold text-primary-light">Funding Amount ({{ school.currency }})</label>
+                    <input type="number" name="amount" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="0.00" required>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label fw-bold text-primary-light">Receipt Date</label>
+                    <input type="date" name="received_date" class="form-control border-0 bg-neutral-50 radius-8 py-10" required>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-24 pt-0">
+                <button type="button" class="btn btn-light radius-8 px-20 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-600 radius-8 px-24 fw-bold shadow-primary">Save Grant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Add Publication -->
+<div class="modal fade" id="addPaperModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="{% url 'research:paper_add' project.pk %}" class="modal-content border-0 radius-16 shadow-lg overflow-hidden">
+            {% csrf_token %}
+            <div class="modal-header bg-primary-600 text-white border-0 p-24">
+                <h6 class="modal-title fw-bold text-white"><i class="ri-article-line me-8"></i> Add Academic Publication</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-24">
+                <div class="mb-20">
+                    <label class="form-label fw-bold text-primary-light">Paper Title</label>
+                    <input type="text" name="title" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="Full title of the publication" required>
+                </div>
+                <div class="mb-20">
+                    <label class="form-label fw-bold text-primary-light">Journal / Venue</label>
+                    <input type="text" name="journal" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="e.g., Nature, IEEE, Conference Name" required>
+                </div>
+                <div class="row gy-20 mb-20">
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-primary-light">Publication Date</label>
+                        <input type="date" name="publication_date" class="form-control border-0 bg-neutral-50 radius-8 py-10" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-primary-light">DOI (Optional)</label>
+                        <input type="text" name="doi" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="10.xxxx/xxxx">
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label fw-bold text-primary-light">Publication URL</label>
+                    <input type="url" name="link" class="form-control border-0 bg-neutral-50 radius-8 py-10" placeholder="https://...">
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-24 pt-0">
+                <button type="button" class="btn btn-light radius-8 px-20 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-600 radius-8 px-24 fw-bold shadow-primary">Record Publication</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Update Ethics -->
+<div class="modal fade" id="updateEthicsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="{% url 'research:ethics_update' project.pk %}" class="modal-content border-0 radius-16 shadow-lg overflow-hidden">
+            {% csrf_token %}
+            <div class="modal-header bg-primary-600 text-white border-0 p-24">
+                <h6 class="modal-title fw-bold text-white"><i class="ri-shield-check-line me-8"></i> IRB Compliance Review</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-24">
+                <div class="mb-20">
+                    <label class="form-label fw-bold text-primary-light">Decision Action</label>
+                    <select name="status" class="form-select border-0 bg-neutral-50 radius-8 py-10">
+                        <option value="PENDING" {% if review.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="APPROVED" {% if review.status == 'APPROVED' %}selected{% endif %}>Approve</option>
+                        <option value="REJECTED" {% if review.status == 'REJECTED' %}selected{% endif %}>Reject / Revise</option>
+                    </select>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label fw-bold text-primary-light">Board Feedback / Notes</label>
+                    <textarea name="comments" class="form-control border-0 bg-neutral-50 radius-8" rows="4" placeholder="Enter review comments...">{{ review.comments }}</textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-24 pt-0">
+                <button type="button" class="btn btn-light radius-8 px-20 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-600 radius-8 px-24 fw-bold shadow-primary">Save Decision</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Simple tab persistent logic
+        var hash = window.location.hash;
+        if (hash) {
+            var triggerEl = document.querySelector('#projectTabs button[data-bs-target="' + hash + '"]');
+            if (triggerEl) {
+                var tab = new bootstrap.Tab(triggerEl);
+                tab.show();
+            }
+        }
+    });
+</script>
+{% endblock %}

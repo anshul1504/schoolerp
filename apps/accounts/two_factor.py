@@ -29,4 +29,3 @@ def requires_email_otp(user) -> bool:
         return True
 
     return False
-

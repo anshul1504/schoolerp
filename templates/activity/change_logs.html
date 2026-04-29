@@ -2,45 +2,39 @@
 
 {% block title %}Change Logs{% endblock %}
 {% block page_heading %}Change Logs{% endblock %}
-{% block page_copy %}Field-level change history for key entities.{% endblock %}
-{% block page_eyebrow %}Super Admin{% endblock %}
+{% block breadcrumb_active %}Change Logs{% endblock %}
+
+{% block heading_actions %}
+  <div class="d-flex align-items-center gap-3">
+    <a href="/activity/" class="btn btn-outline-secondary">Back to Activity</a>
+  </div>
+{% endblock %}
 
 {% block content %}
-  <div class="sf-card mb-24">
-    <div class="sf-card__body">
-      <div class="sf-toolbar">
-        <div class="sf-toolbar__title">
-          <h6>Entity Change Logs</h6>
-          <p>Filter by entity and object id (e.g. `schools.School` + `12`).</p>
-        </div>
-        <div class="sf-actions">
-          <a href="/activity/" class="btn btn-outline-secondary">Back to Activity</a>
-        </div>
+<div class="mt-24">
+  <div class="card h-100">
+    <div class="card-body p-0 dataTable-wrapper">
+      <div class="px-20 py-12 border-bottom border-neutral-200">
+        <form method="get">
+          <div class="row gy-3 gx-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label text-sm fw-semibold text-primary-light mb-8">Entity</label>
+              <input type="text" name="entity" class="form-control" value="{{ filters.entity }}" placeholder="schools.School">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label text-sm fw-semibold text-primary-light mb-8">Object ID</label>
+              <input type="text" name="object_id" class="form-control" value="{{ filters.object_id }}" placeholder="e.g. 1">
+            </div>
+            <div class="col-md-5 d-flex gap-2">
+              <button type="submit" class="btn btn-primary-600">Apply Filter</button>
+              <a href="/activity/changes/" class="btn btn-outline-secondary">Clear</a>
+            </div>
+          </div>
+        </form>
       </div>
 
-      <form method="get" class="sf-filters">
-        <div class="row gy-3 gx-3 align-items-end">
-          <div class="col-md-6">
-            <label class="form-label">Entity</label>
-            <input type="text" name="entity" class="form-control" value="{{ filters.entity }}" placeholder="schools.School">
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Object ID</label>
-            <input type="text" name="object_id" class="form-control" value="{{ filters.object_id }}" placeholder="e.g. 1">
-          </div>
-          <div class="col-md-3 d-flex gap-10">
-            <button type="submit" class="btn btn-outline-secondary">Apply</button>
-            <a href="/activity/changes/" class="btn btn-outline-secondary">Reset</a>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="sf-card">
-    <div class="sf-card__body">
       <div class="table-responsive">
-        <table class="table align-middle sf-table">
+        <table class="table bordered-table mb-0">
           <thead>
             <tr>
               <th>When</th>
@@ -52,23 +46,43 @@
             </tr>
           </thead>
           <tbody>
-            {% for log in logs %}
+            {% for log in page_obj.object_list %}
               <tr>
-                <td class="text-muted text-sm">{{ log.created_at }}</td>
-                <td>{% if log.actor %}{{ log.actor.username }}{% else %}—{% endif %}</td>
-                <td><code>{{ log.entity }}</code></td>
-                <td class="text-muted text-sm">{{ log.object_id }}</td>
-                <td><span class="badge bg-secondary">{{ log.action }}</span></td>
-                <td><code class="text-muted text-sm">{{ log.changes }}</code></td>
+                <td class="text-secondary-light text-sm">{{ log.created_at }}</td>
+                <td><strong class="text-primary-light">{% if log.actor %}{{ log.actor.username }}{% else %}-{% endif %}</strong></td>
+                <td><code class="text-primary-600">{{ log.entity }}</code></td>
+                <td class="text-secondary-light text-sm">{{ log.object_id }}</td>
+                <td><span class="bg-primary-50 text-primary-600 px-12 py-4 radius-4 fw-medium text-sm">{{ log.action }}</span></td>
+                <td><code class="text-secondary-light text-sm">{{ log.changes }}</code></td>
               </tr>
             {% empty %}
-              <tr><td colspan="6" class="text-center text-muted">No change logs yet.</td></tr>
+              <tr>
+                <td colspan="6" class="text-center text-secondary-light py-24">No change logs yet.</td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="text-muted text-sm mt-2">Showing latest 200 records.</div>
+
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-20 py-12 border-top border-neutral-200">
+        <div class="text-secondary-light text-sm">Showing {{ page_start }}-{{ page_end }} of {{ page_obj.paginator.count }}</div>
+        <ul class="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link text-secondary-light fw-medium radius-8 border-0 px-20 py-10 d-flex align-items-center justify-content-center h-48-px" href="?entity={{ filters.entity }}&object_id={{ filters.object_id }}&page={{ page_obj.previous_page_number }}">Prev</a>
+            </li>
+          {% endif %}
+          <li class="page-item">
+            <span class="page-link text-primary-600 fw-medium radius-8 border-0 px-20 py-10 d-flex align-items-center justify-content-center h-48-px">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link text-secondary-light fw-medium radius-8 border-0 px-20 py-10 d-flex align-items-center justify-content-center h-48-px" href="?entity={{ filters.entity }}&object_id={{ filters.object_id }}&page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
   </div>
+</div>
 {% endblock %}
-

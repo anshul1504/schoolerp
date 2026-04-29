@@ -2,8 +2,8 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from apps.core.change_log import record_change
-from .models import Student
 
+from .models import Student
 
 WATCH_FIELDS = [
     "school_id",
@@ -42,7 +42,9 @@ def _student_pre_save(sender, instance: Student, **kwargs):
 @receiver(post_save, sender=Student)
 def _student_post_save(sender, instance: Student, created: bool, **kwargs):
     if created:
-        record_change(entity="students.Student", object_id=instance.pk, action="CREATED", changes={})
+        record_change(
+            entity="students.Student", object_id=instance.pk, action="CREATED", changes={}
+        )
         return
 
     before = getattr(instance, "_changelog_before", None) or {}
@@ -52,10 +54,11 @@ def _student_post_save(sender, instance: Student, created: bool, **kwargs):
         if before.get(field) != after.get(field):
             changes[field] = {"before": before.get(field), "after": after.get(field)}
     if changes:
-        record_change(entity="students.Student", object_id=instance.pk, action="UPDATED", changes=changes)
+        record_change(
+            entity="students.Student", object_id=instance.pk, action="UPDATED", changes=changes
+        )
 
 
 @receiver(post_delete, sender=Student)
 def _student_post_delete(sender, instance: Student, **kwargs):
     record_change(entity="students.Student", object_id=instance.pk, action="DELETED", changes={})
-
