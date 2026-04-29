@@ -28,7 +28,7 @@
     <div class="col-xl-3 col-sm-6">
         <div class="card radius-12 border-neutral-200 h-100">
             <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="radius-8 bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                <div class="radius-8 bg-primary-50 text-primary-600 d-flex align-items-center justify-content-center ui-icon-box-48">
                     <i class="ri-school-line fs-4"></i>
                 </div>
                 <div>
@@ -42,7 +42,7 @@
     <div class="col-xl-3 col-sm-6">
         <div class="card radius-12 border-neutral-200 h-100">
             <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="radius-8 bg-success-50 text-success-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                <div class="radius-8 bg-success-50 text-success-600 d-flex align-items-center justify-content-center ui-icon-box-48">
                     <i class="ri-team-line fs-4"></i>
                 </div>
                 <div>
@@ -56,7 +56,7 @@
     <div class="col-xl-3 col-sm-6">
         <div class="card radius-12 border-neutral-200 h-100">
             <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="radius-8 bg-warning-50 text-warning-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                <div class="radius-8 bg-warning-50 text-warning-600 d-flex align-items-center justify-content-center ui-icon-box-48">
                     <i class="ri-customer-service-2-line fs-4"></i>
                 </div>
                 <div>
@@ -70,7 +70,7 @@
     <div class="col-xl-3 col-sm-6">
         <div class="card radius-12 border-neutral-200 h-100">
             <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="radius-8 bg-danger-50 text-danger-600 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                <div class="radius-8 bg-danger-50 text-danger-600 d-flex align-items-center justify-content-center ui-icon-box-48">
                     <i class="ri-money-rupee-circle-line fs-4"></i>
                 </div>
                 <div>
@@ -91,7 +91,7 @@
                 <p class="text-xs text-secondary-light mb-0">Schools and users added over the last 6 months.</p>
             </div>
             <div class="card-body p-4">
-                <div id="platformGrowthChart" style="height: 310px;"></div>
+                <div id="platformGrowthChart" class="ui-chart-h-310"></div>
             </div>
         </div>
     </div>
@@ -102,7 +102,7 @@
                 <p class="text-xs text-secondary-light mb-0">Current status split.</p>
             </div>
             <div class="card-body p-4">
-                <div id="platformSubscriptionChart" style="height: 270px;"></div>
+                <div id="platformSubscriptionChart" class="ui-chart-h-270"></div>
             </div>
         </div>
     </div>
@@ -120,7 +120,7 @@
                     {% for school in recent_schools %}
                       <a href="/schools/{{ school.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-4 border-0 border-bottom border-neutral-100">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="radius-8 bg-neutral-100 text-neutral-600 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <div class="radius-8 bg-neutral-100 text-neutral-600 d-flex align-items-center justify-content-center ui-icon-box-36">
                                 <i class="ri-school-line"></i>
                             </div>
                             <div>
@@ -150,7 +150,7 @@
                     {% for ticket in support_tickets %}
                       <a href="/platform/support/{{ ticket.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-4 border-0 border-bottom border-neutral-100">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="radius-8 bg-warning-50 text-warning-600 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <div class="radius-8 bg-warning-50 text-warning-600 d-flex align-items-center justify-content-center ui-icon-box-36">
                                 <i class="ri-customer-service-2-line"></i>
                             </div>
                             <div>

@@ -67,14 +67,14 @@
                   {% csrf_token %}
                   <input type="hidden" name="action" value="return_book">
                   <input type="hidden" name="issue_id" value="{{ issue.id }}">
-                  <input type="number" class="form-control form-control-sm d-inline-block me-1" style="width:96px;" name="fine_amount" min="0" step="0.01" placeholder="Fine">
+                  <input type="number" class="form-control form-control-sm d-inline-block me-1 ui-input-w-96" name="fine_amount" min="0" step="0.01" placeholder="Fine">
                   <button class="btn btn-success btn-sm" type="submit">Return</button>
                 </form>
                 <form method="post" class="d-inline ms-1">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="mark_lost">
                   <input type="hidden" name="issue_id" value="{{ issue.id }}">
-                  <input type="number" class="form-control form-control-sm d-inline-block me-1" style="width:96px;" name="fine_amount" min="0" step="0.01" placeholder="Lost fine">
+                  <input type="number" class="form-control form-control-sm d-inline-block me-1 ui-input-w-96" name="fine_amount" min="0" step="0.01" placeholder="Lost fine">
                   <button class="btn btn-outline-danger btn-sm" type="submit">Lost</button>
                 </form>
               </td>

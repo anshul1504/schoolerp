@@ -27,35 +27,35 @@
     </form>
     <div class="row gy-3 mt-1 mb-24">
       <div class="col-md-4">
-        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%); border: 1px solid var(--primary-200);">
+        <div class="radius-8 p-16 h-100 ui-kpi-primary">
           <span class="text-sm fw-medium text-primary-600">Total Leads</span>
           <h4 class="mb-4 mt-8 fw-bold text-primary-700">{{ stats.total }}</h4>
           <small class="text-xs text-primary-500">Current filter scope</small>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%); border: 1px solid var(--success-200);">
+        <div class="radius-8 p-16 h-100 ui-kpi-success">
           <span class="text-sm fw-medium text-success-600">Converted</span>
           <h4 class="mb-4 mt-8 fw-bold text-success-700">{{ stats.converted }}</h4>
           <small class="text-xs text-success-500">Admissions won</small>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--warning-100) 0%, var(--warning-50) 100%); border: 1px solid var(--warning-200);">
+        <div class="radius-8 p-16 h-100 ui-kpi-warning">
           <span class="text-sm fw-medium text-warning-600">Pipeline</span>
           <h4 class="mb-4 mt-8 fw-bold text-warning-700">{{ stats.pipeline }}</h4>
           <small class="text-xs text-warning-500">New + contacted + qualified</small>
         </div>
       </div>
       <div class="col-md-6">
-        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%); border: 1px solid var(--success-200);">
+        <div class="radius-8 p-16 h-100 ui-kpi-success">
           <span class="text-sm fw-medium text-success-600">SLA Due Today</span>
           <h4 class="mb-4 mt-8 fw-bold text-success-700">{{ stats.sla_today }}</h4>
           <small class="text-xs text-success-500">Follow-up commitments for today</small>
         </div>
       </div>
       <div class="col-md-6">
-        <div class="radius-8 p-16 h-100" style="background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%); border: 1px solid var(--danger-200);">
+        <div class="radius-8 p-16 h-100 ui-kpi-danger">
           <span class="text-sm fw-medium text-danger-600">SLA Overdue</span>
           <h4 class="mb-4 mt-8 fw-bold text-danger-700">{{ stats.sla_overdue }}</h4>
           <small class="text-xs text-danger-500">Needs urgent intervention</small>

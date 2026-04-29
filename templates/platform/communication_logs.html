@@ -57,7 +57,7 @@
               </td>
               <td>{{ log.attempt_count }}</td>
               <td>{{ log.last_attempt_at|default:"-" }}</td>
-              <td class="text-danger small" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ log.error }}">{{ log.error|default:"-" }}</td>
+              <td class="text-danger small ui-truncate-200" title="{{ log.error }}">{{ log.error|default:"-" }}</td>
               <td>
                 {% if log.status == 'FAILED' %}
                 <form method="post" class="d-inline">

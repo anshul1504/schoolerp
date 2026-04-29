@@ -87,24 +87,24 @@
                 <h6 class="fw-medium text-primary-light text-md mb-3">Color Schema</h6>
                 <div class="d-grid grid-cols-3 gap-3">
                     <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="base" aria-label="Base">
-                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #475569;"></span>
-                        <span class="fw-medium mt-1" style="color: #475569;">Slate</span>
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3 ui-theme-slate"></span>
+                        <span class="fw-medium mt-1 ui-theme-slate">Slate</span>
                     </button>
                     <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="blue" aria-label="Blue">
-                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #487FFF;"></span>
-                        <span class="fw-medium mt-1" style="color: #487FFF;">Blue</span>
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3 ui-theme-blue"></span>
+                        <span class="fw-medium mt-1 ui-theme-blue">Blue</span>
                     </button>
                     <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="green" aria-label="Green">
-                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #10b981;"></span>
-                        <span class="fw-medium mt-1" style="color: #10b981;">Green</span>
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3 ui-theme-green"></span>
+                        <span class="fw-medium mt-1 ui-theme-green">Green</span>
                     </button>
                     <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="purple" aria-label="Purple">
-                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #8b5cf6;"></span>
-                        <span class="fw-medium mt-1" style="color: #8b5cf6;">Purple</span>
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3 ui-theme-purple"></span>
+                        <span class="fw-medium mt-1 ui-theme-purple">Purple</span>
                     </button>
                     <button type="button" class="color-picker-btn d-flex flex-column justify-content-center align-items-center" data-color="orange" aria-label="Orange">
-                        <span class="color-picker-btn__box h-40-px w-100 rounded-3" style="background-color: #f59e0b;"></span>
-                        <span class="fw-medium mt-1" style="color: #f59e0b;">Orange</span>
+                        <span class="color-picker-btn__box h-40-px w-100 rounded-3 ui-theme-orange"></span>
+                        <span class="fw-medium mt-1 ui-theme-orange">Orange</span>
                     </button>
                 </div>
             </div>
@@ -135,7 +135,7 @@
                         <span class="text-xs text-secondary-light">School ERP</span>
                       </div>
                     {% elif platform_settings.logo %}
-                      <img src="{{ platform_settings.logo.url }}" alt="site logo" class="logo-icon w-auto" style="max-height: 40px; max-width: 40px; object-fit: contain;">
+                      <img src="{{ platform_settings.logo.url }}" alt="site logo" class="logo-icon w-auto ui-logo-platform">
                       <div class="logo-text d-flex flex-column">
                         <span class="school-name text-primary-light">{{ platform_settings.product_name|default:"SchoolFlow" }}</span>
                         <span class="text-xs text-secondary-light">{{ platform_settings.product_meta|default:"School ERP" }}</span>

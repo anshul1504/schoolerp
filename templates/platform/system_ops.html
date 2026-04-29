@@ -43,7 +43,7 @@
                     <span class="text-muted">Disk Usage</span>
                     <div class="text-end">
                         <span class="fw-medium">{{ sys_info.disk_usage }}</span>
-                        <div class="progress mt-1" style="height: 4px; width: 100px;">
+                        <div class="progress mt-1 ui-progress-thin ui-cell-w-100">
                             <div class="progress-bar bg-primary" style="width: 45%;"></div>
                         </div>
                     </div>
@@ -162,7 +162,7 @@
                             {% empty %}
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="ri-database-2-line d-block mb-2" style="font-size: 2rem; opacity: 0.2;"></i>
+                                    <i class="ri-database-2-line d-block mb-2 ui-db-icon-muted"></i>
                                     No database backups available yet.
                                 </td>
                             </tr>

@@ -2,21 +2,6 @@
 
 {% block title %}Class Timetable | School ERP{% endblock %}
 
-{% block extra_css %}
-<style>
-  .timetable-grid { width: 100%; border-collapse: collapse; min-width: 900px; }
-  .timetable-grid th, .timetable-grid td { border: 1px solid #f1f5f9; padding: 1.25rem; vertical-align: top; width: 14%; }
-  .timetable-grid th { background: #f8fafc; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .slot-item { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 0.75rem; border-radius: 12px; margin-bottom: 0.5rem; transition: transform 0.2s ease; }
-  .slot-item:hover { transform: scale(1.02); }
-  .slot-subject { font-weight: 800; font-size: 0.825rem; display: block; color: #1e3a8a; }
-  .slot-teacher { font-size: 0.75rem; color: #64748b; font-weight: 500; }
-  .break-slot { background: #f1f5f9; color: #94a3b8; font-style: italic; font-size: 0.75rem; font-weight: 600; text-align: center; border-radius: 8px; padding: 0.5rem; }
-  .sf-card { background: #fff; border: 1px solid var(--sf-border); border-radius: 16px; margin-bottom: 24px; }
-  .sf-card__body { padding: 20px; }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="platform-panel mb-4">
   <div>
@@ -54,7 +39,7 @@
       <table class="timetable-grid">
         <thead>
           <tr>
-            <th style="width: 100px;">Time</th>
+            <th class="ui-time-col">Time</th>
             {% for day in days %}
               <th>{{ day|title }}</th>
             {% endfor %}

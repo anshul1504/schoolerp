@@ -12,24 +12,24 @@
     </button>
   </div>
 
-  <div class="card certificate-container mx-auto" style="max-width: 900px; border: 15px solid #1a56db; padding: 40px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative;">
+  <div class="card certificate-container mx-auto ui-cert-wrap">
     <!-- Decorative corner elements -->
-    <div style="position: absolute; top: 0; left: 0; width: 50px; height: 50px; border-right: 5px solid #1a56db; border-bottom: 5px solid #1a56db;"></div>
-    <div style="position: absolute; top: 0; right: 0; width: 50px; height: 50px; border-left: 5px solid #1a56db; border-bottom: 5px solid #1a56db;"></div>
-    <div style="position: absolute; bottom: 0; left: 0; width: 50px; height: 50px; border-right: 5px solid #1a56db; border-top: 5px solid #1a56db;"></div>
-    <div style="position: absolute; bottom: 0; right: 0; width: 50px; height: 50px; border-left: 5px solid #1a56db; border-top: 5px solid #1a56db;"></div>
+    <div class="ui-cert-corner ui-cert-corner--tl"></div>
+    <div class="ui-cert-corner ui-cert-corner--tr"></div>
+    <div class="ui-cert-corner ui-cert-corner--bl"></div>
+    <div class="ui-cert-corner ui-cert-corner--br"></div>
 
     <div class="card-body text-center p-4">
       <div class="mb-4">
-        <iconify-icon icon="ri:shield-star-line" style="font-size: 80px; color: #1a56db;"></iconify-icon>
+        <iconify-icon icon="ri:shield-star-line" class="ui-cert-icon"></iconify-icon>
       </div>
 
-      <h1 class="fw-bold mb-3" style="font-family: 'Times New Roman', serif; font-size: 48px; color: #1a56db; text-transform: uppercase; letter-spacing: 2px;">CERTIFICATE</h1>
-      <h3 class="fw-semibold mb-4 text-neutral-600" style="font-family: 'Times New Roman', serif; font-size: 24px; letter-spacing: 1px;">OF COMPLIANCE & ACCREDITATION</h3>
+      <h1 class="fw-bold mb-3 ui-cert-title">CERTIFICATE</h1>
+      <h3 class="fw-semibold mb-4 text-neutral-600 ui-cert-subtitle">OF COMPLIANCE & ACCREDITATION</h3>
 
       <div class="my-5">
         <p class="text-lg text-neutral-500 mb-2">This is to certify that</p>
-        <h2 class="fw-bold text-dark mb-4 border-bottom border-2 border-dark d-inline-block px-5 pb-2" style="font-family: 'Times New Roman', serif; font-size: 36px;">{{ request.user.school.name|default:"School Name" }}</h2>
+        <h2 class="fw-bold text-dark mb-4 border-bottom border-2 border-dark d-inline-block px-5 pb-2 ui-cert-school">{{ request.user.school.name|default:"School Name" }}</h2>
         <p class="text-lg text-neutral-500 mt-3 mb-2">has successfully met the requirements for</p>
         <h3 class="fw-bold text-primary-600 mb-4">{{ cert.name }}</h3>
       </div>
@@ -55,11 +55,11 @@
 
       <div class="mt-5 pt-4 d-flex justify-content-between align-items-end">
         <div class="text-center">
-          <div style="width: 200px; border-bottom: 1px solid #333; margin-bottom: 5px;"></div>
+          <div class="ui-cert-sign"></div>
           <span class="text-sm text-neutral-500">Authorized Signature</span>
         </div>
         <div>
-          <span class="badge {% if cert.status == 'VALID' %}bg-success-100 text-success-800{% else %}bg-danger-100 text-danger-800{% endif %} px-4 py-2 fs-6 rounded-pill" style="border: 2px solid;">
+          <span class="badge {% if cert.status == 'VALID' %}bg-success-100 text-success-800{% else %}bg-danger-100 text-danger-800{% endif %} px-4 py-2 fs-6 rounded-pill ui-cert-badge">
             {{ cert.get_status_display }}
           </span>
         </div>
@@ -68,32 +68,4 @@
   </div>
 </div>
 
-<style>
-  @media print {
-    body * {
-      visibility: hidden;
-    }
-    .print-hide {
-      display: none !important;
-    }
-    .certificate-container, .certificate-container * {
-      visibility: visible;
-    }
-    .certificate-container {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      box-shadow: none !important;
-      border: 15px solid #1a56db !important;
-    }
-    .main-content {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #fff !important;
-    }
-    .sidebar { display: none !important; }
-    .header { display: none !important; }
-  }
-</style>
 {% endblock %}
