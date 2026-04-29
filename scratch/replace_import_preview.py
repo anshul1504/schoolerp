@@ -1,0 +1,143 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+    <div class="">
+        <h1 class="fw-semibold mb-4 h6 text-primary-light">Import Preview</h1>
+        <div class="d-flex align-items-center gap-12">
+            <a href="/" class="text-secondary-light hover-text-primary hover-underline">Dashboard</a>
+            <a href="/users/" class="text-secondary-light hover-text-primary hover-underline"> / User Directory</a>
+            <a href="/users/import/" class="text-secondary-light hover-text-primary hover-underline"> / Import Users</a>
+            <span class="text-secondary-light">/ Preview</span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-6">
+        <a href="/users/import/" class="btn btn-outline-primary d-flex align-items-center gap-6">
+            <iconify-icon icon="ri:upload-cloud-line"></iconify-icon>
+            Upload New File
+        </a>
+        <a href="/users/" class="btn btn-primary-600 d-flex align-items-center gap-6">
+            <iconify-icon icon="ri:arrow-left-line"></iconify-icon>
+            Back to Directory
+        </a>
+    </div>
+</div>
+
+<div class="row gy-4">
+    <div class="col-12">
+        <div class="row gy-3">
+            <div class="col-xxl-4 col-xl-4 col-md-6">
+                <div class="shadow-1 radius-12 bg-primary-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-primary-600 fw-bold text-xs uppercase letter-spacing-1">Total Rows</span>
+                        <iconify-icon icon="ri:list-check-2" class="text-2xl text-primary-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ total_rows }}</h3>
+                    <p class="text-xs text-primary-light mb-0">Rows detected in file</p>
+                </div>
+            </div>
+            <div class="col-xxl-4 col-xl-4 col-md-6">
+                <div class="shadow-1 radius-12 bg-danger-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-danger-600 fw-bold text-xs uppercase letter-spacing-1">Invalid Rows</span>
+                        <iconify-icon icon="ri:error-warning-line" class="text-2xl text-danger-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ invalid_count }}</h3>
+                    <p class="text-xs text-danger-light mb-0">Need correction before import</p>
+                </div>
+            </div>
+            <div class="col-xxl-4 col-xl-4 col-md-12">
+                <div class="shadow-1 radius-12 bg-info-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-info-600 fw-bold text-xs uppercase letter-spacing-1">Preview Scope</span>
+                        <iconify-icon icon="ri:eye-line" class="text-2xl text-info-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">50 Rows</h3>
+                    <p class="text-xs text-info-light mb-0">First rows shown only</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-8">
+            <div class="text-sm text-secondary-light">Showing first 50 rows only.</div>
+            <div class="d-flex gap-16 flex-wrap">
+                <a class="btn btn-outline-secondary radius-8 px-20 py-10 fw-semibold" href="/users/import/errors/">Download errors CSV (after import)</a>
+                <form method="post" action="/users/import/" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="stage" value="confirm">
+                    <button type="submit" class="btn btn-primary-600 radius-8 px-20 py-10 fw-semibold shadow-primary" {% if total_rows == 0 %}disabled{% endif %}>Confirm Import</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+            <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 class="text-lg fw-semibold mb-0">Data Validation</h6>
+                <small class="text-neutral-400">Confirm Import will import valid rows and skip invalid rows.</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 table-hover align-middle">
+                        <thead class="bg-neutral-50">
+                            <tr>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Row</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Status</th>
+                                {% for h in headers %}
+                                    <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">{{ h }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in preview_rows %}
+                                <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                    <td class="py-16 px-24 text-xs fw-semibold text-secondary-light">#{{ row.row_index }}</td>
+                                    <td class="py-16 px-24">
+                                        {% if row.errors %}
+                                            <div class="d-flex align-items-center gap-8 mb-4">
+                                                <span class="w-8-px h-8-px bg-danger-600 rounded-circle"></span>
+                                                <span class="text-xs fw-bold text-danger-600">Invalid</span>
+                                            </div>
+                                            <div class="text-xs text-secondary-light">{{ row.errors|join:", " }}</div>
+                                        {% else %}
+                                            <div class="d-flex align-items-center gap-8">
+                                                <span class="w-8-px h-8-px bg-success-600 rounded-circle"></span>
+                                                <span class="text-xs fw-bold text-success-600">OK</span>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    {% for cell in row.cells %}
+                                        <td class="py-16 px-24 text-sm text-secondary-light">{{ cell|default:"" }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="{{ headers|length|add:2 }}" class="py-64 text-center">
+                                        <iconify-icon icon="ri:file-search-line" class="text-4xl text-neutral-200 mb-12"></iconify-icon>
+                                        <p class="text-neutral-400 mb-0">No rows found.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+'''
+
+with open('templates/users/import_preview.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% endblock \%\})', content, text)
+
+with open('templates/users/import_preview.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")

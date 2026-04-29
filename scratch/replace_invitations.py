@@ -1,0 +1,175 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+    <div class="">
+        <h1 class="fw-semibold mb-4 h6 text-primary-light">Invitation Links</h1>
+        <div class="d-flex align-items-center gap-12">
+            <a href="/" class="text-secondary-light hover-text-primary hover-underline">Dashboard</a>
+            <a href="/users/" class="text-secondary-light hover-text-primary hover-underline"> / User Directory</a>
+            <span class="text-secondary-light">/ Invitations</span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-6">
+        <a href="/users/" class="btn btn-outline-primary d-flex align-items-center gap-6">
+            <iconify-icon icon="ri:arrow-left-line"></iconify-icon>
+            Back to Directory
+        </a>
+        <a href="/users/invite/" class="btn btn-primary-600 d-flex align-items-center gap-6">
+            <iconify-icon icon="ri:mail-send-line"></iconify-icon>
+            Invite User
+        </a>
+    </div>
+</div>
+
+<div class="row gy-4">
+    <div class="col-12">
+        <div class="row gy-3">
+            <div class="col-xxl-4 col-xl-4 col-md-6">
+                <div class="shadow-1 radius-12 bg-primary-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-primary-600 fw-bold text-xs uppercase letter-spacing-1">Invitations</span>
+                        <iconify-icon icon="ri:mail-line" class="text-2xl text-primary-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ invitations|length }}</h3>
+                    <p class="text-xs text-primary-light mb-0">Total links in this view</p>
+                </div>
+            </div>
+            <div class="col-xxl-4 col-xl-4 col-md-6">
+                <div class="shadow-1 radius-12 bg-warning-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-warning-600 fw-bold text-xs uppercase letter-spacing-1">Pending</span>
+                        <iconify-icon icon="ri:time-line" class="text-2xl text-warning-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ invitation_stats.pending_invitations }}</h3>
+                    <p class="text-xs text-warning-light mb-0">Accepted links are filtered in row status</p>
+                </div>
+            </div>
+            <div class="col-xxl-4 col-xl-4 col-md-12">
+                <div class="shadow-1 radius-12 bg-info-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-info-600 fw-bold text-xs uppercase letter-spacing-1">Action</span>
+                        <iconify-icon icon="ri:refresh-line" class="text-2xl text-info-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">Resend</h3>
+                    <p class="text-xs text-info-light mb-0">Pending links can be resent</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+            <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 class="text-lg fw-semibold mb-0">Sent Invitations</h6>
+                <small class="text-neutral-400">Tip: Copy the relative link and share your domain + this path.</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 table-hover align-middle">
+                        <thead class="bg-neutral-50">
+                            <tr>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">User</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Role</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">School</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Expires</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Status</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Email</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase">Link</th>
+                                <th class="py-16 px-24 text-neutral-600 fw-bold text-xs uppercase text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invite in invitations %}
+                                <tr class="border-bottom border-neutral-100 transition-all hover-bg-neutral-50">
+                                    <td class="py-16 px-24">
+                                        <div class="d-flex flex-column">
+                                            <span class="text-sm fw-bold text-primary-light d-block">{{ invite.user.get_full_name|default:invite.user.username }}</span>
+                                            <span class="text-xs text-secondary-light">{{ invite.user.email|default:"-" }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-16 px-24">
+                                        <span class="badge bg-primary-50 text-primary-600 radius-pill px-12 py-6 text-xs fw-medium border border-primary-100">{{ invite.user.get_role_display }}</span>
+                                    </td>
+                                    <td class="py-16 px-24 text-sm text-secondary-light">
+                                        {% if invite.user.school %}{{ invite.user.school.name }}{% else %}-{% endif %}
+                                    </td>
+                                    <td class="py-16 px-24 text-sm text-secondary-light">{{ invite.expires_at|date:"M d, Y" }}</td>
+                                    <td class="py-16 px-24">
+                                        {% if invite.accepted_at %}
+                                            <div class="d-flex align-items-center gap-8">
+                                                <span class="w-8-px h-8-px bg-success-600 rounded-circle"></span>
+                                                <span class="text-xs fw-bold text-success-600">Accepted</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex align-items-center gap-8">
+                                                <span class="w-8-px h-8-px bg-warning-600 rounded-circle"></span>
+                                                <span class="text-xs fw-bold text-warning-600">Pending</span>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-16 px-24">
+                                        {% if invite.sent_at %}
+                                            <div class="d-flex align-items-center gap-8 mb-4">
+                                                <span class="w-8-px h-8-px bg-success-600 rounded-circle"></span>
+                                                <span class="text-xs fw-bold text-success-600">Sent</span>
+                                            </div>
+                                            <div class="text-xs text-secondary-light">{{ invite.sent_to }}</div>
+                                        {% elif invite.sent_to %}
+                                            <div class="d-flex align-items-center gap-8 mb-4">
+                                                <span class="w-8-px h-8-px bg-danger-600 rounded-circle"></span>
+                                                <span class="text-xs fw-bold text-danger-600">Failed</span>
+                                            </div>
+                                            <div class="text-xs text-secondary-light">{{ invite.sent_to }}</div>
+                                        {% else %}
+                                            <span class="text-xs text-secondary-light">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-16 px-24">
+                                        {% if not invite.accepted_at %}
+                                            <code class="text-xs bg-neutral-50 px-8 py-4 radius-4 border border-neutral-100">/activate/{{ invite.token }}/</code>
+                                        {% else %}
+                                            <span class="text-xs text-secondary-light">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-16 px-24 text-end">
+                                        {% if not invite.accepted_at %}
+                                            <form method="post" action="/users/invitations/{{ invite.id }}/resend/" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-primary radius-8 px-16 fw-semibold" onclick="return confirm('Resend invitation to {{ invite.user.username }}?');">
+                                                    Resend
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-xs text-secondary-light">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="py-64 text-center">
+                                        <iconify-icon icon="ri:mail-send-line" class="text-4xl text-neutral-200 mb-12"></iconify-icon>
+                                        <p class="text-neutral-400 mb-0">No invitations yet.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+'''
+
+with open('templates/users/invitations.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% endblock \%\})', content, text)
+
+with open('templates/users/invitations.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")

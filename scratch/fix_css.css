@@ -1,0 +1,95 @@
+/* --- Custom School ERP Styles --- */
+:root {
+    --primary-600: #475569;
+    /* Slate Blue */
+    --primary-700: #334155;
+    --primary-50: #f1f5f9;
+}
+
+.sidebar-logo {
+    padding: 16px 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.logo-text {
+    white-space: normal;
+    max-width: 160px;
+    line-height: 1.1;
+    display: flex;
+    /* Default: visible */
+}
+
+.logo-text .school-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.sidebar .logo-icon {
+    display: block !important;
+    /* Force visibility */
+}
+
+/* Sidebar Elements Visibility */
+.sidebar .profile-dropdown__contents,
+.sidebar .profile-dropdown__icon {
+    display: flex;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.active:not(:hover) .logo-text,
+.sidebar.active:not(:hover) .profile-dropdown__contents,
+.sidebar.active:not(:hover) .profile-dropdown__icon {
+    display: none !important;
+    opacity: 0;
+}
+
+.sidebar.active:not(:hover) .sidebar-logo {
+    justify-content: center !important;
+}
+
+.sidebar.active:not(:hover) .sidebar-toggle {
+    display: none !important;
+}
+
+.sidebar-profile-bottom {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: #1e293b;
+    /* Dark slate */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.sidebar-profile-bottom .profile-dropdown__button {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.sidebar-profile-bottom .text-primary-light {
+    color: #f8fafc !important;
+    /* Off-white */
+}
+
+.sidebar-profile-bottom .text-secondary-light {
+    color: #94a3b8 !important;
+    /* Muted slate */
+}
+
+.sidebar-profile-bottom .profile-dropdown__icon {
+    color: #f8fafc !important;
+}
+
+.sidebar.active:not(:hover) .sidebar-profile-bottom {
+    padding: 12px 10px;
+}
+
+.module-name-header h6 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}

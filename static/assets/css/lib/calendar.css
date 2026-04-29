@@ -25,12 +25,12 @@
     border-color: var(--primary-600);
     color: #fff;
 }
-  
+
 .header-display {
     display: flex;
     align-items: center;
 }
-  
+
 .days, .week {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -74,4 +74,3 @@
     background-color: var(--primary-800) !important;
     color: #fff !important;
 }
-  

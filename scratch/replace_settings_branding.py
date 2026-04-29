@@ -1,0 +1,94 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="row gy-4">
+    {% include "settings/_sidebar.html" %}
+
+    <div class="col-xxl-9 col-lg-8">
+        <form method="post" enctype="multipart/form-data" class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+            {% csrf_token %}
+            <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 class="text-lg fw-semibold mb-0">Branding Configuration</h6>
+                <small class="text-neutral-400">Applied globally across sidebar, topbar, favicon, and shell accents.</small>
+            </div>
+
+            <div class="card-body p-24">
+                <div class="row gy-4">
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Product Name</label>
+                        <input type="text" name="product_name" class="form-control" value="{{ branding.product_name }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Sidebar Meta</label>
+                        <input type="text" name="product_meta" class="form-control" value="{{ branding.product_meta }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Support Email</label>
+                        <input type="email" name="support_email" class="form-control" value="{{ branding.support_email }}">
+                    </div>
+
+                    <div class="col-12"><hr class="border-neutral-100"></div>
+
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Brand Logo</label>
+                        <input type="file" name="logo" class="form-control" accept="image/*">
+                        {% if branding.logo %}
+                            <div class="d-flex align-items-center gap-12 mt-12 bg-neutral-50 p-12 radius-8 border border-neutral-100">
+                                <img src="{{ branding.logo.url }}" alt="Logo" class="w-64-px h-auto object-fit-contain">
+                                <div class="text-xs text-secondary-light">Current: {{ branding.logo.name }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Favicon</label>
+                        <input type="file" name="favicon" class="form-control" accept="image/*">
+                        {% if branding.favicon %}
+                            <div class="d-flex align-items-center gap-12 mt-12 bg-neutral-50 p-12 radius-8 border border-neutral-100">
+                                <img src="{{ branding.favicon.url }}" alt="Favicon" class="w-32-px h-32-px object-fit-cover rounded-circle">
+                                <div class="text-xs text-secondary-light">Current: {{ branding.favicon.name }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12"><hr class="border-neutral-100"></div>
+
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Theme Primary (Hex)</label>
+                        <div class="d-flex align-items-center gap-12">
+                            <input type="color" class="form-control form-control-color p-0 border-0 radius-8 w-40-px h-40-px" value="{{ branding.theme_primary|default:'#1677ff' }}" onchange="document.getElementById('themePrimaryHex').value = this.value">
+                            <input type="text" name="theme_primary" id="themePrimaryHex" class="form-control" value="{{ branding.theme_primary }}" placeholder="#1677ff">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Theme Secondary (Hex)</label>
+                        <div class="d-flex align-items-center gap-12">
+                            <input type="color" class="form-control form-control-color p-0 border-0 radius-8 w-40-px h-40-px" value="{{ branding.theme_secondary|default:'#44b8ff' }}" onchange="document.getElementById('themeSecondaryHex').value = this.value">
+                            <input type="text" name="theme_secondary" id="themeSecondaryHex" class="form-control" value="{{ branding.theme_secondary }}" placeholder="#44b8ff">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-neutral-400 d-block mt-8">Note: Use valid 7-character hex colors only.</small>
+                    </div>
+
+                    <div class="col-12 d-flex gap-16 justify-content-end mt-32">
+                        <a href="/settings/" class="btn btn-neutral-100 text-neutral-600 px-32 py-12 radius-8 fw-semibold">Cancel</a>
+                        <button type="submit" class="btn btn-primary-600 px-32 py-12 radius-8 fw-semibold shadow-primary">Save Branding Settings</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+'''
+
+with open('templates/settings/branding.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% endblock \%\})', content, text)
+
+with open('templates/settings/branding.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")

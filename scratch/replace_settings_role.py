@@ -1,0 +1,80 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="row gy-4">
+    {% include "settings/_sidebar.html" %}
+
+    <div class="col-xxl-9 col-lg-8">
+        <div class="row gy-4">
+            <div class="col-12">
+                <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Select Role</h6>
+                        <small class="text-neutral-400">Load and edit module visibility configuration for a role.</small>
+                    </div>
+                    <div class="card-body p-24">
+                        <form method="get" class="row gy-3 align-items-end">
+                            <div class="col-md-6">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Role</label>
+                                <select name="role" class="form-select form-control">
+                                    {% for group_label, options in grouped_role_choices %}
+                                        <optgroup label="{{ group_label }}">
+                                        {% for value,label in options %}
+                                            <option value="{{ value }}" {% if value == current_role %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex gap-12 justify-content-end">
+                                <a href="/settings/" class="btn btn-neutral-100 text-neutral-600 px-24 py-10 radius-8 fw-semibold">Back</a>
+                                <button type="submit" class="btn btn-primary-600 px-24 py-10 radius-8 fw-semibold shadow-primary">Load Role</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <form method="post" class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                    {% csrf_token %}
+                    <input type="hidden" name="role" value="{{ current_role }}">
+                    <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Sections for {{ current_role_label }}</h6>
+                        <small class="text-neutral-400">Tick sections to display in navigation for this role.</small>
+                    </div>
+                    <div class="card-body p-24">
+                        <div class="row gy-3">
+                            {% for item in nav_items %}
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-check d-flex align-items-center gap-12 border border-neutral-100 p-12 radius-8 hover-bg-neutral-50 cursor-pointer">
+                                        <input class="form-check-input w-20-px h-20-px cursor-pointer" type="checkbox" name="sections" id="sec_{{ item.key }}" value="{{ item.key }}" {% if item.key in selected_sections %}checked{% endif %}>
+                                        <label class="form-check-label text-md fw-medium text-primary-light cursor-pointer w-100" for="sec_{{ item.key }}">{{ item.label }}</label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-16 justify-content-end mt-32">
+                            <a href="/settings/role-matrix/?role={{ current_role }}" class="btn btn-neutral-100 text-neutral-600 px-32 py-12 radius-8 fw-semibold">Reset</a>
+                            <button type="submit" class="btn btn-primary-600 px-32 py-12 radius-8 fw-semibold shadow-primary">Save Matrix</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+'''
+
+with open('templates/settings/role_matrix.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% endblock \%\})', content, text)
+
+with open('templates/settings/role_matrix.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")

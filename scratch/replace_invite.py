@@ -1,0 +1,110 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+    <div class="">
+        <h1 class="fw-semibold mb-4 h6 text-primary-light">Invite User</h1>
+        <div class="">
+            <a href="/" class="text-secondary-light hover-text-primary hover-underline">Dashboard</a>
+            <a href="/users/" class="text-secondary-light hover-text-primary hover-underline"> / User Directory</a>
+            <span class="text-secondary-light">/ Invite User</span>
+        </div>
+    </div>
+    <a href="/users/" class="btn btn-primary-600 d-flex align-items-center gap-6">
+        <iconify-icon icon="ri:arrow-left-line"></iconify-icon>
+        Back to Directory
+    </a>
+</div>
+
+<form method="post" class="mt-24" id="userInviteForm">
+    {% csrf_token %}
+    <div class="row gy-4">
+        <div class="col-lg-12">
+            <div class="alert alert-info bg-info-50 text-info-600 border-info-200 mb-0 d-flex align-items-center gap-12 radius-8">
+                <iconify-icon icon="ri:information-line" class="text-xl"></iconify-icon>
+                This generates a one-time activation link valid for 7 days. The user sets their own password on activation.
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                    <h6 class="text-lg fw-semibold mb-0">Invitation Details</h6>
+                </div>
+                <div class="card-body p-20">
+                    <div class="row gy-3">
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Username <span class="text-danger-600">*</span></label>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Email</label>
+                                <input type="email" name="email" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">First Name</label>
+                                <input type="text" name="first_name" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Last Name</label>
+                                <input type="text" name="last_name" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Role <span class="text-danger-600">*</span></label>
+                                <select name="role" class="form-control form-select" required>
+                                    <option value="" selected disabled>Select role</option>
+                                    {% for group_label, options in grouped_role_choices %}
+                                        <optgroup label="{{ group_label }}">
+                                            {% for value,label in options %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-neutral-400 mt-8 d-block">Non-Super Admin roles must be assigned to a school.</small>
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-sm-6">
+                            <div class="">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">School (required for non-Super Admin)</label>
+                                <select name="school_id" class="form-control form-select" id="userSchoolSelect">
+                                    <option value="">Platform access</option>
+                                    {% for school in schools %}
+                                        <option value="{{ school.id }}">{{ school.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12 d-flex gap-16 justify-content-end mb-24">
+            <a href="/users/" class="btn btn-neutral-100 text-neutral-600 px-32 py-12 radius-8 fw-semibold">Cancel</a>
+            <button type="submit" class="btn btn-primary-600 px-32 py-12 radius-8 fw-semibold shadow-primary">Create Invitation</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+'''
+
+with open('templates/users/invite.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% block extra_js \%\})', content, text)
+
+with open('templates/users/invite.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")

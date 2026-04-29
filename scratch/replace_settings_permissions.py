@@ -1,0 +1,139 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="row gy-4">
+    {% include "settings/_sidebar.html" %}
+
+    <div class="col-xxl-9 col-lg-8">
+        <div class="row gy-4">
+            <div class="col-12">
+                <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Select Role</h6>
+                        <small class="text-neutral-400">Load current permission set for override management.</small>
+                    </div>
+                    <div class="card-body p-24">
+                        <form method="get" class="row gy-3 align-items-end">
+                            <div class="col-md-6">
+                                <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">Role</label>
+                                <select name="role" class="form-select form-control">
+                                    {% for group_label, options in grouped_role_choices %}
+                                        <optgroup label="{{ group_label }}">
+                                        {% for value,label in options %}
+                                            <option value="{{ value }}" {% if value == current_role %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex gap-12 justify-content-end">
+                                <a href="/settings/" class="btn btn-neutral-100 text-neutral-600 px-24 py-10 radius-8 fw-semibold">Back</a>
+                                <button type="submit" class="btn btn-primary-600 px-24 py-10 radius-8 fw-semibold shadow-primary">Load Role</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+                    <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                        <h6 class="text-lg fw-semibold mb-0">Override Summary: {{ current_role_label }}</h6>
+                        <span class="badge {% if using_defaults %}bg-neutral-50 text-neutral-600 border border-neutral-200{% else %}bg-primary-50 text-primary-600 border border-primary-100{% endif %} px-16 py-8 radius-pill fw-medium">
+                            {% if using_defaults %}Using Defaults{% else %}Overrides Active{% endif %}
+                        </span>
+                    </div>
+                    <div class="card-body p-24">
+
+                        <div class="row gy-4 mb-24">
+                            <div class="col-sm-4">
+                                <div class="bg-primary-50 radius-8 p-16 border border-primary-100 d-flex flex-column align-items-center justify-content-center h-100">
+                                    <h2 class="text-2xl fw-bold text-primary-600 mb-4">{{ matched_permissions|length }}</h2>
+                                    <span class="text-xs text-primary-light fw-medium">Matched Defaults</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="bg-success-50 radius-8 p-16 border border-success-100 d-flex flex-column align-items-center justify-content-center h-100">
+                                    <h2 class="text-2xl fw-bold text-success-600 mb-4">{{ added_permissions|length }}</h2>
+                                    <span class="text-xs text-success-light fw-medium">Added Overrides</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="bg-danger-50 radius-8 p-16 border border-danger-100 d-flex flex-column align-items-center justify-content-center h-100">
+                                    <h2 class="text-2xl fw-bold text-danger-600 mb-4">{{ removed_permissions|length }}</h2>
+                                    <span class="text-xs text-danger-light fw-medium">Removed Defaults</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row gy-4 mb-32">
+                            <div class="col-md-6">
+                                <div class="border border-neutral-100 radius-8 p-16 h-100">
+                                    <h6 class="text-sm fw-semibold mb-12">Added Overrides</h6>
+                                    {% if added_permissions %}
+                                        <div class="d-flex flex-wrap gap-8">
+                                            {% for label in added_permission_labels %}
+                                                <span class="badge bg-success-50 text-success-600 border border-success-100">{{ label }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-sm text-neutral-400 mb-0">No added overrides.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border border-neutral-100 radius-8 p-16 h-100">
+                                    <h6 class="text-sm fw-semibold mb-12">Removed Defaults</h6>
+                                    {% if removed_permissions %}
+                                        <div class="d-flex flex-wrap gap-8">
+                                            {% for label in removed_permission_labels %}
+                                                <span class="badge bg-danger-50 text-danger-600 border border-danger-100">{{ label }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-sm text-neutral-400 mb-0">No removed defaults.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="post" class="mt-24">
+                            {% csrf_token %}
+                            <input type="hidden" name="role" value="{{ current_role }}">
+                            <h6 class="text-md fw-semibold mb-16 pb-8 border-bottom border-neutral-100">Permission Mapping</h6>
+
+                            <div class="row gy-3">
+                                {% for code,label in catalog %}
+                                    <div class="col-md-4 col-sm-6">
+                                        <div class="form-check d-flex align-items-center gap-12 border border-neutral-100 p-12 radius-8 hover-bg-neutral-50 cursor-pointer h-100">
+                                            <input class="form-check-input w-20-px h-20-px flex-shrink-0 cursor-pointer" type="checkbox" name="permissions" id="perm_{{ forloop.counter }}" value="{{ code }}" {% if code in selected_permissions %}checked{% endif %}>
+                                            <label class="form-check-label text-sm fw-medium text-primary-light cursor-pointer w-100" for="perm_{{ forloop.counter }}">{{ label }}</label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-flex gap-16 justify-content-end mt-32">
+                                <a href="/settings/permissions/?role={{ current_role }}" class="btn btn-neutral-100 text-neutral-600 px-32 py-12 radius-8 fw-semibold">Reset</a>
+                                <button type="submit" class="btn btn-primary-600 px-32 py-12 radius-8 fw-semibold shadow-primary">Save Permissions</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+'''
+
+with open('templates/settings/permissions_matrix.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% endblock \%\})', content, text)
+
+with open('templates/settings/permissions_matrix.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")

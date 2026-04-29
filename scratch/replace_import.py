@@ -1,0 +1,105 @@
+import sys
+import re
+
+content = '''{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+    <div class="">
+        <h1 class="fw-semibold mb-4 h6 text-primary-light">Import Users</h1>
+        <div class="d-flex align-items-center gap-12">
+            <a href="/" class="text-secondary-light hover-text-primary hover-underline">Dashboard</a>
+            <a href="/users/" class="text-secondary-light hover-text-primary hover-underline"> / User Directory</a>
+            <span class="text-secondary-light">/ Import Users</span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-6">
+        <a href="/users/import/sample/csv/" class="btn btn-outline-primary d-flex align-items-center gap-6">
+            <iconify-icon icon="ri:download-line"></iconify-icon>
+            Download Sample CSV
+        </a>
+        <a href="/users/" class="btn btn-primary-600 d-flex align-items-center gap-6">
+            <iconify-icon icon="ri:arrow-left-line"></iconify-icon>
+            Back to Directory
+        </a>
+    </div>
+</div>
+
+<div class="row gy-4">
+    <div class="col-12">
+        <div class="row gy-3">
+            <div class="col-xxl-4 col-xl-4 col-md-6">
+                <div class="shadow-1 radius-12 bg-primary-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-primary-600 fw-bold text-xs uppercase letter-spacing-1">Expected Headers</span>
+                        <iconify-icon icon="ri:table-line" class="text-2xl text-primary-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">{{ headers|length }}</h3>
+                    <p class="text-xs text-primary-light mb-0">Columns required in the file</p>
+                </div>
+            </div>
+            <div class="col-xxl-4 col-xl-4 col-md-6">
+                <div class="shadow-1 radius-12 bg-success-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-success-600 fw-bold text-xs uppercase letter-spacing-1">File Types</span>
+                        <iconify-icon icon="ri:file-excel-2-line" class="text-2xl text-success-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">CSV + XLSX</h3>
+                    <p class="text-xs text-success-light mb-0">Standard import formats</p>
+                </div>
+            </div>
+            <div class="col-xxl-4 col-xl-4 col-md-12">
+                <div class="shadow-1 radius-12 bg-info-50 p-24 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-12">
+                        <span class="text-info-600 fw-bold text-xs uppercase letter-spacing-1">Flow</span>
+                        <iconify-icon icon="ri:eye-line" class="text-2xl text-info-600"></iconify-icon>
+                    </div>
+                    <h3 class="mb-4">Preview</h3>
+                    <p class="text-xs text-info-light mb-0">Validate before import</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="alert alert-info bg-info-50 text-info-600 border-info-200 mb-0 d-flex align-items-center gap-12 radius-8">
+            <iconify-icon icon="ri:information-line" class="text-xl"></iconify-icon>
+            <strong>Expected Columns:</strong> {{ headers|join:", " }}
+        </div>
+    </div>
+
+    <div class="col-12">
+        <form method="post" enctype="multipart/form-data" class="shadow-1 radius-12 bg-base h-100 overflow-hidden">
+            {% csrf_token %}
+            <input type="hidden" name="stage" value="preview">
+
+            <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 class="text-lg fw-semibold mb-0">Upload File</h6>
+            </div>
+
+            <div class="card-body p-24">
+                <div class="row gy-3">
+                    <div class="col-md-8">
+                        <label class="text-sm fw-semibold text-primary-light d-inline-block mb-8">CSV / XLSX file</label>
+                        <input type="file" name="import_file" class="form-control" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                        <small class="text-neutral-400 mt-8 d-block">Tip: use the sample file to avoid header mismatches.</small>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-16 pb-4">
+                        <a href="/users/" class="btn btn-neutral-100 text-neutral-600 px-32 py-12 radius-8 fw-semibold">Cancel</a>
+                        <button type="submit" class="btn btn-primary-600 px-32 py-12 radius-8 fw-semibold shadow-primary">Preview Import</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+'''
+
+with open('templates/users/import.html', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+text = re.sub(r'\{\% block content \%\}[\s\S]*?(?=\{\% endblock \%\})', content, text)
+
+with open('templates/users/import.html', 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print("done")
